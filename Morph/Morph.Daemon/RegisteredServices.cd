@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Comment CommentText="----------&gt;&gt;">
+    <Position X="2.792" Y="2.386" Height="0.302" Width="0.919" />
+  </Comment>
+  <Class Name="Morph.Daemon.RegisteredRunning" Collapsed="true">
+    <Position X="6" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgABAAQAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>RegisteredServices.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Morph.Daemon.RegisteredStartup" Collapsed="true">
+    <Position X="6" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAIAAAAAAAAAAAAAAAIAAIAAAABAAAI=</HashCode>
+      <FileName>RegisteredServices.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Morph.Daemon.RegisteredService" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="3.75" Y="2.25" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAEAAAAAIAQAAAAAYAAIAAAAAAAAAAA=</HashCode>
+      <FileName>RegisteredServices.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_Running" />
+      <Field Name="_Startup" />
+    </ShowAsAssociation>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Morph.Daemon.RegisteredServices" Collapsed="true">
+    <Position X="1.25" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAAQAAAAAAAEEAABAAAAAAAAAAAAQAAACACAAA=</HashCode>
+      <FileName>RegisteredServices.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Morph.Daemon.RegisteredRunningDaemon" Collapsed="true">
+    <Position X="8.5" Y="1.5" Width="2" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAA=</HashCode>
+      <FileName>RegisteredServices.Daemon.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

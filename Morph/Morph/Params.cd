@@ -1,0 +1,153 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Morph.Params.ValueReferenceIndex">
+    <Position X="1.5" Y="6.75" Width="2" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <AssociationLine Name="Index" Type="Morph.Params.Value" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="1.5" Y="7.5" />
+        <Point X="0.307" Y="7.5" />
+        <Point X="0.307" Y="0.75" />
+        <Point X="1.75" Y="0.75" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true" ManuallySized="true">
+        <Position X="0.83" Y="-7.021" Height="0.182" Width="0.671" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAA=</HashCode>
+      <FileName>Params.ValueReferenceIndex.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Index" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Morph.Params.Value" Collapsed="true">
+    <Position X="1.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Params.Value.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Morph.Params.ValueBase" Collapsed="true">
+    <Position X="0.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Params.ValueBase.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Morph.Params.ValueInstance">
+    <Position X="4.25" Y="4.25" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAgAAAAAAAAAAAAAACAAAAgAAAAAAA=</HashCode>
+      <FileName>Params.ValueInstance.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Array" />
+      <Property Name="Struct" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Morph.Params.Values">
+    <Position X="9.25" Y="4.25" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAIAAAAAAAAAAAAACAAAAAQAAAAAAAAAAAAAAABAAAA=</HashCode>
+      <FileName>Params.ValueInstance.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Morph.Params.Names">
+    <Position X="9.25" Y="6.25" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AEIAAAAAAAAAAAAACAAAIAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Params.ValueInstance.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Morph.Params.ArrayValues">
+    <Position X="6.75" Y="3.25" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <AssociationLine Name="Values" Type="Morph.Params.Values">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.208" Y="0.082" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAIAAAAAAAAAAAAACAAAAAQAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Params.ValueInstance.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Values" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Morph.Params.StructValues">
+    <Position X="6.75" Y="5.25" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <AssociationLine Name="Values" Type="Morph.Params.Values">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.212" Y="0.112" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="Names" Type="Morph.Params.Names">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.189" Y="-0.236" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAIAgAAAAAAAAAAACBAAIgQAAAAAAAAAAAAggAAAAAg=</HashCode>
+      <FileName>Params.ValueInstance.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Values" />
+      <Property Name="Names" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Morph.Params.ValueObject">
+    <Position X="3" Y="1.75" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAABABAAAAAAAAAAA=</HashCode>
+      <FileName>Params.ValueObject.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Morph.Params.ValueReference">
+    <Position X="1.75" Y="4.25" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>Params.ValueReference.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Morph.Params.ValueStream" Collapsed="true">
+    <Position X="5.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Params.ValueStream.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

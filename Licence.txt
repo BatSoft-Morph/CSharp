@@ -1,0 +1,34 @@
+
+Usage rights and rules of the Morph Protocol Definition:
+
+1. The Morph Protocol Definition is free for anyone to implement and use.
+This is permanent and for all time.  However...
+
+2. The Morph Protocol Definition MUST NOT be altered nor extended in any way by anyone other than by Peter Sven Thönell.
+This will last until Peter Thönell has found/established a group that is trusted to maintain the definition of the Morph Protocol sustainably and responsibly.
+
+3. ALL deployed Morph Protocol implementations MUST be correct and accurate implementations of the Morph Protocol Definition, regardless of context, such as platform, scope or other variables.
+Only Morph Protocol implementations that are used for studying and experimenting with the Morph Protocol are exempt.
+
+In essence, you have full READ and EXECUTE rights, but NOT WRITE rights, to the Morph Protocol Definition.
+
+
+The reasons for these restrictions are to enable the Morph Protocol to be ubiquitously available, remain useful, be freely available and cost-free, while preventing fragmentation, incompatibilities and proprietary implementations that would reduce the usability and longevity of the Morph protocol.
+
+Any questions or suggestions for changes to the Morph Protocol can be sent to: peter@batsoft.com.au
+Good suggestions are likely to be adopted, though possibly with alterations.
+
+---
+
+Usage rights and rules of this C# implementation:
+
+As long as the Morph Protocol Definition rules above are followed, this C# implementation of the Morph Protocol has no other restrictions nor limitations at all.
+Anyone may use, deploy, copy, alter, translate, study and experiment with it without any restrictions or limitations whatsoever.
+
+In short, you have full READ, WRITE and EXECUTE rights to this Morph Protocol C# implemenation.
+
+You're welcome to send demos, improvements and/or translations to: peter@batsoft.com.au
+If added to the repository, then kudos be given to the author, of course.  :)
+
+
+Enjoy!  =)

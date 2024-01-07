@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Morph.Daemon.ServicesImpl">
+    <Position X="5" Y="0.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAQAEAAAAgAAAACAAAAAAgAAAAAAAAAAAAQAA=</HashCode>
+      <FileName>Service.Services.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Morph.Daemon.StartupImpl">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAQAAEAAQAEAAAAEAAAAAAAAAAAAAAAAAAAAAAACQAA=</HashCode>
+      <FileName>Service.Startups.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Morph.Daemon.ApartmentObject">
+    <Position X="11.75" Y="0.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>Service.Apartments.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Morph.Daemon.ApartmentObjects">
+    <Position X="9.75" Y="0.5" Width="1.75" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>EAAAAAAAAAAAgAAAAAAACEAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Service.Apartments.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Morph.Daemon.ApartmentsImpl" Collapsed="true">
+    <Position X="11" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Service.Apartments.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Morph.Daemon.ApartmentProxiesImpl" Collapsed="true">
+    <Position X="10.75" Y="4.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Service.Apartments.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Morph.Daemon.ServiceCallback">
+    <Position X="4.5" Y="3.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAQABAAAAAAAAAAAAAACAAAAAAAAA=</HashCode>
+      <FileName>Service.Callbacks.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Morph.Daemon.ServiceCallbacks">
+    <Position X="2.75" Y="3.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAEAAEAAAAAAAAgAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>Service.Callbacks.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="Morph.Daemon.DaemonService">
+    <Position X="6.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEAAAAAABAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAA=</HashCode>
+      <FileName>Service.Services.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Morph.Daemon.DaemonStartup">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEACAAAAAAA=</HashCode>
+      <FileName>Service.Startups.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
