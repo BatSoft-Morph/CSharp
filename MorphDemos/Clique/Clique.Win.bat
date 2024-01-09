@@ -1,0 +1,1 @@
+start %~dp0\Clique.Win\bin\Debug\Clique.Win.exe

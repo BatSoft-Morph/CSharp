@@ -1,0 +1,1 @@
+start %~dp0\BookingClient\bin\Debug\BookingClient.exe

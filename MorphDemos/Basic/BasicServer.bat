@@ -1,0 +1,1 @@
+start %~dp0\BasicServer\bin\Debug\BasicServer.exe
