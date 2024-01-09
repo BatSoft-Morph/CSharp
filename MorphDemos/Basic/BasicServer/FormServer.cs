@@ -1,7 +1,6 @@
-﻿using System.Windows.Forms;
-using Basic;
+﻿using Basic;
 using Morph.Daemon.Client;
-using Morph.Endpoint;
+using System.Windows.Forms;
 
 namespace BasicServer
 {

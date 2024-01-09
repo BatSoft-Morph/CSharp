@@ -66,12 +66,12 @@ namespace BasicClient
 
     private void buttonGetNumber_Click(object sender, System.EventArgs e)
     {
-      _Basic.simple.number = FormNumber;
+      FormNumber = _Basic.simple.number;
     }
 
     private void buttonSetNumber_Click(object sender, System.EventArgs e)
     {
-      FormNumber = _Basic.simple.number;
+      _Basic.simple.number = FormNumber;
     }
 
     private void buttonAssignText_Click(object sender, System.EventArgs e)
