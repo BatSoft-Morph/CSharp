@@ -4,26 +4,26 @@ namespace Morph.Core
 {
   public abstract class Link
   {
-    protected Link(LinkTypeID LinkTypeID)
+    protected Link(LinkTypeID linkTypeID)
     {
-      _LinkTypeID = LinkTypeID;
+      _linkTypeID = linkTypeID;
     }
 
-    private LinkTypeID _LinkTypeID;
+    private readonly LinkTypeID _linkTypeID;
     public LinkTypeID LinkTypeID
-    { get { return _LinkTypeID; } }
+    { get => _linkTypeID; }
 
     public abstract int Size();
-    public abstract void Write(MorphWriter Writer);
+    public abstract void Write(MorphWriter writer);
   }
 
   public interface IActionLink
   {
-    void ActionLink(LinkMessage Message, Link CurrentLink);
+    void ActionLink(LinkMessage message, Link currentLink);
   }
 
   public interface IActionLast
   {
-    void ActionLast(LinkMessage Message);
+    void ActionLast(LinkMessage message);
   }
 }

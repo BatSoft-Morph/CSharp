@@ -9,22 +9,22 @@ namespace Morph.Internet
 {
   public class Listener
   {
-    internal Listener(IPEndPoint EndPoint)
+    internal Listener(IPEndPoint endPoint)
     {
-      _EndPoint = EndPoint;
+      _endPoint = endPoint;
     }
 
-    private IPEndPoint _EndPoint;
+    private readonly IPEndPoint _endPoint;
     public IPEndPoint EndPoint
     {
-      get { return _EndPoint; }
+      get => _endPoint;
     }
 
-    private Socket _Listener;
+    private Socket _listener;
 
-    private Socket CreateSocket(IPEndPoint EndPoint)
+    private Socket CreateSocket(IPEndPoint endPoint)
     {
-      Socket socket = new Socket(EndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+      Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
       socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, 1);
       socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, 1);
       socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
@@ -39,15 +39,15 @@ namespace Morph.Internet
       {
         try
         {
-          _Listener.Bind(_EndPoint);
-          _Listener.Listen(5);
-          while (_IsStarted)
-            Connections.Add(_Listener.Accept());
+          _listener.Bind(_endPoint);
+          _listener.Listen(5);
+          while (_isStarted)
+            Connections.Add(_listener.Accept());
         }
         finally
         {
           lock (this)
-            _IsActive = false;
+            _isActive = false;
         }
       }
       catch (Exception x)
@@ -56,102 +56,102 @@ namespace Morph.Internet
       }
     }
 
-    private bool _IsStarted = false;
-    private bool _IsActive = false;
+    private bool _isStarted = false;
+    private bool _isActive = false;
     public bool IsActive
     {
-      get { return _IsActive; }
+      get => _isActive;
     }
 
     public void Start()
     {
       lock (this)
-        if (!_IsActive)
+        if (!_isActive)
         {
           //  Create the listener
-          _Listener = CreateSocket(_EndPoint);
+          _listener = CreateSocket(_endPoint);
           //  Start the thread
           try
           {
-            _IsStarted = true;
+            _isStarted = true;
             (new Thread(new ThreadStart(AsynchListen))).Start();
-            _IsActive = true;
+            _isActive = true;
           }
           //  Just in case
           catch
           {
-            _IsStarted = false;
-            _Listener.Close();
-            _Listener = null;
+            _isStarted = false;
+            _listener.Close();
+            _listener = null;
             throw;
           }
         }
-        else if (!_IsStarted)
+        else if (!_isStarted)
           throw new EMorphUsage("Cannot start while still busy stopping");
     }
 
     public void Stop()
     {
       lock (this)
-        if (_IsActive)
+        if (_isActive)
         {
           //  Tell the thread to stop
-          _IsStarted = false;
+          _isStarted = false;
           //  Close the listener
-          _Listener.Close();
-          _Listener = null;
+          _listener.Close();
+          _listener = null;
         }
     }
   }
 
   public class Listeners
   {
-    internal Listeners(List<Listener> Items)
+    internal Listeners(List<Listener> items)
     {
-      _Items = Items;
+      _items = items;
     }
 
-    private List<Listener> _Items;
+    private readonly List<Listener> _items;
 
     public int Count
     {
-      get { return _Items.Count; }
+      get => _items.Count;
     }
 
     public Listener this[int index]
     {
-      get { return _Items[index]; }
+      get => _items[index];
     }
 
     public Listener[] ToArray()
     {
-      return _Items.ToArray();
+      return _items.ToArray();
     }
 
     public void StartAll()
     {
-      foreach (Listener Listener in _Items)
+      foreach (Listener Listener in _items)
         Listener.Start();
     }
 
     public void StopAll()
     {
-      foreach (Listener Listener in _Items)
+      foreach (Listener Listener in _items)
         Listener.Stop();
     }
   }
 
   public class ListenerManager
   {
-    static private List<Listener> All = new List<Listener>();
+    private static readonly List<Listener> s_all = new List<Listener>();
 
-    static private bool IsLocal(IPAddress Address)
+    static private bool IsLocal(IPAddress address)
     {
-      IPAddress[] LocalAddresses = GetAllLocalAddresses();
-      foreach (IPAddress LocalAddress in LocalAddresses)
-        if (Address.Equals(LocalAddress))
+      IPAddress[] localAddresses = GetAllLocalAddresses();
+      foreach (IPAddress LocalAddress in localAddresses)
+        if (address.Equals(LocalAddress))
           return true;
-      return IPAddress.IsLoopback(Address);
+      return IPAddress.IsLoopback(address);
     }
 
     static public IPAddress[] GetAllLocalAddresses()
@@ -159,99 +159,99 @@ namespace Morph.Internet
       return Dns.GetHostEntry(Dns.GetHostName()).AddressList;
     }
 
-    static public Listener Obtain(IPAddress Address, int Port)
+    static public Listener Obtain(IPAddress address, int port)
     {
-      return Obtain(new IPEndPoint(Address, Port));
+      return Obtain(new IPEndPoint(address, port));
     }
 
-    static public Listener Obtain(IPEndPoint EndPoint)
+    static public Listener Obtain(IPEndPoint endPoint)
     {
-      if (!IsLocal(EndPoint.Address))
+      if (!IsLocal(endPoint.Address))
         throw new EMorphUsage("Not a local IP address");
       //  See if it already exists
-      Listener PortListener = Find(EndPoint);
-      if (PortListener == null)
+      Listener portListener = Find(endPoint);
+      if (portListener == null)
       { //  Create and register the listener
-        PortListener = new Listener(EndPoint);
-        All.Add(PortListener);
+        portListener = new Listener(endPoint);
+        s_all.Add(portListener);
       }
-      return PortListener;
+      return portListener;
     }
 
-    static public Listeners Obtain(int Port)
+    static public Listeners Obtain(int port)
     {
-      List<Listener> Items = new List<Listener>();
+      List<Listener> items = new List<Listener>();
       //  Add all network addresses to result
-      IPAddress[] Addresses = GetAllLocalAddresses();
-      for (int i = 0; i < Addresses.Length; i++)
-        Items.Add(Obtain(new IPEndPoint(Addresses[i], Port)));
+      IPAddress[] addresses = GetAllLocalAddresses();
+      for (int i = 0; i < addresses.Length; i++)
+        items.Add(Obtain(new IPEndPoint(addresses[i], port)));
       //  Ensure loopback is included
-      bool AddLoopback = true;
-      for (int i = 0; i < Items.Count; i++)
-        if (Items[i].EndPoint.Address.Equals(IPAddress.Loopback))
+      bool addLoopback = true;
+      for (int i = 0; i < items.Count; i++)
+        if (items[i].EndPoint.Address.Equals(IPAddress.Loopback))
         {
-          AddLoopback = false;
+          addLoopback = false;
           break;
         }
-      if (AddLoopback)
-        Items.Add(Obtain(new IPEndPoint(IPAddress.Loopback, Port)));
+      if (addLoopback)
+        items.Add(Obtain(new IPEndPoint(IPAddress.Loopback, port)));
       //  Return a list of listeners
-      return new Listeners(Items);
+      return new Listeners(items);
     }
 
-    static public Listener Find(IPEndPoint EndPoint)
+    static public Listener Find(IPEndPoint endPoint)
     {
-      foreach (Listener Listener in All)
-        if (Listener.EndPoint.Equals(EndPoint))
-          return Listener;
+      foreach (Listener listener in s_all)
+        if (listener.EndPoint.Equals(endPoint))
+          return listener;
       return null;
     }
 
-    static public Listeners Find(IPAddress Address)
+    static public Listeners Find(IPAddress address)
     {
-      List<Listener> Items = new List<Listener>();
-      foreach (Listener Listener in All)
-        if (Listener.EndPoint.Address.Equals(Address))
-          Items.Add(Listener);
-      return new Listeners(Items);
+      List<Listener> items = new List<Listener>();
+      foreach (Listener listener in s_all)
+        if (listener.EndPoint.Address.Equals(address))
+          items.Add(listener);
+      return new Listeners(items);
     }
 
-    static public Listeners Find(int Port)
+    static public Listeners Find(int port)
     {
-      List<Listener> Items = new List<Listener>();
+      List<Listener> items = new List<Listener>();
       //  Add all network addresses to result
-      foreach (Listener Listener in All)
-        if (Listener.EndPoint.Port == Port)
-          Items.Add(Listener);
+      foreach (Listener listener in s_all)
+        if (listener.EndPoint.Port == port)
+          items.Add(listener);
       //  Return a list of listeners
-      return new Listeners(Items);
+      return new Listeners(items);
     }
 
     static public Listeners FindAll()
     {
-      return new Listeners(All);
+      return new Listeners(s_all);
     }
 
     static public void StartAll()
     {
-      foreach (Listener Listener in All)
-        Listener.Start();
+      foreach (Listener listener in s_all)
+        listener.Start();
     }
 
     static public void StopAll()
     {
-      foreach (Listener Listener in All)
-        Listener.Stop();
+      foreach (Listener listener in s_all)
+        listener.Stop();
     }
 
     static public void RemoveAllInactive()
     {
-      lock (All)
-        for (int i = All.Count - 1; 0 <= i; i--)
+      lock (s_all)
+        for (int i = s_all.Count - 1; 0 <= i; i--)
         {
-          Listener Listener = All[i];
-          if (!Listener.IsActive)
-            All.Remove(Listener);
+          Listener listener = s_all[i];
+          if (!listener.IsActive)
+            s_all.Remove(listener);
         }
     }
   }

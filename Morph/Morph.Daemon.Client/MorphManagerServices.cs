@@ -9,20 +9,20 @@ namespace Morph.Daemon.Client
   {
     #region Internal
 
-    internal MorphManagerServices(TimeSpan DefaultTimeout)
-      : base("Morph.Services", DefaultTimeout)
+    internal MorphManagerServices(TimeSpan defaultTimeout)
+      : base("Morph.Services", defaultTimeout)
     {
     }
 
     private MorphService RegisterLocalService(string serviceName, bool accessLocal, bool accessRemote, MorphApartmentFactory apartmentFactory)
     {
-      MorphService Service = MorphServices.Register(serviceName, apartmentFactory);
+      MorphService service = MorphServices.Register(serviceName, apartmentFactory);
       //  Try to register the service with the Morph Daemon
       try
       { //  Tell the Morph daemon to redirect service requests to here
-        ServletProxy.CallMethod("start", new object[] { serviceName, accessLocal, accessRemote });
+        ServletProxy.CallMethod("Start", new object[] { serviceName, accessLocal, accessRemote });
         //  Done
-        return Service;
+        return service;
       }
       catch
       { //  If that fails, then tidy up
@@ -33,28 +33,28 @@ namespace Morph.Daemon.Client
 
     #endregion
 
-    public MorphService startServiceShared(string serviceName, bool accessLocal, bool accessRemote, object defaultObject, InstanceFactories instanceFactories)
+    public MorphService StartServiceShared(string serviceName, bool accessLocal, bool accessRemote, object defaultObject, InstanceFactories instanceFactories)
     {
       MorphApartmentFactory apartmentFactory = new MorphApartmentFactoryShared(defaultObject, instanceFactories);
       return RegisterLocalService(serviceName, accessLocal, accessRemote, apartmentFactory);
     }
 
-    public MorphService startServiceSessioned(string serviceName, bool accessLocal, bool accessRemote, DefaultServletObjectFactory defaultObjectFactory, InstanceFactories instanceFactories, TimeSpan timeout, SequenceLevel sequenceLevel)
+    public MorphService StartServiceSessioned(string serviceName, bool accessLocal, bool accessRemote, IDefaultServletObjectFactory defaultObjectFactory, InstanceFactories instanceFactories, TimeSpan timeout, SequenceLevel sequenceLevel)
     {
       MorphApartmentFactory apartmentFactory = new MorphApartmentFactorySession(defaultObjectFactory, instanceFactories, timeout, sequenceLevel);
       return RegisterLocalService(serviceName, accessLocal, accessRemote, apartmentFactory);
     }
 
-    public MorphService startServiceSessioned(string serviceName, bool accessLocal, bool accessRemote, MorphApartmentFactorySession apartmentFactory)
+    public MorphService StartServiceSessioned(string serviceName, bool accessLocal, bool accessRemote, MorphApartmentFactorySession apartmentFactory)
     {
       return RegisterLocalService(serviceName, accessLocal, accessRemote, apartmentFactory);
     }
 
-    public void stopService(string serviceName)
+    public void StopService(string serviceName)
     {
       try
       {
-        ServletProxy.CallMethod("stop", new object[] { serviceName });
+        ServletProxy.CallMethod("Stop", new object[] { serviceName });
       }
       finally
       {
@@ -62,11 +62,11 @@ namespace Morph.Daemon.Client
       }
     }
 
-    public void stopService(MorphService service)
+    public void StopService(MorphService service)
     {
       try
       {
-        ServletProxy.CallMethod("stop", new object[] { service.Name });
+        ServletProxy.CallMethod("Stop", new object[] { service.Name });
       }
       finally
       {
@@ -74,19 +74,19 @@ namespace Morph.Daemon.Client
       }
     }
 
-    public DaemonService[] listServices()
+    public DaemonService[] ListServices()
     {
-      return (DaemonService[])ServletProxy.CallMethod("listServices", null);
+      return (DaemonService[])ServletProxy.CallMethod("ListServices", null);
     }
 
-    public void listen(DaemonServiceCallback callback)
+    public void Listen(DaemonServiceCallback callback)
     {
-      ServletProxy.CallMethod("listen", new object[] { callback });
+      ServletProxy.CallMethod("Listen", new object[] { callback });
     }
 
-    public void unlisten(DaemonServiceCallback callback)
+    public void Unlisten(DaemonServiceCallback callback)
     {
-      ServletProxy.CallMethod("unlisten", new object[] { callback });
+      ServletProxy.CallMethod("Unlisten", new object[] { callback });
     }
   }
 

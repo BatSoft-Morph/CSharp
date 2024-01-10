@@ -5,114 +5,114 @@ namespace Morph.Base
 {
   public class LinkMessage : Link
   {
-    public LinkMessage(LinkStack PathTo, LinkStack PathFrom, bool IsForceful)
+    public LinkMessage(LinkStack pathTo, LinkStack pathFrom, bool isForceful)
       : base(LinkTypeID.Message)
     {
-      _PathTo = PathTo;
-      _PathFrom = PathFrom;
-      _IsForceful = IsForceful;
+      _pathTo = pathTo;
+      _pathFrom = pathFrom;
+      _isForceful = isForceful;
     }
 
-    internal protected LinkMessage(MorphReader Reader)
+    internal protected LinkMessage(MorphReader reader)
       : base(LinkTypeID.Message)
     {
       //  Read link byte
-      bool HasPathFrom;
-      Reader.ReadLinkByte(out _HasCallNumber, out _IsForceful, out HasPathFrom);
+      bool hasPathFrom;
+      reader.ReadLinkByte(out _hasCallNumber, out _isForceful, out hasPathFrom);
       //  Read link values
       //  - CallNumber
-      if (_HasCallNumber)
-        _CallNumber = Reader.ReadInt32();
+      if (_hasCallNumber)
+        _callNumber = reader.ReadInt32();
       //  - PathTo size
-      int PathToSize = Reader.ReadInt32();
+      int pathToSize = reader.ReadInt32();
       //  - PathFrom size
-      int PathFromSize = 0;
-      if (HasPathFrom)
-        PathFromSize = Reader.ReadInt32();
+      int pathFromSize = 0;
+      if (hasPathFrom)
+        pathFromSize = reader.ReadInt32();
       //  Paths
-      _PathTo = new LinkStack(Reader.SubReader(PathToSize));
-      if (HasPathFrom)
-        _PathFrom = new LinkStack(Reader.SubReader(PathFromSize));
+      _pathTo = new LinkStack(reader.SubReader(pathToSize));
+      if (hasPathFrom)
+        _pathFrom = new LinkStack(reader.SubReader(pathFromSize));
     }
 
-    private bool _HasCallNumber = false;
+    private bool _hasCallNumber = false;
     public bool HasCallNumber
     {
-      get { return _HasCallNumber; }
+      get => _hasCallNumber;
     }
 
-    private int _CallNumber;
+    private int _callNumber;
     public int CallNumber
     {
       get
       {
-        if (!_HasCallNumber)
+        if (!_hasCallNumber)
           throw new EMorphImplementation();
-        return _CallNumber;
+        return _callNumber;
       }
       set
       {
-        _CallNumber = value;
-        _HasCallNumber = true;
+        _callNumber = value;
+        _hasCallNumber = true;
       }
     }
 
-    private bool _IsForceful;
+    private bool _isForceful;
     public bool IsForceful
     {
-      get { return _IsForceful; }
-      set { _IsForceful = value; }
+      get => _isForceful;
+      set => _isForceful = value;
     }
 
-    private LinkStack _PathTo = null;
+    private LinkStack _pathTo = null;
     public LinkStack PathTo
     {
-      get { return _PathTo; }
+      get => _pathTo;
     }
 
     public bool HasPathFrom
     {
-      get { return _PathFrom != null; }
+      get => _pathFrom != null;
     }
 
-    private LinkStack _PathFrom = null;
+    private LinkStack _pathFrom = null;
     public LinkStack PathFrom
     {
-      get { return _PathFrom; }
+      get => _pathFrom;
     }
 
     public object Source = null;  //  The connection that the message comes from
 
     public object Context = null;
 
-    public bool ContextIs(Type ContextType)
+    public bool ContextIs(Type contextType)
     {
-      return (Context != null) && ContextType.IsInstanceOfType(Context);
+      return (Context != null) && contextType.IsInstanceOfType(Context);
     }
 
     public Link Current
     {
       get
       {
-        if (_PathTo == null)
+        if (_pathTo == null)
           return null;
         else
-          return _PathTo.Peek();
+          return _pathTo.Peek();
       }
     }
 
-    public bool CurrentIs(LinkTypeID LinkTypeID)
+    public bool CurrentIs(LinkTypeID linkTypeID)
     {
-      Link CurrentLink = Current;
-      return (CurrentLink != null) && (CurrentLink.LinkTypeID == LinkTypeID);
+      Link currentLink = Current;
+      return (currentLink != null) && (currentLink.LinkTypeID == linkTypeID);
     }
 
     public void NextLink()
     {
-      if (_PathFrom != null)
-        _PathFrom.Push(_PathTo.Pop());
+      if (_pathFrom != null)
+        _pathFrom.Push(_pathTo.Pop());
       else
-        _PathTo.Pop();
+        _pathTo.Pop();
     }
 
     public void NextLinkAction()
@@ -130,40 +130,40 @@ namespace Morph.Base
 
     public override int Size()
     {
-      long TotalSize = 1;
+      long totalSize = 1;
       //  Call number
       if (HasCallNumber)
-        TotalSize += 4;
+        totalSize += 4;
       //  Path To size
-      TotalSize += 4 + PathTo.ByteSize;
+      totalSize += 4 + PathTo.ByteSize;
       //  Path From size
       if (HasPathFrom)
-        TotalSize += 4 + PathFrom.ByteSize;
+        totalSize += 4 + PathFrom.ByteSize;
       //  Analyze limits
-      if (TotalSize > int.MaxValue)
+      if (totalSize > int.MaxValue)
         throw new EMorph("Message is too large");
-      return (int)TotalSize;
+      return (int)totalSize;
     }
 
-    public override void Write(MorphWriter Writer)
+    public override void Write(MorphWriter writer)
     {
-      lock (Writer)
+      lock (writer)
       {
         //  Message link byte
-        Writer.WriteLinkByte(LinkTypeID, _HasCallNumber, _IsForceful, HasPathFrom);
+        writer.WriteLinkByte(LinkTypeID, _hasCallNumber, _isForceful, HasPathFrom);
         //  Call number
-        if (_HasCallNumber)
-          Writer.WriteInt32(CallNumber);
+        if (_hasCallNumber)
+          writer.WriteInt32(CallNumber);
         //  Path to size
-        Writer.WriteInt32(PathTo.ByteSize);
+        writer.WriteInt32(PathTo.ByteSize);
         //  Path from size
         if (HasPathFrom)
-          Writer.WriteInt32(PathFrom.ByteSize);
+          writer.WriteInt32(PathFrom.ByteSize);
         //  Path to
-        PathTo.Write(Writer);
+        PathTo.Write(writer);
         //  Path from
         if (HasPathFrom)
-          PathFrom.Write(Writer);
+          PathFrom.Write(writer);
       }
     }
 
@@ -171,13 +171,13 @@ namespace Morph.Base
 
     public LinkMessage Clone()
     {
-      LinkMessage clone = new LinkMessage(PathTo, PathFrom, _IsForceful);
-      clone._HasCallNumber = this._HasCallNumber;
-      clone._CallNumber = this._CallNumber;
-      if (this._PathTo != null)
-        clone._PathTo = this._PathTo.Clone();
-      if (this._PathFrom != null)
-        clone._PathFrom = this._PathFrom.Clone();
+      LinkMessage clone = new LinkMessage(PathTo, PathFrom, _isForceful);
+      clone._hasCallNumber = _hasCallNumber;
+      clone._callNumber = _callNumber;
+      if (_pathTo != null)
+        clone._pathTo = _pathTo.Clone();
+      if (_pathFrom != null)
+        clone._pathFrom = _pathFrom.Clone();
       return clone;
     }
 
@@ -185,41 +185,41 @@ namespace Morph.Base
     {
       if (!HasPathFrom)
         return null;
-      LinkMessage Reply = new LinkMessage(PathFrom, HasPathFrom ? new LinkStack() : null, _IsForceful);
+      LinkMessage reply = new LinkMessage(PathFrom, HasPathFrom ? new LinkStack() : null, _isForceful);
       if (HasCallNumber)
-        Reply.CallNumber = CallNumber;
-      Reply.IsForceful = IsForceful;
-      return Reply;
+        reply.CallNumber = CallNumber;
+      reply.IsForceful = IsForceful;
+      return reply;
     }
 
     public LinkMessage CreateReply(Exception x)
     {
       if (!HasPathFrom)
         return null;
-      LinkMessage Reply = new LinkMessage(PathFrom, null, _IsForceful);
+      LinkMessage reply = new LinkMessage(PathFrom, null, _isForceful);
       if (HasCallNumber)
-        Reply.CallNumber = CallNumber;
-      Reply.IsForceful = IsForceful;
-      Reply.PathTo.Append(new LinkData(x));
-      return Reply;
+        reply.CallNumber = CallNumber;
+      reply.IsForceful = IsForceful;
+      reply.PathTo.Append(new LinkData(x));
+      return reply;
     }
 
-    public LinkMessage CreateReply(Link Payload)
+    public LinkMessage CreateReply(Link payload)
     {
-      LinkMessage Reply = CreateReply();
-      if (Reply == null)
+      LinkMessage reply = CreateReply();
+      if (reply == null)
         return null;
-      Reply.PathTo.Append(Payload);
-      return Reply;
+      reply.PathTo.Append(payload);
+      return reply;
     }
 
-    public LinkMessage CreateReply(LinkStack Payload)
+    public LinkMessage CreateReply(LinkStack payload)
     {
-      LinkMessage Reply = CreateReply();
-      if (Reply == null)
+      LinkMessage reply = CreateReply();
+      if (reply == null)
         return null;
-      Reply.PathTo.Append(Payload);
-      return Reply;
+      reply.PathTo.Append(payload);
+      return reply;
     }
 
     public override bool Equals(object obj)
@@ -237,7 +237,7 @@ namespace Morph.Base
       string str = "{Message";
       if (HasCallNumber)
         str += " CallNumber=" + CallNumber.ToString();
-      if (_IsForceful)
+      if (_isForceful)
         str += " IsForceful";
       str += " To=" + PathTo.ToString();
       if (HasPathFrom)
@@ -250,7 +250,7 @@ namespace Morph.Base
   {
     public LinkTypeID ID
     {
-      get { return LinkTypeID.Message; }
+      get => LinkTypeID.Message;
     }
 
     public Link ReadLink(MorphReader Reader)

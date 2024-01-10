@@ -27,7 +27,7 @@ namespace Morph.Core
     LinkTypeID ID
     { get; }
 
-    Link ReadLink(MorphReader Reader);
+    Link ReadLink(MorphReader reader);
   }
 
   public interface ILinkTypeAction
@@ -35,85 +35,85 @@ namespace Morph.Core
     LinkTypeID ID
     { get; }
 
-    void ActionLink(LinkMessage Message, Link CurrentLink);
+    void ActionLink(LinkMessage message, Link currentLink);
   }
 
   public static class LinkTypes
   {
-    static private ILinkTypeReader[] _LinkTypeReaders = new ILinkTypeReader[16];
-    static public ILinkTypeReader ReaderByLinkTypeID(LinkTypeID LinkTypeID)
+    private static readonly ILinkTypeReader[] _linkTypeReaders = new ILinkTypeReader[16];
+    static public ILinkTypeReader ReaderByLinkTypeID(LinkTypeID linkTypeID)
     {
-      return _LinkTypeReaders[(byte)LinkTypeID];
+      return _linkTypeReaders[(byte)linkTypeID];
     }
 
-    static private ILinkTypeAction[] _LinkTypeActions = new ILinkTypeAction[16];
+    private static readonly ILinkTypeAction[] _linkTypeActions = new ILinkTypeAction[16];
     static public ILinkTypeAction ActionByLinkTypeID(LinkTypeID LinkTypeID)
     {
-      return _LinkTypeActions[(int)LinkTypeID];
+      return _linkTypeActions[(int)LinkTypeID];
     }
 
     #region Registration
 
-    static public void Register(object LinkType)
+    static public void Register(object linkType)
     {
-      if (LinkType is ILinkTypeReader) RegisterReader((ILinkTypeReader)LinkType);
-      if (LinkType is ILinkTypeAction) RegisterAction((ILinkTypeAction)LinkType);
+      if (linkType is ILinkTypeReader linkTypeReader) RegisterReader(linkTypeReader);
+      if (linkType is ILinkTypeAction linkTypeWriter) RegisterAction(linkTypeWriter);
     }
 
-    static public void RegisterReader(ILinkTypeReader LinkTypeReader)
+    static public void RegisterReader(ILinkTypeReader linkTypeReader)
     {
-      if (LinkTypeReader == null) throw new EMorphUsage("Reader cannot be null");
-      byte LinkTypeID = (byte)LinkTypeReader.ID;
-      if (_LinkTypeReaders[LinkTypeID] != null)
-        throw new EMorph("A link reader for " + LinkTypeID + " is already registered");
-      _LinkTypeReaders[LinkTypeID] = LinkTypeReader;
+      if (linkTypeReader == null) throw new EMorphUsage("Reader cannot be null");
+      byte linkTypeID = (byte)linkTypeReader.ID;
+      if (_linkTypeReaders[linkTypeID] != null)
+        throw new EMorph("A link reader for " + linkTypeID + " is already registered");
+      _linkTypeReaders[linkTypeID] = linkTypeReader;
     }
 
-    static public void RegisterAction(ILinkTypeAction LinkTypeAction)
+    static public void RegisterAction(ILinkTypeAction linkTypeAction)
     {
-      if (LinkTypeAction == null) throw new EMorphUsage("Action cannot be null");
-      byte LinkTypeID = (byte)LinkTypeAction.ID;
-      if (_LinkTypeActions[LinkTypeID] != null)
-        throw new EMorph("A link action for " + LinkTypeID + " is already registered");
-      _LinkTypeActions[LinkTypeID] = LinkTypeAction;
+      if (linkTypeAction == null) throw new EMorphUsage("Action cannot be null");
+      byte linkTypeID = (byte)linkTypeAction.ID;
+      if (_linkTypeActions[linkTypeID] != null)
+        throw new EMorph("A link action for " + linkTypeID + " is already registered");
+      _linkTypeActions[linkTypeID] = linkTypeAction;
     }
 
     #endregion
 
-    static public Link ReadLink(MorphReader Reader)
+    static public Link ReadLink(MorphReader reader)
     {
-      if (!Reader.CanRead)
+      if (!reader.CanRead)
         return null;
-      ILinkTypeReader LinkTypeReader = _LinkTypeReaders[Reader.PeekInt8() & 0xF];
-      if (LinkTypeReader == null)
+      ILinkTypeReader linkTypeReader = _linkTypeReaders[reader.PeekInt8() & 0xF];
+      if (linkTypeReader == null)
         throw new EMorph("Link type not available");
-      return LinkTypeReader.ReadLink(Reader);
+      return linkTypeReader.ReadLink(reader);
     }
 
-    static public void ActionCurrentLink(LinkMessage Message)
+    static public void ActionCurrentLink(LinkMessage message)
     {
-      Link CurrentLink = Message.Current;
+      Link currentLink = message.Current;
       //  Handle abrupt end of message
-      if (CurrentLink == null)
+      if (currentLink == null)
       {
-        if (Message.ContextIs(typeof(IActionLast)))
-          ((IActionLast)Message.Context).ActionLast(Message);
+        if (message.ContextIs(typeof(IActionLast)))
+          ((IActionLast)message.Context).ActionLast(message);
         return;
       }
       //  Find the appropriate link type
-      ILinkTypeAction LinkType = ActionByLinkTypeID(CurrentLink.LinkTypeID);
-      if (LinkType == null)
+      ILinkTypeAction linkType = ActionByLinkTypeID(currentLink.LinkTypeID);
+      if (linkType == null)
         throw new EMorph("Unsupported link type");
       //  Action the link
       try
       {
-        LinkType.ActionLink(Message, CurrentLink);
+        linkType.ActionLink(message, currentLink);
       }
       catch (EMorph x)
       {
         //  If there's a return path, then return an error message
-        if (Message.HasPathFrom)
-          Message.CreateReply(x).Action();
+        if (message.HasPathFrom)
+          message.CreateReply(x).Action();
       }
     }
   }

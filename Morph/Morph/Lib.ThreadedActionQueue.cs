@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace Morph.Lib
 {
-  public interface Action
+  public interface IAction
   {
     void Execute();
   }
@@ -15,29 +15,29 @@ namespace Morph.Lib
     {
     }
 
-    public ThreadedActionQueue(int ThreadCount)
+    public ThreadedActionQueue(int threadCount)
     {
-      SetThreadCount(ThreadCount);
+      SetThreadCount(threadCount);
     }
 
     #region Threading
 
     //  Used for managing the number of threads
-    private int _ThreadCount = 0;
-    private int _ThreadCountTarget = 0;
-    private object _ThreadCountSemaphore = new Object();
+    private int _threadCount = 0;
+    private int _threadCountTarget = 0;
+    private object _threadCountSemaphore = new Object();
 
     //  This gate lets the threads rest when there's no work to do
-    private AutoResetEvent _GateRest = new AutoResetEvent(true);
+    private readonly AutoResetEvent _gateRest = new AutoResetEvent(true);
 
     //  This gate may be useful when tidying up
-    private ManualResetEvent _GateNoThreads = new ManualResetEvent(true);
+    private readonly ManualResetEvent _gateNoThreads = new ManualResetEvent(true);
 
     private void CreateThread()
     {
-      _GateNoThreads.Reset();
+      _gateNoThreads.Reset();
       (new Thread(new ThreadStart(ThreadCode))).Start();
-      _ThreadCount++;
+      _threadCount++;
     }
 
     private void ThreadCode()
@@ -45,33 +45,33 @@ namespace Morph.Lib
       Thread.CurrentThread.Name = "ThreadedActionQueue";
       while (true)
       { //  Wait
-        _GateRest.WaitOne();
+        _gateRest.WaitOne();
         //  Is this thread superfluous?
-        if (_ThreadCountTarget < _ThreadCount)
-          lock (_ThreadCountSemaphore)
-            if (_ThreadCountTarget < _ThreadCount)
+        if (_threadCountTarget < _threadCount)
+          lock (_threadCountSemaphore)
+            if (_threadCountTarget < _threadCount)
             {
-              _ThreadCount--;
+              _threadCount--;
               //  Release the next thread 
-              _GateRest.Set();
+              _gateRest.Set();
               //  Might be idle now
-              if (_ThreadCount == 0)
-                _GateNoThreads.Set();
+              if (_threadCount == 0)
+                _gateNoThreads.Set();
               return;
             }
         //  Get the next action
-        Action Action = null;
-        lock (_Actions)
-          if (_Actions.Count > 0)
-            Action = _Actions.Dequeue();
+        IAction action = null;
+        lock (_actions)
+          if (_actions.Count > 0)
+            action = _actions.Dequeue();
         //  If the queue is empty, then make the threads wait
-        if (Action != null)
+        if (action != null)
         {
-          _GateRest.Set();
+          _gateRest.Set();
           //  Run the Action
           try
           {
-            Action.Execute();
+            action.Execute();
           }
           catch (Exception x)
           {
@@ -81,18 +81,18 @@ namespace Morph.Lib
       }
     }
 
-    public void SetThreadCount(int ThreadCount)
+    public void SetThreadCount(int threadCount)
     {
-      if (ThreadCount < 0)
+      if (threadCount < 0)
         throw new Exception("ThreadCount cannot be less than 0");
       //  Set the target
-      _ThreadCountTarget = ThreadCount;
+      _threadCountTarget = threadCount;
       //  Ensure at least one thread exists, to create other threads.
-      lock (_ThreadCountSemaphore)
-        while (_ThreadCount < _ThreadCountTarget)
+      lock (_threadCountSemaphore)
+        while (_threadCount < _threadCountTarget)
           CreateThread();
       //  Release a thread
-      _GateRest.Set();
+      _gateRest.Set();
     }
 
     public void WaitUntilNoThreads()
@@ -100,10 +100,10 @@ namespace Morph.Lib
       WaitUntilNoThreads(Timeout.Infinite);
     }
 
-    public bool WaitUntilNoThreads(int TimeoutMilliseconds)
+    public bool WaitUntilNoThreads(int timeoutMilliseconds)
     {
       SetThreadCount(0);
-      return _GateNoThreads.WaitOne(TimeoutMilliseconds, false);
+      return _gateNoThreads.WaitOne(timeoutMilliseconds, false);
     }
 
     #endregion
@@ -116,8 +116,7 @@ namespace Morph.Lib
     {
       try
       {
-        if (Error != null)
-          Error(this, new ExceptionArgs(x));
+        Error?.Invoke(this, new ExceptionArgs(x));
       }
       catch
       {
@@ -129,13 +128,13 @@ namespace Morph.Lib
 
     #region Action queue
 
-    private Queue<Action> _Actions = new Queue<Action>();
+    private readonly Queue<IAction> _actions = new Queue<IAction>();
 
-    public void Push(Action Action)
+    public void Push(IAction Action)
     {
-      lock (_Actions)
-        _Actions.Enqueue(Action);
-      _GateRest.Set();
+      lock (_actions)
+        _actions.Enqueue(Action);
+      _gateRest.Set();
     }
 
     //  Used for getting a rough estimate when examining efficiency
@@ -143,8 +142,8 @@ namespace Morph.Lib
     {
       get
       {
-        lock (_Actions)
-          return _Actions.Count;
+        lock (_actions)
+          return _actions.Count;
       }
     }
 

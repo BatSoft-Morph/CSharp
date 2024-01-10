@@ -43,7 +43,7 @@ namespace Morph.Base
   {
     public LinkTypeID ID
     {
-      get { return LinkTypeID.Information; }
+      get => LinkTypeID.Information;
     }
 
     public Link ReadLink(MorphReader Reader)

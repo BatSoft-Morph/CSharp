@@ -10,12 +10,12 @@ namespace Morph.Sequencing
 {
   public class SequenceReceiver : IDisposable
   {
-    internal SequenceReceiver(int SequenceID, bool IsLossless)
+    internal SequenceReceiver(int sequenceID, bool isLossless)
     {
-      _SequenceID = SequenceID;
-      this.IsLossless = IsLossless;
-      lock (SequenceReceivers.All)
-        SequenceReceivers.All.Add(SequenceID, this);
+      _sequenceID = sequenceID;
+      IsLossless = isLossless;
+      lock (SequenceReceivers.s_all)
+        SequenceReceivers.s_all.Add(sequenceID, this);
       Start();
     }
 
@@ -23,42 +23,42 @@ namespace Morph.Sequencing
 
     public void Dispose()
     {
-      lock (SequenceReceivers.All)
-        SequenceReceivers.All.Remove(_SequenceID);
+      lock (SequenceReceivers.s_all)
+        SequenceReceivers.s_all.Remove(_sequenceID);
     }
 
     #endregion
 
-    private int _SequenceID;
+    private int _sequenceID;
     public int SequenceID
     {
-      get { return _SequenceID; }
+      get => _sequenceID;
     }
 
-    private int _SenderID = 0;
+    private int _senderID = 0;
     public int SenderID
     {
-      get { return _SenderID; }
-      set { _SenderID = value; }
+      get => _senderID;
+      set => _senderID = value;
     }
 
-    private ISequenceImplementation _Impl = null;
+    private ISequenceImplementation _sequenceImplementation = null;
     public bool IsLossless
     {
-      get { return _Impl is ImplLossless; }
+      get => _sequenceImplementation is ImplLossless;
       set
       {
-        if (_Impl != null)
+        if (_sequenceImplementation != null)
           if (IsLossless == value)
             return;
           else if (!value)
             throw new EMorphUsage("Sequence cannot change from lossless to lossy.");
-        lock (_Queue)
-          if (_CurrentIndex == 0)
+        lock (_queue)
+          if (_currentIndex == 0)
             if (value)
-              _Impl = new ImplLossless(this);
+              _sequenceImplementation = new ImplLossless(this);
             else
-              _Impl = new ImplLossy(this);
+              _sequenceImplementation = new ImplLossy(this);
           else
             throw new EMorphUsage("Sequence has already started.");
       }
@@ -67,38 +67,38 @@ namespace Morph.Sequencing
     private LinkStack _PathToProxy;
     public LinkStack PathToProxy
     {
-      get { return _PathToProxy; }
-      set { _PathToProxy = value; }
+      get => _PathToProxy;
+      set => _PathToProxy = value;
     }
 
-    private TimeSpan _Timeout = SequenceReceivers.DefaultTimeout;
+    private TimeSpan _timeout = SequenceReceivers.DefaultTimeout;
     public TimeSpan Timeout
     {
-      get { return _Timeout; }
+      get => _timeout;
       set
       {
         if (value != null)
-          _Timeout = value;
+          _timeout = value;
       }
     }
 
-    internal void Index(int Index, LinkMessage Message)
+    internal void Index(int index, LinkMessage message)
     {
-      _Impl.Add(Index, Message);
+      _sequenceImplementation.Add(index, message);
     }
 
-    internal void Stop(int Index)
+    internal void Stop(int index)
     {
       throw new System.Exception("The method or operation is not implemented.");
     }
 
-    private void SendReply(LinkSequence LinkReply)
+    private void SendReply(LinkSequence linkReply)
     {
       try
       {
-        LinkMessage Reply = new LinkMessage(_PathToProxy.Clone(), null, true);
-        Reply.PathTo.Append(LinkReply);
-        Reply.NextLinkAction();
+        LinkMessage reply = new LinkMessage(_PathToProxy.Clone(), null, true);
+        reply.PathTo.Append(linkReply);
+        reply.NextLinkAction();
       }
       catch (Exception x)
       {
@@ -108,29 +108,29 @@ namespace Morph.Sequencing
 
     #region Thread control
 
-    private bool _IsStopped = false;
-    private bool _IsStoppedForce;
-    private int _CurrentIndex = 0;
-    private AutoResetEvent _Gate = new AutoResetEvent(false);
-    private Hashtable _Queue = new Hashtable();
+    private bool _isStopped = false;
+    private bool _isStoppedForce;
+    private int _currentIndex = 0;
+    private readonly AutoResetEvent _gate = new AutoResetEvent(false);
+    private readonly Hashtable _queue = new Hashtable();
 
     private void Start()
     {
       new Thread(new ThreadStart(ExecutionMethod)).Start();
     }
 
-    public void Stop(bool Force)
+    public void Stop(bool force)
     {
-      _IsStoppedForce = Force;
-      _IsStopped = true;
-      lock (_Queue)
-        _Gate.Set();
+      _isStoppedForce = force;
+      _isStopped = true;
+      lock (_queue)
+        _gate.Set();
     }
 
     protected void ExecutionMethod()
     {
       Thread.CurrentThread.Name = "Sequence";
-      while (_Impl.ExecutionIteration()) ;
+      while (_sequenceImplementation.ExecutionIteration()) ;
       //  Send termination message
       //  SendReply(new LinkSequence(_CurrentIndex));
     }
@@ -138,39 +138,39 @@ namespace Morph.Sequencing
     private interface ISequenceImplementation
     {
       bool ExecutionIteration();
-      void Add(int NewIndex, LinkMessage Message);
+      void Add(int newIndex, LinkMessage message);
     }
 
     #region Lossy
 
     private class ImplLossy : ISequenceImplementation
     {
-      internal ImplLossy(SequenceReceiver Owner)
+      internal ImplLossy(SequenceReceiver owner)
       {
-        _Owner = Owner;
+        _Owner = owner;
       }
 
-      private SequenceReceiver _Owner;
+      private readonly SequenceReceiver _Owner;
 
       public bool ExecutionIteration()
       {
         //  Might be time to stop
-        if (_Owner._IsStopped)
-          lock (_Owner._Queue)
-            if (_Owner._IsStoppedForce || (_Owner._Queue.Count == 0))
+        if (_Owner._isStopped)
+          lock (_Owner._queue)
+            if (_Owner._isStoppedForce || (_Owner._queue.Count == 0))
               return false;
         //  Get next item
         object item = null;
-        lock (_Owner._Queue)
-          if (_Owner._Queue.Count > 0)
+        lock (_Owner._queue)
+          if (_Owner._queue.Count > 0)
           {
             while (item == null)
-              item = _Owner._Queue[++_Owner._CurrentIndex];
-            _Owner._Queue.Remove(_Owner._CurrentIndex);
+              item = _Owner._queue[++_Owner._currentIndex];
+            _Owner._queue.Remove(_Owner._currentIndex);
           }
         //  Handle empty queue
         if (item == null)
-          _Owner._Gate.WaitOne();
+          _Owner._gate.WaitOne();
         //  Handle message
         else
           try
@@ -184,14 +184,14 @@ namespace Morph.Sequencing
         return true;
       }
 
-      public void Add(int NewIndex, LinkMessage Message)
+      public void Add(int newIndex, LinkMessage message)
       {
-        lock (_Owner._Queue)
+        lock (_Owner._queue)
         {
-          if (_Owner._CurrentIndex <= NewIndex)
-            _Owner._Queue[NewIndex] = Message;
+          if (_Owner._currentIndex <= newIndex)
+            _Owner._queue[newIndex] = message;
           //  Make sure the execution thread is awake
-          _Owner._Gate.Set();
+          _Owner._gate.Set();
         }
       }
     }
@@ -202,30 +202,30 @@ namespace Morph.Sequencing
 
     private class ImplLossless : ISequenceImplementation
     {
-      internal ImplLossless(SequenceReceiver Owner)
+      internal ImplLossless(SequenceReceiver owner)
       {
-        _Owner = Owner;
+        _Owner = owner;
       }
 
-      private SequenceReceiver _Owner;
+      private readonly SequenceReceiver _Owner;
       private int _FurthestIndex = 1;
 
       public bool ExecutionIteration()
       {
         //  Might be time to stop
-        if (_Owner._IsStopped)
-          lock (_Owner._Queue)
-            if (_Owner._IsStoppedForce || (_Owner._Queue.Count == 0))
+        if (_Owner._isStopped)
+          lock (_Owner._queue)
+            if (_Owner._isStoppedForce || (_Owner._queue.Count == 0))
               return false;
         //  Get next item
         object item = null;
-        lock (_Owner._Queue)
-          if (_Owner._Queue.Count > 0)
-            item = _Owner._Queue[_Owner._CurrentIndex];
+        lock (_Owner._queue)
+          if (_Owner._queue.Count > 0)
+            item = _Owner._queue[_Owner._currentIndex];
         //  Handle empty queue
         if (item == null)
         {
-          _Owner._Gate.WaitOne();
+          _Owner._gate.WaitOne();
           return true;
         }
         //  Handle message
@@ -233,8 +233,8 @@ namespace Morph.Sequencing
         {
           try
           {
-            _Owner._Queue.Remove(_Owner._CurrentIndex);
-            _Owner._CurrentIndex++;
+            _Owner._queue.Remove(_Owner._currentIndex);
+            _Owner._currentIndex++;
             ((LinkMessage)item).NextLinkAction();
           }
           catch (Exception x)
@@ -249,67 +249,67 @@ namespace Morph.Sequencing
           //  Send Resend requests for those messages that have timed out
           List<int> Resends = new List<int>();
           DateTime EarliestDue = DateTime.MaxValue;
-          lock (_Owner._Queue)
-            for (int i = _Owner._CurrentIndex; i < _FurthestIndex; i++)
+          lock (_Owner._queue)
+            for (int i = _Owner._currentIndex; i < _FurthestIndex; i++)
             {
-              item = _Owner._Queue[i];
+              item = _Owner._queue[i];
               if (!(item is DateTime))
                 break;
-              DateTime DueAt = (DateTime)item;
+              DateTime dueAt = (DateTime)item;
               //  If it was due before now then...
-              if (DueAt.CompareTo(DateTime.Now) < 0)
+              if (dueAt.CompareTo(DateTime.Now) < 0)
               {
                 //  ...update the due time
-                DueAt = DueAt.Add(_Owner._Timeout);
-                _Owner._Queue[i] = DueAt;
+                dueAt = dueAt.Add(_Owner._timeout);
+                _Owner._queue[i] = dueAt;
                 //  ...make a note to send Resend request
                 Resends.Add(i);
               }
-              if (DueAt.CompareTo(EarliestDue) < 0)
-                EarliestDue = DueAt;
+              if (dueAt.CompareTo(EarliestDue) < 0)
+                EarliestDue = dueAt;
             }
           //  Send Resend requests (outside the lock)
           for (int i = 0; i < Resends.Count; i++)
-            _Owner.SendReply(new LinkSequenceIndexReply(_Owner._SenderID, Resends[i], true));
+            _Owner.SendReply(new LinkSequenceIndexReply(_Owner._senderID, Resends[i], true));
           //  Wait for the earliest timeout to expire
           //  Note: if EarliestDue = MaxValue, then _Gate will also be set, yielding no wait.
           int WaitTime = EarliestDue.Subtract(DateTime.Now).Milliseconds;
           if (WaitTime > 0)
-            _Owner._Gate.WaitOne(WaitTime, false);
+            _Owner._gate.WaitOne(WaitTime, false);
         }
         return true;
       }
 
-      public void Add(int NewIndex, LinkMessage Message)
+      public void Add(int newIndex, LinkMessage message)
       {
-        if (_Owner._CurrentIndex == 0)
-          _Owner._CurrentIndex = 1;
-        lock (_Owner._Queue)
+        if (_Owner._currentIndex == 0)
+          _Owner._currentIndex = 1;
+        lock (_Owner._queue)
           //  May be a resend for a message that's already been digested
-          if (_Owner._CurrentIndex <= NewIndex)
+          if (_Owner._currentIndex <= newIndex)
           {
             //  Add the message into the queue. (Replacing an existing message is fine.)
-            _Owner._Queue[NewIndex] = Message;
+            _Owner._queue[newIndex] = message;
             //  Update the furthest index
-            if (_FurthestIndex < NewIndex)
+            if (_FurthestIndex < newIndex)
             {
               _FurthestIndex++;
               //  Fill in any Lossy with "expected by" times
-              if (_FurthestIndex < NewIndex)
+              if (_FurthestIndex < newIndex)
               {
                 DateTime ExpectedBy = DateTime.Now.Add(_Owner.Timeout);
                 do
                 {
-                  _Owner._Queue[_FurthestIndex] = ExpectedBy;
+                  _Owner._queue[_FurthestIndex] = ExpectedBy;
                   _FurthestIndex++;
-                } while (_FurthestIndex < NewIndex);
+                } while (_FurthestIndex < newIndex);
               }
             }
             //  Make sure the execution thread is awake
-            _Owner._Gate.Set();
+            _Owner._gate.Set();
           }
         //  Send Ack
-        _Owner.SendReply(new LinkSequenceIndexReply(_Owner._SenderID, NewIndex, false));
+        _Owner.SendReply(new LinkSequenceIndexReply(_Owner._senderID, newIndex, false));
       }
     }
 
@@ -319,9 +319,9 @@ namespace Morph.Sequencing
 
     public Link StartLink()
     {
-      lock (_Queue)
-        if (_CurrentIndex == 0)
-          return new LinkSequenceStartReply(_SequenceID, _SenderID, IsLossless);
+      lock (_queue)
+        if (_currentIndex == 0)
+          return new LinkSequenceStartReply(_sequenceID, _senderID, IsLossless);
         else
           return null;
     }
@@ -329,25 +329,25 @@ namespace Morph.Sequencing
 
   public static class SequenceReceivers
   {
-    static internal Hashtable All = new Hashtable();
-    static private IDSeed _SequenceIDSeed = new IDSeed();
+    static internal Hashtable s_all = new Hashtable();
+    private static readonly IDSeed _SequenceIDSeed = new IDSeed();
 
-    static internal SequenceReceiver Find(int SequenceID)
+    static internal SequenceReceiver Find(int sequenceID)
     {
-      lock (All)
-        return (SequenceReceiver)All[SequenceID];
+      lock (s_all)
+        return (SequenceReceiver)s_all[sequenceID];
     }
 
-    static public SequenceReceiver New(bool IsLossless)
+    static public SequenceReceiver New(bool isLossless)
     {
-      lock (All)
+      lock (s_all)
       {
-        int SequenceID;
+        int sequenceID;
         do
         {
-          SequenceID = _SequenceIDSeed.Generate();
-        } while (All.Contains(SequenceID));
-        return new SequenceReceiver(SequenceID, IsLossless);
+          sequenceID = _SequenceIDSeed.Generate();
+        } while (s_all.Contains(sequenceID));
+        return new SequenceReceiver(sequenceID, isLossless);
       }
     }
 

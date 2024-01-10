@@ -18,76 +18,76 @@ namespace Morph.Endpoint
       get;
     }
 
-    private LinkStack DevicePathOf(LinkStack Path)
+    private LinkStack DevicePathOf(LinkStack path)
     {
-      if (Path == null)
+      if (path == null)
         return null;
-      List<Link> Links = Path.ToLinks();
-      for (int i = Links.Count - 1; i >= 0; i--)
+      List<Link> links = path.ToLinks();
+      for (int i = links.Count - 1; i >= 0; i--)
       {
-        Link Link = Links[i];
-        if ((Link is LinkApartment) ||
-            (Link is LinkApartmentProxy) ||
-            (Link is LinkService) ||
-            (Link is LinkServlet) ||
-            (Link is LinkMember) ||
-            (Link is LinkData))
-          Links.RemoveAt(i);
+        Link link = links[i];
+        if ((link is LinkApartment) ||
+            (link is LinkApartmentProxy) ||
+            (link is LinkService) ||
+            (link is LinkServlet) ||
+            (link is LinkMember) ||
+            (link is LinkData))
+          links.RemoveAt(i);
       }
-      return new LinkStack(Links);
+      return new LinkStack(links);
     }
 
-    private LinkStack EndpointPathOf(LinkStack Path)
+    private LinkStack EndpointPathOf(LinkStack path)
     {
-      if (Path == null)
+      if (path == null)
         return null;
-      List<Link> Links = Path.ToLinks();
-      for (int i = Links.Count - 1; i >= 0; i--)
+      List<Link> links = path.ToLinks();
+      for (int i = links.Count - 1; i >= 0; i--)
       {
-        Link Link = Links[i];
-        if ((Link is LinkServlet) ||
-            (Link is LinkMember) ||
-            (Link is LinkData))
-          Links.RemoveAt(i);
+        Link link = links[i];
+        if ((link is LinkServlet) ||
+            (link is LinkMember) ||
+            (link is LinkData))
+          links.RemoveAt(i);
       }
-      return new LinkStack(Links);
+      return new LinkStack(links);
     }
 
-    protected internal Servlet _Servlet;
+    protected internal Servlet _servlet;
 
-    protected internal abstract LinkData Invoke(LinkMessage Message, LinkStack SenderDevicePath, LinkData DataIn);
+    protected internal abstract LinkData Invoke(LinkMessage message, LinkStack senderDevicePath, LinkData dataIn);
 
     #region IActionLinkData
 
-    public void ActionLinkData(LinkMessage Message, LinkData DataIn)
+    public void ActionLinkData(LinkMessage message, LinkData dataIn)
     {
       //  Obtain apartment
-      MorphApartment Apartment = _Servlet.Apartment;
+      MorphApartment apartment = _servlet.Apartment;
       try
       {
         //  Get a device path
-        LinkStack PathToSender = null;
-        if (Apartment is MorphApartmentSession)
-          PathToSender = ((MorphApartmentSession)Apartment).Path;
-        else if (Message.HasPathFrom)
-          PathToSender = Message.PathFrom;
+        LinkStack pathToSender = null;
+        if (apartment is MorphApartmentSession)
+          pathToSender = ((MorphApartmentSession)apartment).Path;
+        else if (message.HasPathFrom)
+          pathToSender = message.PathFrom;
         //  Invoke the method
-        LinkData DataOut = Invoke(Message, DevicePathOf(PathToSender), DataIn);
+        LinkData dataOut = Invoke(message, DevicePathOf(pathToSender), dataIn);
         //  Send a reply
-        SendReply(Message, Apartment, DataOut, null);
+        SendReply(message, apartment, dataOut, null);
       }
       catch (EMorph x)
       {
-        SendReply(Message, Apartment, null, x);
+        SendReply(message, apartment, null, x);
       }
       catch (TargetInvocationException x)
       {
         Exception y = x.InnerException;
-        SendReply(Message, Apartment, new LinkData(y), y);
+        SendReply(message, apartment, new LinkData(y), y);
       }
       catch (Exception x)
       {
-        SendReply(Message, Apartment, new LinkData(x), x);
+        SendReply(message, apartment, new LinkData(x), x);
       }
     }
 
@@ -95,42 +95,42 @@ namespace Morph.Endpoint
 
     #region IActionLast
 
-    public void ActionLast(LinkMessage Message)
+    public void ActionLast(LinkMessage message)
     {
-      ActionLinkData(Message, null);
+      ActionLinkData(message, null);
     }
 
     #endregion
 
-    private void SendReply(LinkMessage Message, MorphApartment Apartment, Link Payload, Exception Error)
+    private void SendReply(LinkMessage message, MorphApartment apartment, Link payload, Exception error)
     {
       //  Identify cases when we don't reply
-      if (!Message.HasCallNumber)
+      if (!message.HasCallNumber)
         return; //  CallNumber is required on the calling end to match call and reply
-      if (!Message.HasPathFrom && !(Apartment is MorphApartmentSession))
+      if (!message.HasPathFrom && !(apartment is MorphApartmentSession))
         return; //  Wouldn't know where to reply to        
       //  In this implementation, we only bother replying with a from path if the call had a from path.
-      LinkStack PathFrom = null;
-      if (Message.HasPathFrom)
-        PathFrom = new LinkStack();
+      LinkStack pathFrom = null;
+      if (message.HasPathFrom)
+        pathFrom = new LinkStack();
       //  Build a destination (return) path
-      LinkStack PathTo = null;
-      if (Apartment is MorphApartmentSession)
-        PathTo = ((MorphApartmentSession)Apartment).GenerateReturnPath();
-      else if (Message.HasPathFrom)
-        PathTo = EndpointPathOf(Message.PathFrom);
-      PathTo.Append(Payload);
+      LinkStack pathTo = null;
+      if (apartment is MorphApartmentSession)
+        pathTo = ((MorphApartmentSession)apartment).GenerateReturnPath();
+      else if (message.HasPathFrom)
+        pathTo = EndpointPathOf(message.PathFrom);
+      pathTo.Append(payload);
       //  Build reply message
-      LinkMessage ReplyMessage = new LinkMessage(PathTo, PathFrom, Message.IsForceful);
-      if (Message.HasCallNumber)
-        ReplyMessage.CallNumber = Message.CallNumber;
+      LinkMessage replyMessage = new LinkMessage(pathTo, pathFrom, message.IsForceful);
+      if (message.HasCallNumber)
+        replyMessage.CallNumber = message.CallNumber;
       //  Send the reply
-      ReplyMessage.NextLinkAction();
+      replyMessage.NextLinkAction();
     }
 
     public override bool Equals(object obj)
     {
-      return (obj is LinkMember) && (((LinkMember)obj).Name.ToLower().Equals(Name.ToLower()));
+      return (obj is LinkMember linkMember) && (linkMember.Name.ToLower().Equals(Name.ToLower()));
     }
 
     public override int GetHashCode()
@@ -143,35 +143,35 @@ namespace Morph.Endpoint
   {
     public LinkTypeID ID
     {
-      get { return LinkTypeID.Member; }
+      get => LinkTypeID.Member;
     }
 
-    public Link ReadLink(MorphReader Reader)
+    public Link ReadLink(MorphReader reader)
     {
-      bool IsProperty, IsSet, HasIndex;
-      Reader.ReadLinkByte(out IsProperty, out IsSet, out HasIndex);
-      string Name = Reader.ReadString();
-      if (IsProperty)
-        return new LinkProperty(Name, IsSet, HasIndex);
+      bool isProperty, isSet, hasIndex;
+      reader.ReadLinkByte(out isProperty, out isSet, out hasIndex);
+      string name = reader.ReadString();
+      if (isProperty)
+        return new LinkProperty(name, isSet, hasIndex);
       else
-        return new LinkMethod(Name);
+        return new LinkMethod(name);
     }
 
-    public void ActionLink(LinkMessage Message, Link CurrentLink)
+    public void ActionLink(LinkMessage message, Link currentLink)
     {
       //  Obtain servlet
-      Servlet Servlet;
-      if (Message.ContextIs(typeof(Servlet)))
-        Servlet = (Servlet)Message.Context;
-      else if (Message.ContextIs(typeof(MorphApartment)))
-        Servlet = ((MorphApartment)Message.Context).DefaultServlet;
+      Servlet servlet;
+      if (message.ContextIs(typeof(Servlet)))
+        servlet = (Servlet)message.Context;
+      else if (message.ContextIs(typeof(MorphApartment)))
+        servlet = ((MorphApartment)message.Context).DefaultServlet;
       else
         throw new EMorph("Link type not supported by context");
       //  Hold on to the servlet
-      ((LinkMember)CurrentLink)._Servlet = Servlet;
+      ((LinkMember)currentLink)._servlet = servlet;
       //  Move along
-      Message.Context = CurrentLink;
-      Message.NextLinkAction();
+      message.Context = currentLink;
+      message.NextLinkAction();
     }
   }
 }

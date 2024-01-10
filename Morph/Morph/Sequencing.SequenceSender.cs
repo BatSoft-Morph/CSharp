@@ -8,48 +8,39 @@ namespace Morph.Sequencing
 {
   public class SequenceSender : IDisposable
   {
-    internal SequenceSender(int SenderID, bool IsLossless)
+    internal SequenceSender(int senderID, bool isLossless)
     {
-      _SenderID = SenderID;
-      this.IsLossless = IsLossless;
-      lock (SequenceSenders.All)
-        SequenceSenders.All.Add(SenderID, this);
+      this.SenderID = senderID;
+      this.IsLossless = isLossless;
+      lock (SequenceSenders.s_all)
+        SequenceSenders.s_all.Add(senderID, this);
     }
 
     #region IDisposable Members
 
     public void Dispose()
     {
-      lock (SequenceSenders.All)
-        SequenceSenders.All.Remove(_SenderID);
+      lock (SequenceSenders.s_all)
+        SequenceSenders.s_all.Remove(SenderID);
     }
 
     #endregion
 
-    private int _SequenceID = 0;
-    public int SequenceID
-    {
-      get { return _SequenceID; }
-      set { _SequenceID = value; }
-    }
+    public int SequenceID { get; set; } = 0;
 
-    private int _SenderID;
-    public int SenderID
-    {
-      get { return _SenderID; }
-    }
+    public int SenderID { get; private set; }
 
-    private int _Index = 0;
-    private Hashtable _NotAcked = null;
+    private int _index = 0;
+    private Hashtable _notAcked = null;
 
     public bool IsLossless
     {
-      get { return _NotAcked != null; }
+      get => _notAcked != null;
       set
       {
         if (IsLossless != value)
           if (value)
-            _NotAcked = new Hashtable();
+            _notAcked = new Hashtable();
           else
             throw new EMorphUsage("Losslessness cannot be turned off.  Instead, replace current sequence with a lossy sequence.");
       }
@@ -57,34 +48,34 @@ namespace Morph.Sequencing
 
     public bool IsStopped
     {
-      get { return _SenderID == 0; }
+      get => SenderID == 0;
     }
 
-    public void AddNextLink(bool IsLast, LinkMessage Message)
+    public void AddNextLink(bool isLast, LinkMessage message)
     {
       lock (this)
       {
         //  Already stopped
-        if (_SenderID == 0)
+        if (SenderID == 0)
           throw new EMorphUsage("Cannot use a sequence that has been stopped.");
         //  Next
-        if (_SequenceID != 0)
+        if (SequenceID != 0)
         {
-          ++_Index;
-          if (_NotAcked != null)
-            lock (_NotAcked)
-              _NotAcked[_Index] = Message;
-          Message.PathTo.Push(new LinkSequenceIndexSend(_SequenceID, _Index, IsLast));
+          ++_index;
+          if (_notAcked != null)
+            lock (_notAcked)
+              _notAcked[_index] = message;
+          message.PathTo.Push(new LinkSequenceIndexSend(SequenceID, _index, isLast));
         }
         //  Last, but never even started
-        else if (IsLast)
+        else if (isLast)
         {
           Expire();
           return;
         }
         //  Start
-        if ((_SequenceID == 0) || (_Index == 1))
-          Message.PathTo.Push(new LinkSequenceStartSend(_SequenceID, _SenderID, IsLossless));
+        if ((SequenceID == 0) || (_index == 1))
+          message.PathTo.Push(new LinkSequenceStartSend(SequenceID, SenderID, IsLossless));
       }
     }
 
@@ -92,8 +83,8 @@ namespace Morph.Sequencing
     {
       lock (this)
       {
-        _SenderID = 0;
-        if ((_NotAcked == null) || (_NotAcked.Count == 0))
+        SenderID = 0;
+        if ((_notAcked == null) || (_notAcked.Count == 0))
           Dispose();
       }
     }
@@ -102,7 +93,7 @@ namespace Morph.Sequencing
     {
       lock (this)
       {
-        _SenderID = 0;
+        SenderID = 0;
         Dispose();
       }
     }
@@ -111,25 +102,25 @@ namespace Morph.Sequencing
     {
       lock (this)
       {
-        if ((_NotAcked != null) && (_NotAcked.Count == 0))
+        if ((_notAcked != null) && (_notAcked.Count == 0))
           Dispose();
       }
     }
 
-    internal void Ack(int Index)
+    internal void Ack(int index)
     {
-      if (_NotAcked != null)
-        lock (_NotAcked)
-          _NotAcked.Remove(Index);
+      if (_notAcked != null)
+        lock (_notAcked)
+          _notAcked.Remove(index);
     }
 
-    internal void Resend(int Index)
+    internal void Resend(int index)
     {
-      if (_NotAcked != null)
+      if (_notAcked != null)
       {
         LinkMessage Message;
-        lock (_NotAcked)
-          Message = (LinkMessage)_NotAcked[Index];
+        lock (_notAcked)
+          Message = (LinkMessage)_notAcked[index];
         Message.NextLinkAction();
       }
     }
@@ -137,25 +128,25 @@ namespace Morph.Sequencing
 
   public static class SequenceSenders
   {
-    static internal Hashtable All = new Hashtable();
-    static private IDSeed _SenderIDSeed = new IDSeed();
+    static internal Hashtable s_all = new Hashtable();
+    private static readonly IDSeed s_senderIDSeed = new IDSeed();
 
-    static internal SequenceSender Find(int SenderID)
+    static internal SequenceSender Find(int senderID)
     {
-      lock (All)
-        return (SequenceSender)All[SenderID];
+      lock (s_all)
+        return (SequenceSender)s_all[senderID];
     }
 
-    static internal SequenceSender New(LinkStack Path, bool IsLossless)
+    static internal SequenceSender New(LinkStack path, bool isLossless)
     {
-      lock (All)
+      lock (s_all)
       {
         int SenderID;
         do
         {
-          SenderID = _SenderIDSeed.Generate();
-        } while (All.Contains(SenderID));
-        return new SequenceSender(SenderID, IsLossless);
+          SenderID = s_senderIDSeed.Generate();
+        } while (s_all.Contains(SenderID));
+        return new SequenceSender(SenderID, isLossless);
       }
     }
   }

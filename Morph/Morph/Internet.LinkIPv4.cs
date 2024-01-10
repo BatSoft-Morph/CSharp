@@ -5,19 +5,19 @@ namespace Morph.Internet
 {
   public class LinkInternetIPv4 : LinkInternet
   {
-    public LinkInternetIPv4(IPEndPoint EndPoint)
-      : base(EndPoint)
+    public LinkInternetIPv4(IPEndPoint endPoint)
+      : base(endPoint)
     {
     }
 
-    static public LinkInternetIPv4 ReadNew(MorphReader Reader, bool HasURI, bool HasPort)
+    static public LinkInternetIPv4 ReadNew(MorphReader reader, bool hasURI, bool hasPort)
     {
       //  Read host
       IPAddress address;
-      if (HasURI)
+      if (hasURI)
         try
         { //  String
-          address = IPAddress.Parse(Reader.ReadString());
+          address = IPAddress.Parse(reader.ReadString());
         }
         catch
         {
@@ -26,16 +26,16 @@ namespace Morph.Internet
       else
       { //  Binary
         byte[] host = new byte[4];
-        host[0] = (byte)Reader.ReadInt8();
-        host[1] = (byte)Reader.ReadInt8();
-        host[2] = (byte)Reader.ReadInt8();
-        host[3] = (byte)Reader.ReadInt8();
+        host[0] = (byte)reader.ReadInt8();
+        host[1] = (byte)reader.ReadInt8();
+        host[2] = (byte)reader.ReadInt8();
+        host[3] = (byte)reader.ReadInt8();
         address = new IPAddress(host);
       }
       //  Read port
       int port = LinkInternet.MorphPort;
-      if (HasPort)
-        port = Reader.ReadInt16()&0x0000FFFF;
+      if (hasPort)
+        port = reader.ReadInt16()&0x0000FFFF;
       //  Done
       return new LinkInternetIPv4(new IPEndPoint(address, port));
     }
@@ -44,39 +44,39 @@ namespace Morph.Internet
 
     public override int Size()
     {
-      bool HasURI = false;// Host == null;  //  Is there ever a need for more than byte[4]?
-      bool HasPort = EndPoint.Port != LinkInternet.MorphPort;
+      bool hasURI = false;// Host == null;  //  Is there ever a need for more than byte[4]?
+      bool hasPort = EndPoint.Port != LinkInternet.MorphPort;
       int size = 1;
-      if (HasURI)
+      if (hasURI)
         size += 4 + (EndPoint.Address.ToString().Length * 2);
       else
         size += 4;
-      if (HasPort)
+      if (hasPort)
         size += 2;
       return size;
     }
 
-    public override void Write(MorphWriter Writer)
+    public override void Write(MorphWriter writer)
     {
-      bool IsIPv6 = false;
-      bool IsString = false;// Host == null;  //  Is there ever a need for more than byte[4]?
-      bool HasPort = EndPoint.Port != LinkInternet.MorphPort;
+      bool isIPv6 = false;
+      bool isString = false;// Host == null;  //  Is there ever a need for more than byte[4]?
+      bool hasPort = EndPoint.Port != LinkInternet.MorphPort;
       //  Link byte
-      Writer.WriteLinkByte(LinkTypeID, IsIPv6, IsString, HasPort);
+      writer.WriteLinkByte(LinkTypeID, isIPv6, isString, hasPort);
       //  Host
-      if (IsString)
-        Writer.WriteString(EndPoint.Address.ToString());
+      if (isString)
+        writer.WriteString(EndPoint.Address.ToString());
       else
       {
         byte[] host = EndPoint.Address.GetAddressBytes();
-        Writer.WriteInt8(host[0]);
-        Writer.WriteInt8(host[1]);
-        Writer.WriteInt8(host[2]);
-        Writer.WriteInt8(host[3]);
+        writer.WriteInt8(host[0]);
+        writer.WriteInt8(host[1]);
+        writer.WriteInt8(host[2]);
+        writer.WriteInt8(host[3]);
       }
       // Port
-      if (HasPort)
-        Writer.WriteInt16(EndPoint.Port);
+      if (hasPort)
+        writer.WriteInt16(EndPoint.Port);
     }
 
     #endregion

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Morph.Lib
 {
-  public interface RegisterItemID
+  public interface IRegisterItemID
   {
     int ID
     {
@@ -11,7 +11,7 @@ namespace Morph.Lib
     }
   }
 
-  public interface RegisterItemName
+  public interface IRegisterItemName
   {
     string Name
     {
@@ -23,13 +23,13 @@ namespace Morph.Lib
   {
     #region Private
 
-    private Hashtable _Items = new Hashtable();
+    private readonly Hashtable _items = new Hashtable();
 
     private void Add(object key, T item)
     {
-      lock (_Items)
-        if (!_Items.Contains(key))
-          _Items.Add(key, item);
+      lock (_items)
+        if (!_items.Contains(key))
+          _items.Add(key, item);
     }
 
     #endregion
@@ -37,24 +37,24 @@ namespace Morph.Lib
     #region Public
 
     public int Count
-    { get { return _Items.Count; } }
+    { get => _items.Count; }
 
     public void Add(T item)
     {
-      if (item is RegisterItemID)
-        Add(((RegisterItemID)item).ID, item);
-      if (item is RegisterItemName)
-        Add(((RegisterItemName)item).Name, item);
+      if (item is IRegisterItemID itemID)
+        Add(itemID.ID, item);
+      if (item is IRegisterItemName itemName)
+        Add(itemName.Name, item);
     }
 
     public void Remove(T item)
     {
-      lock (_Items)
+      lock (_items)
       {
-        if (item is RegisterItemID)
-          _Items.Remove(((RegisterItemID)item).ID);
-        if (item is RegisterItemName)
-          _Items.Remove(((RegisterItemName)item).Name);
+        if (item is IRegisterItemID itemID)
+          _items.Remove(itemID.ID);
+        if (item is IRegisterItemName itemName)
+          _items.Remove(itemName.Name);
       }
     }
 
@@ -67,14 +67,14 @@ namespace Morph.Lib
 
     public virtual T Find(object key)
     {
-      lock (_Items)
-        return (T)_Items[key];
+      lock (_items)
+        return (T)_items[key];
     }
 
     public List<T> List()
     {
       List<T> Result = new List<T>();
-      IEnumerator enums = _Items.GetEnumerator();
+      IEnumerator enums = _items.GetEnumerator();
       while (enums.MoveNext())
         Result.Add((T)((DictionaryEntry)enums.Current).Value);
       return Result;
@@ -86,7 +86,7 @@ namespace Morph.Lib
 
     public IEnumerator GetEnumerator()
     {
-      return _Items.GetEnumerator();
+      return _items.GetEnumerator();
     }
 
     #endregion

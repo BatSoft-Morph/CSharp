@@ -7,35 +7,35 @@ namespace Morph.Daemon
 {
   public class ApartmentObjects : MorphReference, IMorphParameters
   {
-    internal ApartmentObjects(string TypeName, IIDFactory IDFactory, RegisteredApartments Registered)
-      : base(TypeName)
+    internal ApartmentObjects(string typeName, IIDFactory idFactory, RegisteredApartments registered)
+      : base(typeName)
     {
-      _IDFactory = IDFactory;
-      _Registered = Registered;
+      _idFactory = idFactory;
+      _registered = registered;
     }
 
-    private IIDFactory _IDFactory;
-    private RegisteredApartments _Registered;
+    private readonly IIDFactory _idFactory;
+    private readonly RegisteredApartments _registered;
 
-    public int obtain(LinkMessage Message)
+    public int Obtain(LinkMessage message)
     {
-      int ID = _IDFactory.Generate();
-      if (Message is LinkMessageFromIP)
-        new RegisteredApartmentInternet(_Registered, ID, ((LinkMessageFromIP)Message).Connection);
+      int ID = _idFactory.Generate();
+      if (message is LinkMessageFromIP)
+        new RegisteredApartmentInternet(_registered, ID, ((LinkMessageFromIP)message).Connection);
       else
-        throw new EMorphDaemon(GetType().Name + ".obtain(): Unhandled message type \"" + Message.GetType().Name + "\".");
+        throw new EMorphDaemon(GetType().Name + ".obtain(): Unhandled message type \"" + message.GetType().Name + "\".");
       return ID;
     }
 
-    public void release(LinkMessage Message, int id)
+    public void Release(LinkMessage message, int id)
     {
-      if (Message is LinkMessageFromIP)
+      if (message is LinkMessageFromIP)
       {
-        Connection connection = ((LinkMessageFromIP)Message).Connection;
-        _Registered.Unregister(id);
+        Connection connection = ((LinkMessageFromIP)message).Connection;
+        _registered.Unregister(id);
       }
       else
-        throw new EMorphDaemon(GetType().Name + ".release(): Unhandled message type \"" + Message.GetType().Name + "\".");
+        throw new EMorphDaemon(GetType().Name + ".Release(): Unhandled message type \"" + message.GetType().Name + "\".");
     }
   }
 }

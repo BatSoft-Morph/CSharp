@@ -21,44 +21,44 @@ namespace Morph.Sequencing
 
     #endregion
 
-    public abstract void Action(LinkMessage Message);
+    public abstract void Action(LinkMessage message);
   }
 
   public interface IActionLinkSequence
   {
-    void ActionLinkSequence(LinkMessage Message, LinkSequence LinkSequence);
+    void ActionLinkSequence(LinkMessage message, LinkSequence linkSequence);
   }
 
   public class LinkTypeSequence : ILinkTypeReader, ILinkTypeAction
   {
     public LinkTypeID ID
     {
-      get { return LinkTypeID.Sequence; }
+      get => LinkTypeID.Sequence;
     }
 
-    public Link ReadLink(MorphReader Reader)
+    public Link ReadLink(MorphReader reader)
     {
-      bool IsStart, ToSender, z;
-      Reader.ReadLinkByte(out IsStart, out ToSender, out z);
-      int Value1 = Reader.ReadInt32();
-      int Value2 = Reader.ReadInt32();
-      if (IsStart)
-        if (ToSender)
-          return new LinkSequenceStartReply(Value1, Value2, z);
+      bool isStart, toSender, z;
+      reader.ReadLinkByte(out isStart, out toSender, out z);
+      int value1 = reader.ReadInt32();
+      int value2 = reader.ReadInt32();
+      if (isStart)
+        if (toSender)
+          return new LinkSequenceStartReply(value1, value2, z);
         else
-          return new LinkSequenceStartSend(Value1, Value2, z);
+          return new LinkSequenceStartSend(value1, value2, z);
       else  //  IsIndex
-        if (ToSender)
-          return new LinkSequenceIndexReply(Value1, Value2, z);
+        if (toSender)
+          return new LinkSequenceIndexReply(value1, value2, z);
         else
-          return new LinkSequenceIndexSend(Value1, Value2, z);
+          return new LinkSequenceIndexSend(value1, value2, z);
     }
 
-    public void ActionLink(LinkMessage Message, Link CurrentLink)
+    public void ActionLink(LinkMessage message, Link currentLink)
     {
-      if (!Message.ContextIs(typeof(IActionLinkSequence)))
+      if (!message.ContextIs(typeof(IActionLinkSequence)))
         throw new EMorph("Unexpected link type");
-      ((IActionLinkSequence)Message.Context).ActionLinkSequence(Message, (LinkSequence)CurrentLink);
+      ((IActionLinkSequence)message.Context).ActionLinkSequence(message, (LinkSequence)currentLink);
     }
   }
 }

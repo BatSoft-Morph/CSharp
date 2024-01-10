@@ -10,31 +10,31 @@ namespace Morph.Endpoint
   {
     #region Internal
 
-    private RegisterItems<ReplyParams> _Replies = new RegisterItems<ReplyParams>();
+    private readonly RegisterItems<ReplyParams> _replies = new RegisterItems<ReplyParams>();
 
     private void AddReply(ReplyParams Reply)
     {
-      lock (_Replies)
-        _Replies.Add(Reply);
+      lock (_replies)
+        _replies.Add(Reply);
     }
 
-    private class ReplyParams : RegisterItemID
+    private class ReplyParams : IRegisterItemID
     {
-      public ReplyParams(int ID, InstanceFactories InstanceFactories, Device Device, LinkStack FromPath, LinkData LinkData)
+      public ReplyParams(int id, InstanceFactories instanceFactories, Device device, LinkStack fromPath, LinkData linkData)
         : base()
       {
-        _ID = ID;
-        this.InstanceFactories = InstanceFactories;
-        this.Device = Device;
-        if (FromPath != null)
-          this.ReverseFromPath = FromPath.Reverse();
-        this.LinkData = LinkData;
+        _id = id;
+        InstanceFactories = instanceFactories;
+        Device = device;
+        if (fromPath != null)
+          ReverseFromPath = fromPath.Reverse();
+        LinkData = linkData;
       }
 
-      private int _ID;
+      private readonly int _id;
       public int ID
       {
-        get { return _ID; }
+        get => _id;
       }
 
       public InstanceFactories InstanceFactories;
@@ -48,19 +48,19 @@ namespace Morph.Endpoint
 
     #endregion
 
-    public void AssignReply(int ID, InstanceFactories InstanceFactories, Device Device, LinkStack FromPath, LinkData LinkData)
+    public void AssignReply(int id, InstanceFactories instanceFactories, Device device, LinkStack fromPath, LinkData linkData)
     {
-      AddReply(new ReplyParams(ID, InstanceFactories, Device, FromPath, LinkData));
+      AddReply(new ReplyParams(id, instanceFactories, device, fromPath, linkData));
     }
 
-    public object GetReply(int ID, out object[] Params)
+    public object GetReply(int id, out object[] Params)
     {
       //  Extract the Reply
       ReplyParams reply;
-      lock (_Replies)
+      lock (_replies)
       {
-        reply = _Replies.Find(ID);
-        _Replies.Remove(ID);
+        reply = _replies.Find(id);
+        _replies.Remove(id);
       }
       //  Examine the reply
       if (reply == null)
@@ -71,34 +71,35 @@ namespace Morph.Endpoint
         return null;
       }
       //  Decode reply
-      object Special;
-      Parameters.Decode(reply.InstanceFactories, reply.Device.Path, reply.LinkData.Reader, out Params, out Special);
+      object special;
+      Parameters.Decode(reply.InstanceFactories, reply.Device.Path, reply.LinkData.Reader, out Params, out special);
       //  Reply might be an exception
       if (reply.LinkData.IsException)
       {
         //  Collect information about the exception
-        int ErrorCode = reply.LinkData.ErrorCode;
-        string Message = null;
-        string Trace = reply.ReverseFromPath.ToString();
-        if (Special != null)
-          if (Special is ValueInstance)
+        int errorCode = reply.LinkData.ErrorCode;
+        string message = null;
+        string trace = reply.ReverseFromPath.ToString();
+        if (special != null)
+          if (special is ValueInstance error)
           {
-            ValueInstance Error = (ValueInstance)Special;
-            Message = (string)Error.Struct.ByNameOrNull("message");
-            Trace = Error.Struct.ByNameOrNull("trace") + Trace;
+            message = (string)error.Struct.ByNameOrNull("message");
+            trace = error.Struct.ByNameOrNull("trace") + trace;
           }
           else
-            ; //  In this implementation we won't worry about if the return type is wrong.
-        EMorph.Throw(ErrorCode, Message, Trace);
+          {
+            //  In this implementation we won't worry about if the return type is wrong.
+          }
+        EMorph.Throw(errorCode, message, trace);
       }
       //  Return normally
-      return Special;
+      return special;
     }
 
-    public void Remove(int ID)
+    public void Remove(int id)
     {
-      lock (_Replies)
-        _Replies.Remove(ID);
+      lock (_replies)
+        _replies.Remove(id);
     }
   }
 }

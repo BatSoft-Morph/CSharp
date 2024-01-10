@@ -9,73 +9,73 @@ namespace Morph.Lib
 
     //  DateTime encoded according to http://www.w3.org/TR/xmlschema-2/#dateTime
 
-    static private void AppendFullNumber(StringBuilder Builder, int Number, int Length)
+    static private void AppendFullNumber(StringBuilder builder, int number, int length)
     {
-      string Str = Number.ToString();
-      for (int i = Length - Str.Length; i > 0; i--)
-        Builder.Append('0');
-      Builder.Append(Number);
+      string str = number.ToString();
+      for (int i = length - str.Length; i > 0; i--)
+        builder.Append('0');
+      builder.Append(number);
     }
 
-    static public string DateTimeToStr(DateTime When)
+    static public string DateTimeToStr(DateTime when)
     {
       StringBuilder builder = new StringBuilder(21);
-      builder.Append(When.Year);
+      builder.Append(when.Year);
       builder.Append('-');      
-      AppendFullNumber(builder, When.Month, 2);
+      AppendFullNumber(builder, when.Month, 2);
       builder.Append('-');
-      AppendFullNumber(builder, When.Day, 2);
+      AppendFullNumber(builder, when.Day, 2);
       builder.Append('T');
-      AppendFullNumber(builder, When.Hour, 2);
+      AppendFullNumber(builder, when.Hour, 2);
       builder.Append(':');
-      AppendFullNumber(builder, When.Minute, 2);
+      AppendFullNumber(builder, when.Minute, 2);
       builder.Append(':');
-      AppendFullNumber(builder, When.Second, 2);
-      if (When.Kind == DateTimeKind.Local)
+      AppendFullNumber(builder, when.Second, 2);
+      if (when.Kind == DateTimeKind.Local)
         builder.Append('Z');
       return builder.ToString();
     }
 
-    static public DateTime StrToDateTime(string When)
+    static public DateTime StrToDateTime(string when)
     {
-      StringParser Parser = new StringParser(When);
+      StringParser parser = new StringParser(when);
       //  Year (could be negative)
-      int Year;
-      string YearStr = Parser.ReadTo("-", true);
-      if (YearStr == null)
-        Year = -Int32.Parse(Parser.ReadTo("-", true));
+      int year;
+      string yearStr = parser.ReadTo("-", true);
+      if (yearStr == null)
+        year = -Int32.Parse(parser.ReadTo("-", true));
       else
-        Year = Int32.Parse(YearStr);
+        year = Int32.Parse(yearStr);
       //  Read the rest of the date/time
-      int Month = Int32.Parse(Parser.ReadTo("-", true));
-      int Day = Int32.Parse(Parser.ReadTo("T", true));
-      int Hour = Int32.Parse(Parser.ReadTo(":", true));
-      int Minute = Int32.Parse(Parser.ReadTo(":", true));
-      int Second = Int32.Parse(Parser.ReadDigits());
+      int month = Int32.Parse(parser.ReadTo("-", true));
+      int day = Int32.Parse(parser.ReadTo("T", true));
+      int hour = Int32.Parse(parser.ReadTo(":", true));
+      int minute = Int32.Parse(parser.ReadTo(":", true));
+      int second = Int32.Parse(parser.ReadDigits());
       //  Milliseconds
-      int MS = 0;
-      if (!Parser.IsEnded())
-        if (Parser.Current() == '.')
+      int ms = 0;
+      if (!parser.IsEnded())
+        if (parser.Current() == '.')
         {
-          Parser.Move(1);
-          MS = Int32.Parse(Parser.ReadDigits());
+          parser.Move(1);
+          ms = Int32.Parse(parser.ReadDigits());
         }
       //  Time zone
-      DateTimeKind Kind;
-      if (Parser.IsEnded())
-        Kind = DateTimeKind.Utc;
-      else if (Parser.Current() == 'Z')
-        Kind = DateTimeKind.Local;
+      DateTimeKind kind;
+      if (parser.IsEnded())
+        kind = DateTimeKind.Utc;
+      else if (parser.Current() == 'Z')
+        kind = DateTimeKind.Local;
       else
       {
-        DateTime Result = new DateTime(Year, Month, Day, Hour, Minute, Second, MS, new System.Globalization.GregorianCalendar(), DateTimeKind.Utc);
-        int TZHour = Int32.Parse(Parser.ReadTo(":", true));
-        int TZMinute = Int32.Parse(Parser.ReadToEnd());
-        Result.AddHours(-TZHour);
-        Result.AddMinutes(-TZMinute);
-        return Result;
+        DateTime result = new DateTime(year, month, day, hour, minute, second, ms, new System.Globalization.GregorianCalendar(), DateTimeKind.Utc);
+        int tzHour = Int32.Parse(parser.ReadTo(":", true));
+        int tzMinute = Int32.Parse(parser.ReadToEnd());
+        result.AddHours(-tzHour);
+        result.AddMinutes(-tzMinute);
+        return result;
       }
-      return new DateTime(Year, Month, Day, Hour, Minute, Second, MS, new System.Globalization.GregorianCalendar(), Kind);
+      return new DateTime(year, month, day, hour, minute, second, ms, new System.Globalization.GregorianCalendar(), kind);
     }
 
     #endregion

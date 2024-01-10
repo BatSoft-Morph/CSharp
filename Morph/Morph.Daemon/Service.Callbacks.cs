@@ -5,66 +5,66 @@ namespace Morph.Daemon
 {
   public class ServiceCallback
   {
-    internal ServiceCallback(ServletProxy ServletProxy)
+    internal ServiceCallback(ServletProxy servletProxy)
     {
-      _ServletProxy = ServletProxy;
+      _servletProxy = servletProxy;
     }
 
-    private ServletProxy _ServletProxy;
+    private readonly ServletProxy _servletProxy;
 
-    public void added(string serviceName)
+    public void Added(string serviceName)
     {
-      _ServletProxy.SendMethod("added", new object[] { serviceName });
+      _servletProxy.SendMethod("Added", new object[] { serviceName });
     }
 
-    public void removed(string serviceName)
+    public void Removed(string serviceName)
     {
-      _ServletProxy.SendMethod("removed", new object[] { serviceName });
+      _servletProxy.SendMethod("Removed", new object[] { serviceName });
     }
   }
 
   public class ServiceCallbacks
   {
-    private List<ServiceCallback> _Callbacks = new List<ServiceCallback>();
+    private readonly List<ServiceCallback> _callbacks = new List<ServiceCallback>();
 
     public void DoCallbackAdded(string serviceName)
     {
-      lock (_Callbacks)
-        for (int i = _Callbacks.Count - 1; i >= 0; i--)
+      lock (_callbacks)
+        for (int i = _callbacks.Count - 1; i >= 0; i--)
           try
           {
-            _Callbacks[i].added(serviceName);
+            _callbacks[i].Added(serviceName);
           }
           catch
           {
-            _Callbacks.RemoveAt(i);
+            _callbacks.RemoveAt(i);
           }
     }
 
     public void DoCallbackRemoved(string serviceName)
     {
-      lock (_Callbacks)
-        for (int i = _Callbacks.Count - 1; i >= 0; i--)
+      lock (_callbacks)
+        for (int i = _callbacks.Count - 1; i >= 0; i--)
           try
           {
-            _Callbacks[i].removed(serviceName);
+            _callbacks[i].Removed(serviceName);
           }
           catch
           {
-            _Callbacks.RemoveAt(i);
+            _callbacks.RemoveAt(i);
           }
     }
 
     public void Listen(ServiceCallback Callback)
     {
-      lock (_Callbacks)
-        _Callbacks.Add(Callback);
+      lock (_callbacks)
+        _callbacks.Add(Callback);
     }
 
     public void Removed(ServiceCallback Callback)
     {
-      lock (_Callbacks)
-        _Callbacks.Remove(Callback);
+      lock (_callbacks)
+        _callbacks.Remove(Callback);
     }
   }
 }

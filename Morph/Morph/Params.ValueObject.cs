@@ -2,15 +2,15 @@
 {
   public abstract class ValueObject : Value
   {
-    public ValueObject(string TypeName)
+    public ValueObject(string typeName)
     {
-      _TypeName = TypeName;
+      _typeName = typeName;
     }
 
-    private string _TypeName;
+    private readonly string _typeName;
     public string TypeName
     {
-      get { return _TypeName; }
+      get => _typeName;
     }
   }
 }

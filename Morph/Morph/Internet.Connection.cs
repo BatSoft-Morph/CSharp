@@ -13,81 +13,81 @@ namespace Morph.Internet
 {
   public class LinkMessageFromIP : LinkMessage
   {
-    public LinkMessageFromIP(LinkStack PathTo, LinkStack PathFrom, bool IsForceful, Connection Connection)
-      : base(PathTo, PathFrom, IsForceful)
+    public LinkMessageFromIP(LinkStack pathTo, LinkStack pathFrom, bool isForceful, Connection connection)
+      : base(pathTo, pathFrom, isForceful)
     {
-      _Connection = Connection;
+      _connection = connection;
     }
 
-    private Connection _Connection;
+    private Connection _connection;
     public Connection Connection
     {
-      get { return _Connection; }
+      get => _connection;
     }
   }
 
   internal class DataInHandler
   {
-    public DataInHandler(Connection Connection)
+    public DataInHandler(Connection connection)
     {
-      _Connection = Connection;
-      _Stream = new MorphStream();
-      _Reader = new MorphReaderSizeless(_Stream);
+      _connection = connection;
+      _stream = new MorphStream();
+      _reader = new MorphReaderSizeless(_stream);
     }
 
     //  Incoming data
-    private Connection _Connection;
+    private readonly Connection _connection;
 
-    private MorphStream _Stream;
-    private MorphReader _Reader;
+    private readonly MorphStream _stream;
+    private readonly MorphReader _reader;
 
     //  Message information
 
     private enum Stage { Clear, LinkByte, Message, Closed };
 
-    private Stage _Stage = Stage.Clear;
-    private LinkTypeID _LinkTypeID;
-    private bool _HasCallNumber, _IsForceful, _HasPathFrom;
-    private int _CallNumber, _PathToLength, _PathFromLength;
+    private Stage _stage = Stage.Clear;
+    private LinkTypeID _linkTypeID;
+    private bool _hasCallNumber, _isForceful, _hasPathFrom;
+    private int _callNumber, _pathToLength, _pathFromLength;
 
     private void ClearToLinkByte()
     {
-      if ((_Stage == Stage.Clear) && (_Stream.Remaining > 0))
+      if ((_stage == Stage.Clear) && (_stream.Remaining > 0))
       {
         //  Examine in the link byte
-        _LinkTypeID = _Reader.ReadLinkByte(out _HasCallNumber, out _IsForceful, out _HasPathFrom);
+        _linkTypeID = _reader.ReadLinkByte(out _hasCallNumber, out _isForceful, out _hasPathFrom);
         //  Next stage
-        _Stage = Stage.LinkByte;
+        _stage = Stage.LinkByte;
       }
     }
 
     private void LinkTypeToMessage()
     {
-      if (_Stage == Stage.LinkByte)
+      if (_stage == Stage.LinkByte)
         try
         {
           //  If received a LinkEnd message to the socket, then end the socket
-          if (_LinkTypeID == LinkTypeID.End)
+          if (_linkTypeID == LinkTypeID.End)
           {
             //  Next stage
-            _Stage = Stage.Closed;
+            _stage = Stage.Closed;
             //  Close the connection
-            _Connection.Close();
+            _connection.Close();
             return;
           }
           //  If receiving a LinkMessage, then see if there's enough data for reading it in
-          if (_LinkTypeID == LinkTypeID.Message)
+          if (_linkTypeID == LinkTypeID.Message)
           {
-            if (_Stream.Remaining >= 4 + (_HasCallNumber ? 4 : 0) + (_HasPathFrom ? 4 : 0))
+            if (_stream.Remaining >= 4 + (_hasCallNumber ? 4 : 0) + (_hasPathFrom ? 4 : 0))
             {
               //  - CallNumber
-              _CallNumber = _HasCallNumber ? _Reader.ReadInt32() : 0;
+              _callNumber = _hasCallNumber ? _reader.ReadInt32() : 0;
               //  - PathTo size
-              _PathToLength = _Reader.ReadInt32();
+              _pathToLength = _reader.ReadInt32();
               //  - PathFrom size
-              _PathFromLength = _HasPathFrom ? _Reader.ReadInt32() : 0;
+              _pathFromLength = _hasPathFrom ? _reader.ReadInt32() : 0;
               //  Next stage
-              _Stage = Stage.Message;
+              _stage = Stage.Message;
             }
           }
           else
@@ -96,36 +96,36 @@ namespace Morph.Internet
         }
         catch
         {
-          _Connection.Close();
+          _connection.Close();
           throw;
         }
     }
 
     private void MessageToClear()
     {
-      if ((_Stage == Stage.Message) && (_PathToLength + _PathFromLength <= _Stream.Remaining))
+      if ((_stage == Stage.Message) && (_pathToLength + _pathFromLength <= _stream.Remaining))
       {
         //  Read PathTo 
-        LinkStack PathTo = new LinkStack(_Reader.SubReader(_PathToLength));
+        LinkStack pathTo = new LinkStack(_reader.SubReader(_pathToLength));
         //  Read PathFrom
-        LinkStack PathFrom = null;
-        if (_HasPathFrom)
-          if (_PathFromLength == 0)
-            PathFrom = new LinkStack();
+        LinkStack pathFrom = null;
+        if (_hasPathFrom)
+          if (_pathFromLength == 0)
+            pathFrom = new LinkStack();
           else
-            PathFrom = new LinkStack(_Reader.SubReader(_PathFromLength));
+            pathFrom = new LinkStack(_reader.SubReader(_pathFromLength));
         //  Create message
-        LinkMessage Message = new LinkMessageFromIP(PathTo, PathFrom, _IsForceful, _Connection);
-        Message.Source = _Connection;
-        if (_HasCallNumber) Message.CallNumber = _CallNumber;
-        Message.IsForceful = _IsForceful;
+        LinkMessage message = new LinkMessageFromIP(pathTo, pathFrom, _isForceful, _connection);
+        message.Source = _connection;
+        if (_hasCallNumber) message.CallNumber = _callNumber;
+        message.IsForceful = _isForceful;
         //  Apply NAT workaround for IPv4
-        if ((_Connection.Socket.AddressFamily == AddressFamily.InterNetwork) && (PathFrom != null))
-          Message.PathFrom.Push(new LinkInternetIPv4((IPEndPoint)_Connection.Socket.RemoteEndPoint));
+        if ((_connection.Socket.AddressFamily == AddressFamily.InterNetwork) && (pathFrom != null))
+          message.PathFrom.Push(new LinkInternetIPv4((IPEndPoint)_connection.Socket.RemoteEndPoint));
         //  Add the (now completely received) message to the action queue
-        ActionHandler.Add(Message);
+        ActionHandler.Add(message);
         //  Next stage
-        _Stage = Stage.Clear;
+        _stage = Stage.Clear;
       }
     }
 
@@ -134,24 +134,24 @@ namespace Morph.Internet
       if ((data == null) || (count == 0))
         return;
       //  Write data to stream
-      _Stream.Write(data, offset, count);
+      _stream.Write(data, offset, count);
       //  Read messages from stream
       do
       {
         ClearToLinkByte();
         LinkTypeToMessage();
         MessageToClear();
-      } while ((_Stage == Stage.Clear) && (_Stream.Remaining > 0));
+      } while ((_stage == Stage.Clear) && (_stream.Remaining > 0));
     }
   }
 
-  public class Connection : RegisterItemName
+  public class Connection : IRegisterItemName
   {
-    internal Connection(Socket Socket)
+    internal Connection(Socket socket)
     {
-      _Socket = Socket;
-      _Name = _Socket.RemoteEndPoint.ToString();
-      _DataIn = new DataInHandler(this);
+      _socket = socket;
+      _name = _socket.RemoteEndPoint.ToString();
+      _dataIn = new DataInHandler(this);
       SendMorphValidation();
       Connections.Add(this);
       StartReceivingData();
@@ -160,94 +160,94 @@ namespace Morph.Internet
     #region Connection validation
 
     //  "Morph"#0 + Major version:1 + Minor version:1 
-    private static byte[] MorphValidation = new byte[] { 0x4D, 0x6F, 0x72, 0x70, 0x68, 0x00, 0x01, 0x01 };
+    private static readonly byte[] s_MorphValidation = new byte[] { 0x4D, 0x6F, 0x72, 0x70, 0x68, 0x00, 0x01, 0x01 };
 
-    private ManualResetEvent _MorphValidationSent = new ManualResetEvent(false);
+    private readonly ManualResetEvent _morphValidationSent = new ManualResetEvent(false);
 
     private void SendMorphValidation()
     {
-      _Socket.Send(MorphValidation);
-      _MorphValidationSent.Set();
+      _socket.Send(s_MorphValidation);
+      _morphValidationSent.Set();
     }
 
     private void TestMorphValidation()
     {
-      byte[] Buffer = new byte[8];
-      if (Buffer.Length != _Socket.Receive(Buffer))
+      byte[] buffer = new byte[8];
+      if (buffer.Length != _socket.Receive(buffer))
         throw new EMorph("Remote connection appears to not be a Morph connection.");
       for (int i = 5; i >= 0; i--)
-        if (Buffer[i] != MorphValidation[i])
+        if (buffer[i] != s_MorphValidation[i])
           throw new EMorph("Remote connection appears to not be a Morph connection.");
-      if (Buffer[6] != MorphValidation[6])
+      if (buffer[6] != s_MorphValidation[6])
         throw new EMorph("Incompatible Major versions of Morph.");
-      if (Buffer[7] != MorphValidation[7])
+      if (buffer[7] != s_MorphValidation[7])
         throw new EMorph("Incompatible Minor versions of Morph.");
     }
 
     #endregion
 
-    private Socket _Socket;
+    private readonly Socket _socket;
     public Socket Socket
     {
-      get { return _Socket; }
+      get => _socket;
     }
 
-    private DataInHandler _DataIn;
+    private readonly DataInHandler _dataIn;
     private const int BufferSize = 2048;
 
     public EndPoint LocalEndPoint
     {
-      get { return _Socket.LocalEndPoint; }
+      get => _socket.LocalEndPoint;
     }
 
     public EndPoint RemoteEndPoint
     {
-      get { return _Socket.RemoteEndPoint; }
+      get => _socket.RemoteEndPoint;
     }
 
-    private LinkInternet _Link = null;
+    private LinkInternet _link = null;
     public LinkInternet Link
     {
       get
       {
-        if (_Link == null)
-          _Link = LinkInternet.New(RemoteEndPoint);
-        return _Link;
+        if (_link == null)
+          _link = LinkInternet.New(RemoteEndPoint);
+        return _link;
       }
     }
 
-    public void Write(LinkMessage Message)
+    public void Write(LinkMessage Mmessage)
     {
       //  Don't write until Morph validation information has been sent
-      _MorphValidationSent.WaitOne();
+      _morphValidationSent.WaitOne();
       //  Get the data to send.
       //  Alot of optimisation could be done here.
       //  This ought to use BeginSend(), but that'll have to wait for now.
       //  Also, this is where one would batch messages
       //
       //  Create a stream
-      MemoryStream Stream = new MemoryStream();
+      MemoryStream stream = new MemoryStream();
       //  Write the Message to the stream
-      Message.Write(new MorphWriter(Stream));
+      Mmessage.Write(new MorphWriter(stream));
       //  Start from the beginning
-      long TotalCount = Stream.Length;
-      Stream.Position = 0;
+      long totalCount = stream.Length;
+      stream.Position = 0;
       //  Write the stream to the socket
-      byte[] Buffer = new byte[BufferSize];
-      lock (_Socket)
-        if (_Socket.Connected)
-          while (TotalCount > 0)
+      byte[] buffer = new byte[BufferSize];
+      lock (_socket)
+        if (_socket.Connected)
+          while (totalCount > 0)
           {
-            int count = (int)(TotalCount < BufferSize ? TotalCount : BufferSize);
-            count = Stream.Read(Buffer, 0, count);
-            _Socket.Send(Buffer, 0, count, SocketFlags.Partial);
-            TotalCount -= count;
+            int count = (int)(totalCount < BufferSize ? totalCount : BufferSize);
+            count = stream.Read(buffer, 0, count);
+            _socket.Send(buffer, 0, count, SocketFlags.Partial);
+            totalCount -= count;
           }
     }
 
     #region Receiving
 
-    private byte[] _IncomingData = new byte[BufferSize];
+    private readonly byte[] _incomingData = new byte[BufferSize];
 
     internal void StartReceivingData()
     {
@@ -262,18 +262,18 @@ namespace Morph.Internet
         //  Validate the connection
         TestMorphValidation();
         //  Read incoming data
-        int NoDataIteration = 0;
-        while (_Socket.Connected)
+        int noDataIteration = 0;
+        while (_socket.Connected)
         {
-          int count = _Socket.Receive(_IncomingData, 0, _IncomingData.Length, SocketFlags.Partial);
+          int count = _socket.Receive(_incomingData, 0, _incomingData.Length, SocketFlags.Partial);
           //  Workaround for _Socket.Receive() continuously returning 0 instead of waiting for data.
           //  Seems to happen when connection has been abandoned by remote host.
           if (count > 0)
-            NoDataIteration = 0;
-          else if (NoDataIteration++ > 5)
+            noDataIteration = 0;
+          else if (noDataIteration++ > 5)
             Close();
           //  Add the received data to the message stream
-          _DataIn.AddData(_IncomingData, 0, count);
+          _dataIn.AddData(_incomingData, 0, count);
         }
       }
       catch (Exception x)
@@ -296,33 +296,32 @@ namespace Morph.Internet
     {
       //  Prevent other threads from writing to the socket
       Connections.Remove(this);
-      lock (_Socket)
+      lock (_socket)
       {
         //  Notify attached objects to tidy themselves up
-        if (OnClose != null)
-          OnClose(this, new EventArgs());
+        OnClose?.Invoke(this, new EventArgs());
         //  Try to tell other end that the socket is closing
-        if (_Socket.Connected)
+        if (_socket.Connected)
         {
           try
           {
-            _Socket.Send(new byte[] { 0 }); //  Sending LinkEnd
+            _socket.Send(new byte[] { 0 }); //  Sending LinkEnd
           }
           catch
           {
           }
           //  Now close the socket
-          _Socket.Close();
+          _socket.Close();
         }
       }
     }
 
     #region RegisterItemName Members
 
-    private string _Name;
+    private readonly string _name;
     public string Name
     {
-      get { return _Name; }
+      get => _name;
     }
 
     #endregion
@@ -334,12 +333,12 @@ namespace Morph.Internet
   {
     #region internal
 
-    static private RegisterItems<Connection> Conns = new RegisterItems<Connection>();
-    static private Hashtable LocalEndPoints = new Hashtable();
+    private static readonly RegisterItems<Connection> s_Conns = new RegisterItems<Connection>();
+    private static readonly Hashtable s_LocalEndPoints = new Hashtable();
 
     private class LocalEndPointCounter
     {
-      public int Count = 1;
+      public int count = 1;
     }
 
     static private IPAddress[] CurrentLocalAddresses()
@@ -347,56 +346,56 @@ namespace Morph.Internet
       return Dns.GetHostEntry(Dns.GetHostName()).AddressList;
     }
 
-    static private Socket NewSocket(IPEndPoint RemoteEndPoint)
+    static private Socket NewSocket(IPEndPoint remoteEndPoint)
     {
-      ProtocolType Protocol;
-      if (RemoteEndPoint.AddressFamily == AddressFamily.InterNetwork)
-        Protocol = ProtocolType.IP;
-      else if (RemoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
-        Protocol = ProtocolType.IPv6;
+      ProtocolType protocol;
+      if (remoteEndPoint.AddressFamily == AddressFamily.InterNetwork)
+        protocol = ProtocolType.IP;
+      else if (remoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
+        protocol = ProtocolType.IPv6;
       else
         throw new Exception("Unsupported protocol");
       //  Create socket connection
-      Socket socket = new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, Protocol);
+      Socket socket = new Socket(remoteEndPoint.AddressFamily, SocketType.Stream, protocol);
       //socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
       //socket.Bind(new IPEndPoint(IPAddress.Any, 0));
-      socket.Connect(RemoteEndPoint);
+      socket.Connect(remoteEndPoint);
       //  Create connection
       return socket;
     }
 
-    static internal void Add(Connection Connection)
+    static internal void Add(Connection connection)
     {
-      lock (Conns)
+      lock (s_Conns)
       {
-        Conns.Add(Connection);
+        s_Conns.Add(connection);
         //  If this is a server process, then multiple sockets may use the same local endpoint,
         //  so keep a reference count.
-        lock (LocalEndPoints)
+        lock (s_LocalEndPoints)
         {
-          LocalEndPointCounter counter = (LocalEndPointCounter)LocalEndPoints[Connection.LocalEndPoint.ToString()];
+          LocalEndPointCounter counter = (LocalEndPointCounter)s_LocalEndPoints[connection.LocalEndPoint.ToString()];
           if (counter == null)
-            LocalEndPoints.Add(Connection.LocalEndPoint.ToString(), new LocalEndPointCounter());
+            s_LocalEndPoints.Add(connection.LocalEndPoint.ToString(), new LocalEndPointCounter());
           else
-            counter.Count++;
+            counter.count++;
         }
       }
     }
 
-    static internal void Remove(Connection Connection)
+    static internal void Remove(Connection connection)
     {
-      lock (Conns)
+      lock (s_Conns)
       {
-        Conns.Remove(Connection);
-        lock (LocalEndPoints)
+        s_Conns.Remove(connection);
+        lock (s_LocalEndPoints)
         {
-          LocalEndPointCounter counter = (LocalEndPointCounter)LocalEndPoints[Connection.LocalEndPoint.ToString()];
+          LocalEndPointCounter counter = (LocalEndPointCounter)s_LocalEndPoints[connection.LocalEndPoint.ToString()];
           if (counter != null)  //  Should not be possible to be null, but just just in case
           { //  Decrement the refence count
-            counter.Count--;
+            counter.count--;
             //  If there are no more, then remove the counter
-            if (counter.Count == 0)
-              LocalEndPoints.Remove(Connection.LocalEndPoint.ToString());
+            if (counter.count == 0)
+              s_LocalEndPoints.Remove(connection.LocalEndPoint.ToString());
           }
         }
       }
@@ -404,58 +403,58 @@ namespace Morph.Internet
 
     #endregion
 
-    static public Connection Add(Socket Socket)
+    static public Connection Add(Socket socket)
     {
-      if (Socket == null)
+      if (socket == null)
         throw new EMorphUsage("Cannot connect with a null connection");
       //  Create (and register) the new connection
-      return new Connection(Socket);
+      return new Connection(socket);
     }
 
-    static public Connection Add(IPEndPoint RemoteEndPoint)
+    static public Connection Add(IPEndPoint remoteEndPoint)
     {
-      if (RemoteEndPoint == null)
+      if (remoteEndPoint == null)
         throw new EMorphUsage("Cannot connect to a null end point");
       //  Create (and register) the new connection
-      return Add(NewSocket(RemoteEndPoint));
+      return Add(NewSocket(remoteEndPoint));
     }
 
-    static public Connection Obtain(IPEndPoint RemoteEndPoint)
+    static public Connection Obtain(IPEndPoint remoteEndPoint)
     {
-      Connection Connection = Find(RemoteEndPoint);
-      if (Connection == null)
-        return new Connection(NewSocket(RemoteEndPoint));
-      return Connection;
+      Connection connection = Find(remoteEndPoint);
+      if (connection == null)
+        return new Connection(NewSocket(remoteEndPoint));
+      return connection;
     }
 
-    static public Connection Find(IPEndPoint RemoteEndPoint)
+    static public Connection Find(IPEndPoint remoteEndPoint)
     {
-      lock (Conns)
-        return Conns.Find(RemoteEndPoint.ToString());
+      lock (s_Conns)
+        return s_Conns.Find(remoteEndPoint.ToString());
     }
 
     static public void CloseAll()
     {
-      List<Connection> AllConns;
-      lock (Conns)
-        AllConns = Conns.List();
-      foreach (Connection Conn in AllConns)
-        Conn.Close();
+      List<Connection> allConns;
+      lock (s_Conns)
+        allConns = s_Conns.List();
+      foreach (Connection conn in allConns)
+        conn.Close();
     }
 
-    static public bool IsEndPointOnThisDevice(IPEndPoint EndPoint)
+    static public bool IsEndPointOnThisDevice(IPEndPoint endPoint)
     {
-      IPAddress[] LocalAddresses = CurrentLocalAddresses();
-      foreach (IPAddress LocalAddress in LocalAddresses)
-        if (EndPoint.Address.Equals(LocalAddress))
+      IPAddress[] localAddresses = CurrentLocalAddresses();
+      foreach (IPAddress localAddress in localAddresses)
+        if (endPoint.Address.Equals(localAddress))
           return true;
-      return IPAddress.Loopback.Equals(EndPoint.Address);
+      return IPAddress.Loopback.Equals(endPoint.Address);
     }
 
-    static public bool IsEndPointOnThisProcess(IPEndPoint EndPoint)
+    static public bool IsEndPointOnThisProcess(IPEndPoint endPoint)
     {
-      lock (LocalEndPoints)
-        return LocalEndPoints[EndPoint.ToString()] != null;
+      lock (s_LocalEndPoints)
+        return s_LocalEndPoints[endPoint.ToString()] != null;
     }
   }
 }

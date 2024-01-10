@@ -46,543 +46,538 @@ namespace Morph.Params
 
     #region Encoding
 
-    static public MorphWriter Encode(object[] Params, InstanceFactories InstanceFactories)
+    static public MorphWriter Encode(object[] Params, InstanceFactories instanceFactories)
     {
       if (Params == null)
         return null;
-      return Encode(Params, null, InstanceFactories);
+      return Encode(Params, null, instanceFactories);
     }
 
-    static public MorphWriter Encode(object[] Params, object Special, InstanceFactories InstanceFactories)
+    static public MorphWriter Encode(object[] Params, object special, InstanceFactories instanceFactories)
     {
-      int ParamCount = 1 + (Params == null ? 0 : Params.Length);
-      MemoryStream Stream = new MemoryStream();
-      MorphWriter Writer = new MorphWriter(Stream);
+      int paramCount = 1 + (Params == null ? 0 : Params.Length);
+      MemoryStream stream = new MemoryStream();
+      MorphWriter writer = new MorphWriter(stream);
       //  Write the param count
-      Writer.WriteInt32(ParamCount);
+      writer.WriteInt32(paramCount);
       //  Write the "special" param (ie. return value, property value)
-      EncodeValueAndValueByte(Writer, InstanceFactories, null, Special);
+      EncodeValueAndValueByte(writer, instanceFactories, null, special);
       //  Write each param
       if (Params != null)
         foreach (object obj in Params)
-          EncodeValueAndValueByte(Writer, InstanceFactories, null, obj);
+          EncodeValueAndValueByte(writer, instanceFactories, null, obj);
       //  Return the data
-      Stream.Close();
-      return Writer;
+      stream.Close();
+      return writer;
     }
 
-    private static void InsertInt8AtPosition(MorphWriter Writer, long Pos, byte Value)
+    private static void InsertInt8AtPosition(MorphWriter writer, long position, byte value)
     {
-      long CurrentPos = Writer.Stream.Position;
-      Writer.Stream.Position = Pos;
-      Writer.WriteInt8(Value);
-      Writer.Stream.Position = CurrentPos;
+      long currentPos = writer.Stream.Position;
+      writer.Stream.Position = position;
+      writer.WriteInt8(value);
+      writer.Stream.Position = currentPos;
     }
 
-    private static void InsertInt32AtPosition(MorphWriter Writer, long Pos, int Value)
+    private static void InsertInt32AtPosition(MorphWriter writer, long position, int value)
     {
-      long CurrentPos = Writer.Stream.Position;
-      Writer.Stream.Position = Pos;
-      Writer.WriteInt32(Value);
-      Writer.Stream.Position = CurrentPos;
+      long currentPos = writer.Stream.Position;
+      writer.Stream.Position = position;
+      writer.WriteInt32(value);
+      writer.Stream.Position = currentPos;
     }
 
-    private static void InsertInt64AtPosition(MorphWriter Writer, long Pos, long Value)
+    private static void InsertInt64AtPosition(MorphWriter writer, long position, long value)
     {
-      long CurrentPos = Writer.Stream.Position;
-      Writer.Stream.Position = Pos;
-      Writer.WriteInt64(Value);
-      Writer.Stream.Position = CurrentPos;
+      long currentPos = writer.Stream.Position;
+      writer.Stream.Position = position;
+      writer.WriteInt64(value);
+      writer.Stream.Position = currentPos;
     }
 
-    static private void EncodeValueAndValueByte(MorphWriter Writer, InstanceFactories InstanceFactories, string Name, object Value)
+    static private void EncodeValueAndValueByte(MorphWriter writer, InstanceFactories instanceFactories, string name, object value)
     {
       //  Put empty placeholder for the ValueType
-      long ValueBytePos = Writer.Stream.Position;
-      Writer.WriteInt8(0);
+      long valueBytePos = writer.Stream.Position;
+      writer.WriteInt8(0);
       //  Write the contents of the value
-      byte ValueType = EncodeValue(Writer, InstanceFactories, Name, Value);
+      byte valueType = EncodeValue(writer, instanceFactories, name, value);
       //  Put in the proper value of ValueType
-      InsertInt8AtPosition(Writer, ValueBytePos, ValueType);
+      InsertInt8AtPosition(writer, valueBytePos, valueType);
     }
 
-    static private byte EncodeValue(MorphWriter Writer, InstanceFactories InstanceFactories, string Name, object Value)
+    static private byte EncodeValue(MorphWriter writer, InstanceFactories instanceFactories, string name, object value)
     {
-      byte ValueType = 0;
+      byte valueType = 0;
       //  HasValueName
-      if (Name != null)
+      if (name != null)
       {
-        ValueType |= ValueType_HasValueName;
-        Writer.WriteIdentifier(Name);
+        valueType |= ValueType_HasValueName;
+        writer.WriteIdentifier(name);
       }
       //  IsNull
-      if (Value == null)
+      if (value == null)
       {
-        ValueType |= ValueType_IsNull;
-        return ValueType;
+        valueType |= ValueType_IsNull;
+        return valueType;
       }
       //  Predefined types
-      string TypeName = null;
-      if (InstanceFactories.EncodeSimple(out Value, out TypeName, Value))
+      if (instanceFactories.EncodeSimple(out value, out string typeName, value))
         //  HasTypeName for simple types
-        if (TypeName != null)
+        if (typeName != null)
         {
-          ValueType |= ValueType_HasTypeName;
-          Writer.WriteIdentifier(TypeName);
+          valueType |= ValueType_HasTypeName;
+          writer.WriteIdentifier(typeName);
         }
       //  Simple
-      if (EncodeSimple(Writer, Value, ref ValueType))
-        return ValueType;
+      if (EncodeSimple(writer, value, ref valueType))
+        return valueType;
       //  HasTypeName
-      if ((Value is ValueObject) && (((ValueObject)Value).TypeName != null))
-        TypeName = ((ValueObject)Value).TypeName;
-      else if (Value is IMorphReference)
+      if ((value is ValueObject) && (((ValueObject)value).TypeName != null))
+        typeName = ((ValueObject)value).TypeName;
+      else if (value is IMorphReference)
       {
-        if (((IMorphReference)Value).MorphServlet == null)
+        if (((IMorphReference)value).MorphServlet == null)
           throw new EMorph("Morph Reference needs a Morph Servlet");
-        TypeName = ((IMorphReference)Value).MorphServlet.TypeName;
+        typeName = ((IMorphReference)value).MorphServlet.TypeName;
       }
-      else if (Value is Array)
-        TypeName = ((Array)Value).GetType().Name;
+      else if (value is Array)
+        typeName = ((Array)value).GetType().Name;
       else
-        TypeName = Value.GetType().Name;
-      if (TypeName != null)
+        typeName = value.GetType().Name;
+      if (typeName != null)
       {
-        ValueType |= ValueType_HasTypeName;
-        Writer.WriteIdentifier(TypeName);
+        valueType |= ValueType_HasTypeName;
+        writer.WriteIdentifier(typeName);
       }
       //  IsStream
-      if (Value is ValueStream)
+      if (value is ValueStream)
       {
-        ValueType |= ValueType_IsReference;
-        return ValueType;
+        valueType |= ValueType_IsReference;
+        return valueType;
       }
       //  IsServlet
-      if (Value is IMorphReference)
-        return (byte)(ValueType | EncodeServlet(Writer, ((IMorphReference)Value).MorphServlet));
-      if (Value is Servlet)
-        return (byte)(ValueType | EncodeServlet(Writer, Value));
-      if (Value is ServletProxy)
-        return (byte)(ValueType | EncodeServletProxy(Writer, Value));
+      if (value is IMorphReference)
+        return (byte)(valueType | EncodeServlet(writer, ((IMorphReference)value).MorphServlet));
+      if (value is Servlet)
+        return (byte)(valueType | EncodeServlet(writer, value));
+      if (value is ServletProxy)
+        return (byte)(valueType | EncodeServletProxy(writer, value));
       //  Struct and array
       //  - Developer defined encoding
-      Value = InstanceFactories.EncodeInstance(Value);
+      value = instanceFactories.EncodeInstance(value);
       //  - Already encoded
-      if (Value is ValueInstance)
-        return (byte)(ValueType | EncodeValueInstance(Writer, InstanceFactories, (ValueInstance)Value));
+      if (value is ValueInstance)
+        return (byte)(valueType | EncodeValueInstance(writer, instanceFactories, (ValueInstance)value));
       //  - Developer defined encoding
-      if (Value is IMorphInstance)
-        return (byte)(ValueType | EncodeValueInstance(Writer, InstanceFactories, ((IMorphInstance)Value).MorphEncode()));
+      if (value is IMorphInstance)
+        return (byte)(valueType | EncodeValueInstance(writer, instanceFactories, ((IMorphInstance)value).MorphEncode()));
       //  - Default encoding
-      if (Value is System.Array)
-        return (byte)(ValueType | EncodeArray(Writer, InstanceFactories, Value));
-      if (Value is System.Object)
-        return (byte)(ValueType | EncodeStruct(Writer, InstanceFactories, Value));
+      if (value is System.Array)
+        return (byte)(valueType | EncodeArray(writer, instanceFactories, value));
+      if (value is System.Object)
+        return (byte)(valueType | EncodeStruct(writer, instanceFactories, value));
       //  Default
-      throw new EMorph("Encryption of parameter type " + Value.GetType().FullName + " is not implemented.");
+      throw new EMorph("Encryption of parameter type " + value.GetType().FullName + " is not implemented.");
     }
 
-    static private bool EncodeSimple(MorphWriter Writer, object Value, ref byte ValueType)
+    static private bool EncodeSimple(MorphWriter writer, object value, ref byte valueType)
     {
-      if (Value is Array)
+      if (value is Array valueArray)
       {
-        if (Value is Byte[])
+        if (value is Byte[])
         {
-          Writer.WriteInt8(0x0A); //  SimpleType
-          Writer.WriteInt32(((Array)Value).Length);
-          Writer.WriteBytes((Byte[])Value);
+          writer.WriteInt8(0x0A); //  SimpleType
+          writer.WriteInt32(valueArray.Length);
+          writer.WriteBytes((Byte[])value);
           return true;
         }
-        if (Value is Int16[])
+        if (value is Int16[])
         {
-          Writer.WriteInt8(0x4A); //  SimpleType
-          Writer.WriteInt32(((Array)Value).Length);
-          Int16[] array = (Int16[])Value;
+          writer.WriteInt8(0x4A); //  SimpleType
+          writer.WriteInt32(valueArray.Length);
+          Int16[] array = (Int16[])value;
           for (int i = 0; i < array.Length; i++)
-            Writer.WriteInt16(array[i]);
+            writer.WriteInt16(array[i]);
           return true;
         }
-        if (Value is Int32[])
+        if (value is Int32[])
         {
-          Writer.WriteInt8(0x8A); //  SimpleType
-          Writer.WriteInt32(((Array)Value).Length);
-          Int32[] array = (Int32[])Value;
+          writer.WriteInt8(0x8A); //  SimpleType
+          writer.WriteInt32(valueArray.Length);
+          Int32[] array = (Int32[])value;
           for (int i = 0; i < array.Length; i++)
-            Writer.WriteInt32(array[i]);
+            writer.WriteInt32(array[i]);
           return true;
         }
-        if (Value is Int64[])
+        if (value is Int64[])
         {
-          Writer.WriteInt8(0xCa); //  SimpleType
-          Writer.WriteInt32(((Array)Value).Length);
-          Int64[] array = (Int64[])Value;
+          writer.WriteInt8(0xCa); //  SimpleType
+          writer.WriteInt32(valueArray.Length);
+          Int64[] array = (Int64[])value;
           for (int i = 0; i < array.Length; i++)
-            Writer.WriteInt64(array[i]);
+            writer.WriteInt64(array[i]);
           return true;
         }
-        if (Value is Char[])
+        if (value is Char[])
         {
-          Writer.WriteInt8(0x1B); //  SimpleType
-          Writer.WriteInt32(((Array)Value).Length);
-          Char[] array = (Char[])Value;
+          writer.WriteInt8(0x1B); //  SimpleType
+          writer.WriteInt32(valueArray.Length);
+          Char[] array = (Char[])value;
           for (int i = 0; i < array.Length; i++)
-            Writer.WriteInt16(array[i]);
+            writer.WriteInt16(array[i]);
           return true;
         }
-        if (Value is String[])
+        if (value is String[])
         {
-          Writer.WriteInt8(0xBB); //  SimpleType
-          Writer.WriteInt32(((Array)Value).Length);
-          String[] array = (String[])Value;
+          writer.WriteInt8(0xBB); //  SimpleType
+          writer.WriteInt32(valueArray.Length);
+          String[] array = (String[])value;
           for (int i = 0; i < array.Length; i++)
-            Writer.WriteString(array[i]);
+            writer.WriteString(array[i]);
           return true;
         }
       }
       //  Not array...
-      if (Value is Byte)
+      if (value is Byte)
       {
-        Writer.WriteInt8(0x00); //  SimpleType
-        Writer.WriteInt8((Byte)Value);
+        writer.WriteInt8(0x00); //  SimpleType
+        writer.WriteInt8((Byte)value);
         return true;
       }
-      if (Value is Int16)
+      if (value is Int16)
       {
-        Writer.WriteInt8(0x40); //  SimpleType
-        Writer.WriteInt16((Int16)Value);
+        writer.WriteInt8(0x40); //  SimpleType
+        writer.WriteInt16((Int16)value);
         return true;
       }
-      if (Value is Int32)
+      if (value is Int32)
       {
-        Writer.WriteInt8(0x80); //  SimpleType
-        Writer.WriteInt32((Int32)Value);
+        writer.WriteInt8(0x80); //  SimpleType
+        writer.WriteInt32((Int32)value);
         return true;
       }
-      if (Value is Int64)
+      if (value is Int64)
       {
-        Writer.WriteInt8(0xC0); //  SimpleType
-        Writer.WriteInt64((Int64)Value);
+        writer.WriteInt8(0xC0); //  SimpleType
+        writer.WriteInt64((Int64)value);
         return true;
       }
-      if (Value is Char)
+      if (value is Char)
       {
-        Writer.WriteInt8(0x11); //  SimpleType
-        Writer.WriteInt16((Int16)((Char)Value));
+        writer.WriteInt8(0x11); //  SimpleType
+        writer.WriteInt16((Int16)((Char)value));
         return true;
       }
-      if (Value is String)
+      if (value is String)
       {
-        Writer.WriteInt8(0xB1); //  SimpleType
-        Writer.WriteString((String)Value);
+        writer.WriteInt8(0xB1); //  SimpleType
+        writer.WriteString((String)value);
         return true;
       }
       return false;
     }
 
-    static private byte EncodeServlet(MorphWriter Writer, object Value)
+    static private byte EncodeServlet(MorphWriter writer, object value)
     {
-      Servlet Servlet = (Servlet)Value;
-      byte ValueType = 0;
+      Servlet servlet = (Servlet)value;
+      byte valueType = 0;
       //  IsReference
-      ValueType |= ValueType_IsReference;
-      Writer.WriteInt32(Servlet.ID);
+      valueType |= ValueType_IsReference;
+      writer.WriteInt32(servlet.ID);
       //  IsServlet
-      ValueType |= ValueType_IsServlet;
-      Writer.WriteInt32(Servlet.Apartment.ID);
+      valueType |= ValueType_IsServlet;
+      writer.WriteInt32(servlet.Apartment.ID);
       //  Done
-      return ValueType;
+      return valueType;
     }
 
-    static private byte EncodeServletProxy(MorphWriter Writer, object Value)
+    static private byte EncodeServletProxy(MorphWriter writer, object value)
     {
-      ServletProxy Servlet = (ServletProxy)Value;
-      byte ValueType = 0;
+      ServletProxy servlet = (ServletProxy)value;
+      byte valueType = 0;
       //  IsReference
-      ValueType |= ValueType_IsReference;
-      Writer.WriteInt32(Servlet.ID);
+      valueType |= ValueType_IsReference;
+      writer.WriteInt32(servlet.ID);
       //  IsServlet
-      ValueType |= ValueType_IsServlet;
-      Writer.WriteInt32(Servlet.ApartmentProxy.ApartmentLink.ApartmentID);
+      valueType |= ValueType_IsServlet;
+      writer.WriteInt32(servlet.ApartmentProxy.ApartmentLink.ApartmentID);
       //  HasDevicePath
-      LinkStack DevicePath = Servlet.ApartmentProxy.Device.Path;
-      if (DevicePath != null)
+      LinkStack devicePath = servlet.ApartmentProxy.Device.Path;
+      if (devicePath != null)
       {
-        ValueType |= ValueType_HasDevicePath;
-        Writer.WriteInt32(DevicePath.ByteSize);
-        DevicePath.Write(Writer);
+        valueType |= ValueType_HasDevicePath;
+        writer.WriteInt32(devicePath.ByteSize);
+        devicePath.Write(writer);
       }
       //  Done
-      return ValueType;
+      return valueType;
     }
 
-    static private byte EncodeValueInstance(MorphWriter Writer, InstanceFactories InstanceFactories, ValueInstance Value)
+    static private byte EncodeValueInstance(MorphWriter writer, InstanceFactories instanceFactories, ValueInstance value)
     {
-      byte ValueType = 0;
+      byte valueType = 0;
       //  Write Struct
-      if (Value.Struct != null)
+      if (value.Struct != null)
       {
-        ValueType |= ValueType_IsStruct;
-        StructValues Struct = Value.Struct;
+        valueType |= ValueType_IsStruct;
+        StructValues Struct = value.Struct;
         //  ValueCount
-        Writer.WriteInt32(Struct.Count);
+        writer.WriteInt32(Struct.Count);
         //  Values
         for (int i = 0; i < Struct.Count; i++)
-          EncodeValueAndValueByte(Writer, InstanceFactories, Struct.Names[i], Struct.Values[i]);
+          EncodeValueAndValueByte(writer, instanceFactories, Struct.Names[i], Struct.Values[i]);
       }
       //  Write Array
-      if (Value.Array != null)
+      if (value.Array != null)
       {
-        ValueType |= ValueType_IsArray;
-        ArrayValues Array = Value.Array;
+        valueType |= ValueType_IsArray;
+        ArrayValues array = value.Array;
         //  ArrayCount
-        Writer.WriteInt32(Array.Count);
+        writer.WriteInt32(array.Count);
         //  Values
-        for (int i = 0; i < Array.Count; i++)
-          EncodeValueAndValueByte(Writer, InstanceFactories, null, Array.Values[i]);
+        for (int i = 0; i < array.Count; i++)
+          EncodeValueAndValueByte(writer, instanceFactories, null, array.Values[i]);
       }
-      return ValueType;
+      return valueType;
     }
 
-    static private byte EncodeStruct(MorphWriter Writer, InstanceFactories InstanceFactories, object Struct)
+    static private byte EncodeStruct(MorphWriter writer, InstanceFactories instanceFactories, object @struct)
     {
-      byte ValueType = ValueType_IsStruct;
+      byte valueType = ValueType_IsStruct;
       //  Make space for StructElemCount
-      int ValueCount = 0;
-      long ValueCountPos = Writer.Stream.Position;
-      Writer.WriteInt32(0); //  Allocate space for later
+      int valueCount = 0;
+      long valueCountPos = writer.Stream.Position;
+      writer.WriteInt32(0); //  Allocate space for later
       //  Write values
-      FieldInfo[] fields = Struct.GetType().GetFields();
+      FieldInfo[] fields = @struct.GetType().GetFields();
       foreach (FieldInfo field in fields)
         if (field.IsPublic && !field.IsStatic && !field.IsLiteral)
         {
-          EncodeValueAndValueByte(Writer, InstanceFactories, field.Name, field.GetValue(Struct));
-          ValueCount++;
+          EncodeValueAndValueByte(writer, instanceFactories, field.Name, field.GetValue(@struct));
+          valueCount++;
         }
       //  Write StructElemCount
-      InsertInt32AtPosition(Writer, ValueCountPos, ValueCount);
-      return ValueType;
+      InsertInt32AtPosition(writer, valueCountPos, valueCount);
+      return valueType;
     }
 
-    static private byte EncodeArray(MorphWriter Writer, InstanceFactories InstanceFactories, object Value)
+    static private byte EncodeArray(MorphWriter writer, InstanceFactories instanceFactories, object value)
     {
-      byte ValueType = ValueType_IsArray;
-      Array array = (Array)Value;
+      byte valueType = ValueType_IsArray;
+      Array array = (Array)value;
       //  ArrayElemCount
-      Writer.WriteInt32(array.Length);
+      writer.WriteInt32(array.Length);
       //  ArrayElemType
-      ValueType |= ValueType_ArrayElemType;
-      string TypeName = Value.GetType().Name;
-      Writer.WriteIdentifier(TypeName.Substring(0, TypeName.Length - 2));
+      valueType |= ValueType_ArrayElemType;
+      string typeName = value.GetType().Name;
+      writer.WriteIdentifier(typeName.Substring(0, typeName.Length - 2));
       //  Write values
       for (int i = 0; i < array.Length; i++)
-        EncodeValueAndValueByte(Writer, InstanceFactories, null, array.GetValue(i));
-      return ValueType;
+        EncodeValueAndValueByte(writer, instanceFactories, null, array.GetValue(i));
+      return valueType;
     }
 
     #endregion
 
     #region Decoding
 
-    static public void Decode(InstanceFactories InstanceFactories, LinkStack DevicePath, MorphReader DataReader, out object[] Params, out object Special)
+    static public void Decode(InstanceFactories instanceFactories, LinkStack devicePath, MorphReader dataReader, out object[] Params, out object special)
     {
-      if ((DataReader == null) || !DataReader.CanRead)
+      if ((dataReader == null) || !dataReader.CanRead)
       {
         Params = null;
-        Special = null;
+        special = null;
         return;
       }
       //  Param count
-      int ParamCount = DataReader.ReadInt32() - 1;
+      int paramCount = dataReader.ReadInt32() - 1;
       //  Read in special
-      string Name;
-      Special = DecodeValue(InstanceFactories, DevicePath, DataReader, out Name);
+      special = DecodeValue(instanceFactories, devicePath, dataReader, out string Name);
       //  Read in parameters
-      if (ParamCount > 0)
+      if (paramCount > 0)
       {
-        Params = new object[ParamCount];
+        Params = new object[paramCount];
         for (int i = 0; i < Params.Length; i++)
-          Params[i] = DecodeValue(InstanceFactories, DevicePath, DataReader, out Name);
+          Params[i] = DecodeValue(instanceFactories, devicePath, dataReader, out Name);
       }
       else
         Params = null;
     }
 
-    static private object DecodeValue(InstanceFactories InstanceFactories, LinkStack DevicePath, MorphReader Reader, out string ValueName)
+    static private object DecodeValue(InstanceFactories instanceFactories, LinkStack devicePath, MorphReader reader, out string valueName)
     {
-      ValueName = null;
-      byte ValueType = (byte)Reader.ReadInt8();
+      valueName = null;
+      byte valueType = (byte)reader.ReadInt8();
       //  HasValueName
-      if ((ValueType & ValueType_HasValueName) != 0)
-        ValueName = Reader.ReadIdentifier();
+      if ((valueType & ValueType_HasValueName) != 0)
+        valueName = reader.ReadIdentifier();
       //  IsNull
-      if ((ValueType & ValueType_IsNull) != 0)
+      if ((valueType & ValueType_IsNull) != 0)
         return null;
       //  HasTypeName
-      string TypeName = null;
-      if ((ValueType & ValueType_HasTypeName) != 0)
-        TypeName = Reader.ReadIdentifier();
+      string typeName = null;
+      if ((valueType & ValueType_HasTypeName) != 0)
+        typeName = reader.ReadIdentifier();
       //  IsReference
-      if ((ValueType & ValueType_IsReference) != 0)
+      if ((valueType & ValueType_IsReference) != 0)
         //  IsServlet
-        if ((ValueType & ValueType_IsServlet) != 0)
-          return DecodeServlet(InstanceFactories, DevicePath, Reader, ValueType, TypeName);
+        if ((valueType & ValueType_IsServlet) != 0)
+          return DecodeServlet(instanceFactories, devicePath, reader, valueType, typeName);
         //  Is stream
         else
           throw new EMorph("Not implemented");
       //  IsStruct or IsArray
-      bool IsStruct = (ValueType & ValueType_IsStruct) != 0;
-      bool IsArray = (ValueType & ValueType_IsArray) != 0;
-      if (IsStruct || IsArray)
+      bool isStruct = (valueType & ValueType_IsStruct) != 0;
+      bool isArray = (valueType & ValueType_IsArray) != 0;
+      if (isStruct || isArray)
       {
-        ValueInstance Value = (ValueInstance)DecodeValueInstance(InstanceFactories, DevicePath, Reader, ValueType, IsStruct, IsArray, TypeName);
-        object result;
+        ValueInstance value = (ValueInstance)DecodeValueInstance(instanceFactories, devicePath, reader, valueType, isStruct, isArray, typeName);
+        object complexResult;
         //  Might be able to translate to a proper instance
-        if (InstanceFactories.DecodeInstance(Value, out result))
-          return result;
-        if (IsArray && !IsStruct)
-          return Value.Array.Values.ToArray();
-        return Value;
+        if (instanceFactories.DecodeInstance(value, out complexResult))
+          return complexResult;
+        if (isArray && !isStruct)
+          return value.Array.Values.ToArray();
+        return value;
       }
       //  Is simple type
-      object Result = DecodeSimple(Reader, TypeName);
-      InstanceFactories.DecodeSimple(Result, TypeName, out Result);
-      return Result;
+      object simpleResult = DecodeSimple(reader, typeName);
+      instanceFactories.DecodeSimple(simpleResult, typeName, out simpleResult);
+      return simpleResult;
     }
 
-    static private object DecodeServlet(InstanceFactories InstanceFactories, LinkStack DevicePath, MorphReader Reader, byte ValueType, string TypeName)
+    static private object DecodeServlet(InstanceFactories instanceFactories, LinkStack devicePath, MorphReader reader, byte valueType, string typeName)
     {
       //  Servlet ID
-      int ServletID = Reader.ReadInt32();
+      int servletID = reader.ReadInt32();
       //  MorphApartment ID
-      int ApartmentID = Reader.ReadInt32();
+      int apartmentID = reader.ReadInt32();
       //  Device path
-      LinkStack FullPath;
-      if ((ValueType & ValueType_HasDevicePath) != 0)
-        FullPath = new LinkStack(Reader.ReadBytes(Reader.ReadInt32()));
+      LinkStack fullPath;
+      if ((valueType & ValueType_HasDevicePath) != 0)
+        fullPath = new LinkStack(reader.ReadBytes(reader.ReadInt32()));
       else
-        FullPath = new LinkStack();
+        fullPath = new LinkStack();
       //  Add the device path to make it the point of view of this receiver.
-      FullPath.Push(DevicePath);
+      fullPath.Push(devicePath);
       //  Optimise device path
-      List<Link> Links = FullPath.ToLinks();
+      List<Link> links = fullPath.ToLinks();
       //  Eliminate: A-B-A  ( -> A-A )
-      for (int i = Links.Count - 3; i >= 0; i--)
-        if (Links[i].Equals(Links[i + 2]))
-          Links.RemoveAt(i + 1);
+      for (int i = links.Count - 3; i >= 0; i--)
+        if (links[i].Equals(links[i + 2]))
+          links.RemoveAt(i + 1);
       //  Eliminate: A-A    ( -> A )
-      for (int i = Links.Count - 2; i >= 0; i--)
-        if (Links[i].Equals(Links[i + 1]))
-          Links.RemoveAt(i + 1);
+      for (int i = links.Count - 2; i >= 0; i--)
+        if (links[i].Equals(links[i + 1]))
+          links.RemoveAt(i + 1);
       //  Might be in a local apartment
-      if ((Links.Count == 0) ||
-        ((Links.Count == 1) && (Links[0] is LinkInternet) && (Connections.IsEndPointOnThisProcess(((LinkInternet)Links[0]).EndPoint))))
+      if ((links.Count == 0) ||
+        ((links.Count == 1) && (links[0] is LinkInternet) && (Connections.IsEndPointOnThisProcess(((LinkInternet)links[0]).EndPoint))))
       {
-        MorphApartment Apartment = MorphApartmentFactory.Find(ApartmentID);
-        if (Apartment == null)
+        MorphApartment apartment = MorphApartmentFactory.Find(apartmentID);
+        if (apartment == null)
           throw new EMorph("Apartment not found");
         //  Create servlet proxy
-        Servlet Servlet = Apartment.Servlets.Find(ServletID);
-        if (Servlet == null)
+        Servlet servlet = apartment.Servlets.Find(servletID);
+        if (servlet == null)
           throw new EMorph("Servlet not found");
-        return Servlet.Object;
+        return servlet.Object;
       }
       //  Obtain servlet proxy
-      ServletProxy Proxy = Devices.Obtain(FullPath).Obtain(ApartmentID, InstanceFactories).ServletProxies.Obtain(ServletID, TypeName);
+      ServletProxy proxy = Devices.Obtain(fullPath).Obtain(apartmentID, instanceFactories).ServletProxies.Obtain(servletID, typeName);
       //  Try to convert it 
-      object Result;
-      if ((InstanceFactories != null) && (InstanceFactories.DecodeReference(Proxy, out Result)))
-        return Result;
+      if ((instanceFactories != null) && (instanceFactories.DecodeReference(proxy, out object result)))
+        return result;
       else
-        return Proxy;
+        return proxy;
     }
 
-    static private object DecodeValueInstance(InstanceFactories InstanceFactories, LinkStack DevicePath, MorphReader Reader, byte ValueType, bool IsStruct, bool IsArray, string TypeName)
+    static private object DecodeValueInstance(InstanceFactories instanceFactories, LinkStack devicePath, MorphReader reader, byte valueType, bool isStruct, bool isArray, string typeName)
     {
       //  Create result
-      ValueInstance result = new ValueInstance(TypeName, IsStruct, IsArray);
+      ValueInstance result = new ValueInstance(typeName, isStruct, isArray);
       //  Read Struct
-      if (IsStruct)
+      if (isStruct)
       {
         StructValues Struct = result.Struct;
         //  StructElemCount
-        int StructElemCount = Reader.ReadInt32();
+        int structElemCount = reader.ReadInt32();
         //  Read values
-        for (int i = 0; i < StructElemCount; i++)
+        for (int i = 0; i < structElemCount; i++)
         {
-          string Name = null;
-          object Value = DecodeValue(InstanceFactories, DevicePath, Reader, out Name);
+          object Value = DecodeValue(instanceFactories, devicePath, reader, out string Name);
           Struct.Add(Value, Name);
         }
       }
       //  Read Array
-      if (IsArray)
+      if (isArray)
       {
-        ArrayValues Array = result.Array;
+        ArrayValues array = result.Array;
         //  ArrayElemCount
-        int ArrayElemCount = Reader.ReadInt32();
+        int arrayElemCount = reader.ReadInt32();
         //  ArrayElemType
-        string ArrayElemType = null;
-        if ((ValueType & ValueType_ArrayElemType) != 0)
-          ArrayElemType = Reader.ReadIdentifier();
+        string arrayElemType = null;
+        if ((valueType & ValueType_ArrayElemType) != 0)
+          arrayElemType = reader.ReadIdentifier();
         //  Read values
-        for (int i = 0; i < ArrayElemCount; i++)
+        for (int i = 0; i < arrayElemCount; i++)
         {
-          string Name = null;
-          object Value = DecodeValue(InstanceFactories, DevicePath, Reader, out Name);
-          Array.Add(Value);
+          object Value = DecodeValue(instanceFactories, devicePath, reader, out string Name);
+          array.Add(Value);
         }
       }
       return result;
     }
 
-    static private object DecodeSimple(MorphReader Reader, string TypeName)
+    static private object DecodeSimple(MorphReader reader, string typeName)
     {
-      byte SimpleType = (byte)Reader.ReadInt8();
-      bool IsNumeric = (SimpleType & SimpleType_IsCharacter) == 0;
-      bool IsArray = (SimpleType & SimpleType_IsArray) != 0;
+      byte simpleType = (byte)reader.ReadInt8();
+      bool isNumeric = (simpleType & SimpleType_IsCharacter) == 0;
+      bool isArray = (simpleType & SimpleType_IsArray) != 0;
       //  Might need to read ArraySize
       long ArraySize = 0;
-      if (IsArray)
-        ArraySize = ReadCountAsInt64(Reader, (SimpleType & SimpleType_ArraySize) >> 2);
+      if (isArray)
+        ArraySize = ReadCountAsInt64(reader, (simpleType & SimpleType_ArraySize) >> 2);
       //  IsNumeric/IsCharacter
-      if (IsNumeric)
+      if (isNumeric)
       #region IsNumeric
       {
-        byte BytesPerValue = (byte)((SimpleType & SimpleType_ValueSize) >> 6);
-        if (!IsArray)
+        byte bytesPerValue = (byte)((simpleType & SimpleType_ValueSize) >> 6);
+        if (!isArray)
           //  Single ordinal value
-          return ReadCount(Reader, BytesPerValue);
+          return ReadCount(reader, bytesPerValue);
         else
         { //  Array of ordinal values
-          switch (BytesPerValue)
+          switch (bytesPerValue)
           {
             case 0: //  2^ByteCountSize = 1 = 8 bit
               {
-                Byte[] Result = new Byte[ArraySize];
+                Byte[] result = new Byte[ArraySize];
                 for (int i = 0; i < ArraySize; i++)
-                  Result[i] = (Byte)Reader.ReadInt8();
-                return Result;
+                  result[i] = (Byte)reader.ReadInt8();
+                return result;
               }
             case 1: //  2^ByteCountSize = 2 = 16 bit
               {
-                Int16[] Result = new Int16[ArraySize];
+                Int16[] result = new Int16[ArraySize];
                 for (int i = 0; i < ArraySize; i++)
-                  Result[i] = (Int16)Reader.ReadInt16();
-                return Result;
+                  result[i] = (Int16)reader.ReadInt16();
+                return result;
               }
             case 2: //  2^ByteCountSize = 4 = 32 bit
               {
-                Int32[] Result = new Int32[ArraySize];
+                Int32[] result = new Int32[ArraySize];
                 for (int i = 0; i < ArraySize; i++)
-                  Result[i] = (Int32)Reader.ReadInt32();
-                return Result;
+                  result[i] = (Int32)reader.ReadInt32();
+                return result;
               }
             case 3: //  2^ByteCountSize = 8 = 64 bit
               {
-                Int64[] Result = new Int64[ArraySize];
+                Int64[] result = new Int64[ArraySize];
                 for (int i = 0; i < ArraySize; i++)
-                  Result[i] = (Int64)Reader.ReadInt64();
-                return Result;
+                  result[i] = (Int64)reader.ReadInt64();
+                return result;
               }
           }
         }
@@ -591,69 +586,69 @@ namespace Morph.Params
       else
       #region IsCharacter
       {
-        bool IsUnicode = (SimpleType & SimpleType_IsUnicode) != 0;
-        bool IsString = (SimpleType & SimpleType_IsString) != 0;
-        if (!IsString)
-          if (!IsArray)
+        bool isUnicode = (simpleType & SimpleType_IsUnicode) != 0;
+        bool isString = (simpleType & SimpleType_IsString) != 0;
+        if (!isString)
+          if (!isArray)
             //  Single character
-            if (!IsUnicode)
-              return (Char)Reader.ReadInt8(); //  ASCII
+            if (!isUnicode)
+              return (Char)reader.ReadInt8(); //  ASCII
             else
-              return (Char)Reader.ReadInt16();  //  Unicode
+              return (Char)reader.ReadInt16();  //  Unicode
           else
             //  Array of characters
-            if (!IsUnicode)
+            if (!isUnicode)
             { //  ASCII array
-              Char[] Result = new Char[ArraySize];
+              Char[] result = new Char[ArraySize];
               for (int i = 0; i < ArraySize; i++)
-                Result[i] = (Char)Reader.ReadInt8();
-              return Result;
+                result[i] = (Char)reader.ReadInt8();
+              return result;
             }
             else
             { //  Unicode array
-              Char[] Result = new Char[ArraySize];
+              Char[] result = new Char[ArraySize];
               for (int i = 0; i < ArraySize; i++)
-                Result[i] = (Char)Reader.ReadInt16();
-              return Result;
+                result[i] = (Char)reader.ReadInt16();
+              return result;
             }
-        else if (!IsArray)
+        else if (!isArray)
         { //  Single string
-          byte ByteCountSize = (byte)((SimpleType & SimpleType_StringLength) >> 6);
-          return Reader.ReadString(ByteCountSize, IsUnicode);
+          byte byteCountSize = (byte)((simpleType & SimpleType_StringLength) >> 6);
+          return reader.ReadString(byteCountSize, isUnicode);
         }
         else
         { //  Array of strings
-          byte ByteCountSize = (byte)((SimpleType & SimpleType_StringLength) >> 6);
-          string[] Result = new String[ArraySize];
+          byte byteCountSize = (byte)((simpleType & SimpleType_StringLength) >> 6);
+          string[] result = new String[ArraySize];
           for (int i = 0; i < ArraySize; i++)
-            Result[i] = Reader.ReadString(ByteCountSize, IsUnicode);
-          return Result;
+            result[i] = reader.ReadString(byteCountSize, isUnicode);
+          return result;
         }
       }
       #endregion
       throw new EMorph("Implementation error");
     }
 
-    static private object ReadCount(MorphReader Reader, int ByteCount)
+    static private object ReadCount(MorphReader reader, int byteCount)
     {
-      switch (ByteCount)
+      switch (byteCount)
       {
-        case 0: return (Byte)Reader.ReadInt8();
-        case 1: return (Int16)Reader.ReadInt16();
-        case 2: return (Int32)Reader.ReadInt32();
-        case 3: return (Int64)Reader.ReadInt64();
+        case 0: return (Byte)reader.ReadInt8();
+        case 1: return (Int16)reader.ReadInt16();
+        case 2: return (Int32)reader.ReadInt32();
+        case 3: return (Int64)reader.ReadInt64();
         default: throw new EMorph("Implementation error");
       }
     }
 
-    static private Int64 ReadCountAsInt64(MorphReader Reader, int ByteCount)
+    static private Int64 ReadCountAsInt64(MorphReader reader, int byteCount)
     {
-      switch (ByteCount)
+      switch (byteCount)
       {
-        case 0: return Reader.ReadInt8();
-        case 1: return Reader.ReadInt16();
-        case 2: return Reader.ReadInt32();
-        case 3: return Reader.ReadInt64();
+        case 0: return reader.ReadInt8();
+        case 1: return reader.ReadInt16();
+        case 2: return reader.ReadInt32();
+        case 3: return reader.ReadInt64();
         default: throw new EMorph("Implementation error");
       }
     }

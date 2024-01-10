@@ -6,106 +6,106 @@ namespace Morph.Core
   {
     public LinkStack()
     {
-      _Links = new List<Link>();
-      _Reader = null;
+      _links = new List<Link>();
+      _reader = null;
     }
 
-    public LinkStack(MorphReader Reader)
+    public LinkStack(MorphReader reader)
     {
-      _Links = new List<Link>();
-      _Reader = Reader;
+      _links = new List<Link>();
+      _reader = reader;
       ToString();
     }
 
     public LinkStack(byte[] bytes)
     {
-      _Links = new List<Link>();
-      _Reader = new MorphReaderSized(bytes);
+      _links = new List<Link>();
+      _reader = new MorphReaderSized(bytes);
     }
 
-    public LinkStack(List<Link> Links)
+    public LinkStack(List<Link> links)
     {
-      _Links = Links;
-      _Reader = null;
+      _links = links;
+      _reader = null;
     }
 
-    private List<Link> _Links;
-    private MorphReader _Reader;
+    private readonly List<Link> _links;
+    private readonly MorphReader _reader;
 
-    private List<Link> CloneList(List<Link> SourceList)
+    private List<Link> CloneList(List<Link> sourceList)
     {
       List<Link> result = new List<Link>();
-      for (int i = 0; i < SourceList.Count; i++)
-        result.Add(SourceList[i]);
+      for (int i = 0; i < sourceList.Count; i++)
+        result.Add(sourceList[i]);
       return result;
     }
 
     public void PeekAll()
     {
-      if (_Reader != null)
-        while (_Reader.CanRead)
-          _Links.Insert(0, LinkTypes.ReadLink(_Reader));
+      if (_reader != null)
+        while (_reader.CanRead)
+          _links.Insert(0, LinkTypes.ReadLink(_reader));
     }
 
     public Link Peek()
     {
-      if (_Links.Count == 0)
+      if (_links.Count == 0)
       { //  Read next link
-        if (_Reader == null)
+        if (_reader == null)
           return null;
-        Link link = LinkTypes.ReadLink(_Reader);
+        Link link = LinkTypes.ReadLink(_reader);
         if (link == null)
           return null;
         //  Add it
-        _Links.Add(link);
+        _links.Add(link);
       }
       //  Return the top of the stack
-      return _Links[_Links.Count - 1];
+      return _links[_links.Count - 1];
     }
 
     public Link Pop()
     {
       Link Link = Peek();
-      if (_Links.Count > 0)
-        _Links.RemoveAt(_Links.Count - 1);
+      if (_links.Count > 0)
+        _links.RemoveAt(_links.Count - 1);
       return Link;
     }
 
-    public void Push(Link Link)
+    public void Push(Link link)
     {
-      if (Link != null)
-        _Links.Add(Link);
+      if (link != null)
+        _links.Add(link);
     }
 
-    public void Push(LinkStack Stack)
+    public void Push(LinkStack stack)
     {
-      if (Stack == null)
+      if (stack == null)
         return;
       //  Decode all the links
-      Stack.PeekAll();
+      stack.PeekAll();
       //  Add the links to Stack
-      for (int i = 0; i < Stack._Links.Count; i++)
-        _Links.Add(Stack._Links[i]);
+      for (int i = 0; i < stack._links.Count; i++)
+        _links.Add(stack._links[i]);
     }
 
-    public void Append(Link Link)
+    public void Append(Link link)
     {
-      if (Link == null)
+      if (link == null)
         return;
       //  Decode all the links
       PeekAll();
       //  Add the link to Stack
-      if (Link != null)
-        _Links.Insert(0, Link);
+      if (link != null)
+        _links.Insert(0, link);
     }
 
-    public void Append(LinkStack Stack)
+    public void Append(LinkStack stack)
     {
       //  Decode all the links
-      Stack.PeekAll();
+      stack.PeekAll();
       //  Add the links to Stack
-      for (int i = 0; i < Stack._Links.Count; i++)
-        _Links.Insert(i, Stack._Links[i]);  
+      for (int i = 0; i < stack._links.Count; i++)
+        _links.Insert(i, stack._links[i]);  
     }
 
     public int ByteSize
@@ -113,44 +113,44 @@ namespace Morph.Core
       get
       {
         int result = 0;
-        for (int i = _Links.Count - 1; 0 <= i; i--)
+        for (int i = _links.Count - 1; 0 <= i; i--)
         {
-          int size = _Links[i].Size();
+          int size = _links[i].Size();
           result += size;
         }
-        if (_Reader != null)
-          result += ((int)_Reader.Remaining);
+        if (_reader != null)
+          result += ((int)_reader.Remaining);
         return result;
       }
     }
 
-    public void Write(MorphWriter Writer)
+    public void Write(MorphWriter writer)
     {
-      for (int i = _Links.Count - 1; 0 <= i; i--)
-        _Links[i].Write(Writer);
-      if (_Reader != null)
-        Writer.WriteStream(_Reader);
+      for (int i = _links.Count - 1; 0 <= i; i--)
+        _links[i].Write(writer);
+      if (_reader != null)
+        writer.WriteStream(_reader);
     }
 
     public List<Link> ToLinks()
     {
       PeekAll();
-      return CloneList(_Links);
+      return CloneList(_links);
     }
 
     public LinkStack Clone()
     {
       PeekAll();
-      return new LinkStack(CloneList(_Links));
+      return new LinkStack(CloneList(_links));
     }
 
     public LinkStack Reverse()
     {
-      List<Link> Links = ToLinks();
-      List<Link> Reverse = new List<Link>();
-      for (int i = Links.Count - 1; i >= 0; i--)
-        Reverse.Add(Links[i]);
-      return new LinkStack(Reverse);
+      List<Link> links = ToLinks();
+      List<Link> reverse = new List<Link>();
+      for (int i = links.Count - 1; i >= 0; i--)
+        reverse.Add(links[i]);
+      return new LinkStack(reverse);
     }
 
     #region Object overrides
@@ -159,15 +159,15 @@ namespace Morph.Core
     {
       if (!(obj is LinkStack))
         return false;
-      LinkStack Other = (LinkStack)obj;
+      LinkStack other = (LinkStack)obj;
       //  Convert binary to objects
       this.PeekAll();
-      Other.PeekAll();
+      other.PeekAll();
       //  Compare the objects that make up the paths
-      if (this._Links.Count != Other._Links.Count)
+      if (this._links.Count != other._links.Count)
         return false;
-      for (int i = _Links.Count - 1; i >= 0; i--)
-        if (!_Links[i].Equals(Other._Links[i]))
+      for (int i = _links.Count - 1; i >= 0; i--)
+        if (!_links[i].Equals(other._links[i]))
           return false;
       return true;
     }
@@ -187,10 +187,10 @@ namespace Morph.Core
       return str;
        * */
       string str = "(";
-      for (int i = _Links.Count - 1; 0 <= i; i--)
-        str += _Links[i].ToString();
-      if ((_Reader != null) && (_Reader.CanRead))
-        str += "...[" + _Reader.Remaining.ToString() + " B]";
+      for (int i = _links.Count - 1; 0 <= i; i--)
+        str += _links[i].ToString();
+      if ((_reader != null) && (_reader.CanRead))
+        str += "...[" + _reader.Remaining.ToString() + " B]";
       return str + ')';
     }
 

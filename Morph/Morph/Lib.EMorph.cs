@@ -4,10 +4,10 @@ namespace Morph
 {
   public class EMorph : Exception
   {
-    public EMorph(int ErrorCode)
-      : base(ErrorCode.ToString())
+    public EMorph(int errorCode)
+      : base(errorCode.ToString())
     {
-      _ErrorCode = ErrorCode;
+      _errorCode = errorCode;
     }
 
     public EMorph(string message)
@@ -15,44 +15,44 @@ namespace Morph
     {
     }
 
-    public EMorph(int ErrorCode, string message)
+    public EMorph(int errorCode, string message)
       : base(message)
     {
-      _ErrorCode = ErrorCode;
+      _errorCode = errorCode;
     }
 
-    private EMorph(int ErrorCode, string message, string MorphTrace)
+    private EMorph(int errorCode, string message, string morphTrace)
       : base(message)
     {
-      _ErrorCode = ErrorCode;
-      _StackTrace = MorphTrace;
+      _errorCode = errorCode;
+      _stackTrace = morphTrace;
     }
 
-    private int _ErrorCode = Any;
+    private readonly int _errorCode = Any;
     public int ErrorCode
     {
-      get { return _ErrorCode; }
+      get => _errorCode;
     }
 
     public const int None = 0;
     public const int Any = -1;
 
-    private string _StackTrace = null;
+    private readonly string _stackTrace = null;
     public override string StackTrace
     {
       get
       {
-        if (_StackTrace != null)
-          return _StackTrace;
+        if (_stackTrace != null)
+          return _stackTrace;
         return base.StackTrace;
       }
     }
 
-    static public void Throw(int ErrorCode, string Message, string MorphTrace)
+    static public void Throw(int errorCode, string message, string morphTrace)
     {
-      if (Message == null)
-        Message = "Morph error: " + ErrorCode.ToString();
-      throw new EMorph(ErrorCode, Message, MorphTrace);
+      if (message == null)
+        message = "Morph error: " + errorCode.ToString();
+      throw new EMorph(errorCode, message, morphTrace);
     }
   }
 
@@ -66,8 +66,8 @@ namespace Morph
 
   public class EMorphUsage : EMorph
   {
-    public EMorphUsage(string Message)
-      : base(Message)
+    public EMorphUsage(string message)
+      : base(message)
     {
     }
   }

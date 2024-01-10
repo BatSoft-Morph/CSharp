@@ -4,150 +4,150 @@ namespace Morph.Params
 {
   public class ValueInstance : ValueObject
   {
-    public ValueInstance(string TypeName, bool IsStruct, bool IsArray)
-      : base(TypeName)
+    public ValueInstance(string typeName, bool isStruct, bool isArray)
+      : base(typeName)
     {
-      if (IsArray)
-        _Array = new ArrayValues();
-      if (IsStruct)
-        _Struct = new StructValues();
+      if (isArray)
+        _array = new ArrayValues();
+      if (isStruct)
+        _struct = new StructValues();
     }
 
-    private ArrayValues _Array;
+    private readonly ArrayValues _array;
     public ArrayValues Array
     {
-      get { return _Array; }
+      get => _array;
     }
 
-    private StructValues _Struct;
+    private readonly StructValues _struct;
     public StructValues Struct
     {
-      get { return _Struct; }
+      get => _struct;
     }
   }
 
   public class ArrayValues
   {
-    private Values _Values = new Values();
+    private readonly Values _values = new Values();
 
     public int Count
     {
-      get { return _Values.Count; }
+      get => _values.Count;
     }
 
     public Values Values
     {
-      get { return _Values; }
+      get => _values;
     }
 
-    public void Add(object Value)
+    public void Add(object value)
     {
-      _Values.Add(Value);
+      _values.Add(value);
     }
   }
 
   public class StructValues
   {
-    private Values _Values = new Values();
-    private Names _Names = new Names();
+    private readonly Values _values = new Values();
+    private readonly Names _names = new Names();
 
     public int Count
     {
-      get { return _Values.Count; }
+      get => _values.Count;
     }
 
     public Values Values
     {
-      get { return _Values; }
+      get => _values;
     }
 
     public Names Names
     {
-      get { return _Names; }
+      get => _names;
     }
 
-    public bool HasName(string Name)
+    public bool HasName(string name)
     {
-      return _Names.IndexOf(Name) < 0;
+      return _names.IndexOf(name) < 0;
     }
 
-    public object ByName(string Name)
+    public object ByName(string name)
     {
-      int i = _Names.IndexOf(Name);
+      int i = _names.IndexOf(name);
       if (i < 0)
-        throw new EMorph("Identifier not found: " + Name);
-      return _Values[i];
+        throw new EMorph("Identifier not found: " + name);
+      return _values[i];
     }
 
-    public object ByNameOrNull(string Name)
+    public object ByNameOrNull(string name)
     {
-      int i = _Names.IndexOf(Name);
+      int i = _names.IndexOf(name);
       if (i < 0)
         return null;
-      return _Values[i];
+      return _values[i];
     }
 
-    public void Add(object Value, string Name)
+    public void Add(object value, string name)
     {
-      _Values.Add(Value);
-      _Names.Add(Name);
+      _values.Add(value);
+      _names.Add(name);
     }
 
     public object[] ToObjects()
     {
       if (Count == 0)
         return null;
-      return _Values._Values.ToArray();
+      return _values._values.ToArray();
     }
   }
 
   public class Values
   {
-    internal List<object> _Values = new List<object>();
+    internal List<object> _values = new List<object>();
 
     internal int Count
     {
-      get { return _Values.Count; }
+      get => _values.Count;
     }
 
     public object this[int i]
     {
-      get { return _Values[i]; }
+      get => _values[i];
     }
 
     internal void Add(object Value)
     {
-      _Values.Add(Value);
+      _values.Add(Value);
     }
 
     internal object[] ToArray()
     {
-      return _Values.ToArray();
+      return _values.ToArray();
     }
   }
 
   public class Names
   {
-    private List<string> _Names = new List<string>();
+    private List<string> _names = new List<string>();
 
     internal int Count
     {
-      get { return _Names.Count; }
+      get => _names.Count;
     }
 
     public string this[int i]
     {
-      get { return _Names[i]; }
+      get => _names[i];
     }
 
-    internal int IndexOf(string Name)
+    internal int IndexOf(string name)
     {
-      return _Names.IndexOf(Name);
+      return _names.IndexOf(name);
     }
 
-    internal void Add(string Name)
+    internal void Add(string name)
     {
-      _Names.Add(Name);
+      _names.Add(name);
     }
   }
 }

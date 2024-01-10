@@ -9,70 +9,70 @@ namespace Morph.Daemon
   {
     static internal ServiceCallbacks _ServiceCallbacks = new ServiceCallbacks();
 
-    public void start(LinkMessage Message, string serviceName, bool accessLocal, bool accessRemote)
+    public void Start(LinkMessage message, string serviceName, bool accessLocal, bool accessRemote)
     {
       //  Register the service with the daemon
-      RegisteredService Service = RegisteredServices.ObtainByName(serviceName);
-      lock (Service)
-        if (Message is LinkMessageFromIP)
+      RegisteredService service = RegisteredServices.ObtainByName(serviceName);
+      lock (service)
+        if (message is LinkMessageFromIP)
         {
-          Service.Running = new RegisteredRunningInternet(Service, ((LinkMessageFromIP)Message).Connection);
-          Service.Running.AccessLocal = accessLocal;
-          Service.Running.AccessRemote = accessRemote;
+          service.Running = new RegisteredRunningInternet(service, ((LinkMessageFromIP)message).Connection);
+          service.Running.AccessLocal = accessLocal;
+          service.Running.AccessRemote = accessRemote;
         }
         else
-          throw new EMorphDaemon(GetType().Name + ".start(): Unhandled message type \"" + Message.GetType().Name + "\".");
+          throw new EMorphDaemon(GetType().Name + ".Start(): Unhandled message type \"" + message.GetType().Name + "\".");
     }
 
-    public void stop(LinkMessage Message, string serviceName)
+    public void Stop(LinkMessage message, string serviceName)
     {
       //  Find the service
-      RegisteredService Service = RegisteredServices.FindByName(serviceName);
-      if (Service == null)
+      RegisteredService service = RegisteredServices.FindByName(serviceName);
+      if (service == null)
         return; //  Nothing to find
       //  Stop service from IP
-      if (Message is LinkMessageFromIP)
-        lock (Service)
+      if (message is LinkMessageFromIP)
+        lock (service)
         {
-          Connection connection = ((LinkMessageFromIP)Message).Connection;
-          if (!Service.IsRunning)
-            if (!(Service.Running is RegisteredRunningInternet) || (((RegisteredRunningInternet)Service.Running).Connection != connection))
+          Connection connection = ((LinkMessageFromIP)message).Connection;
+          if (!service.IsRunning)
+            if (!(service.Running is RegisteredRunningInternet) || (((RegisteredRunningInternet)service.Running).Connection != connection))
               throw new EMorphDaemon("Caller cannot stop a service " + serviceName + " which it does not own.");
-          Service.Running = null;
+          service.Running = null;
           return;
         }
       //  This should not happen with a full implementation
-      throw new EMorphDaemon(MorphDaemonService.ServiceName_Services + ".stop(): \"" + serviceName + "\"");
+      throw new EMorphDaemon(MorphDaemonService.ServiceName_Services + ".Stop(): \"" + serviceName + "\"");
     }
 
-    public DaemonService[] listServices(LinkMessage Message)
+    public DaemonService[] ListServices(LinkMessage message)
     {
       //  List services
-      RegisteredService[] AllServices = RegisteredServices.ListAll();
+      RegisteredService[] allServices = RegisteredServices.ListAll();
       //  Filter in running services
       List<DaemonService> result = new List<DaemonService>();
-      for (int i = 0; i < AllServices.Length; i++)
+      for (int i = 0; i < allServices.Length; i++)
       {
-        RegisteredService Service = AllServices[i];
-        lock (Service)
-          if (Service.IsRunning)
+        RegisteredService service = allServices[i];
+        lock (service)
+          if (service.IsRunning)
           {
             DaemonService RunningService = new DaemonService();
-            RunningService.serviceName = Service.Name;
-            RunningService.accessLocal = Service.Running.AccessLocal;
-            RunningService.accessRemote = Service.Running.AccessRemote;
+            RunningService.serviceName = service.Name;
+            RunningService.accessLocal = service.Running.AccessLocal;
+            RunningService.accessRemote = service.Running.AccessRemote;
             result.Add(RunningService);
           }
       }
       return result.ToArray();
     }
 
-    public void listen(LinkMessage Message, ServiceCallback callback)
+    public void Listen(LinkMessage message, ServiceCallback callback)
     {
       _ServiceCallbacks.Listen(callback);
     }
 
-    public void unlisten(LinkMessage Message, ServiceCallback callback)
+    public void Unlisten(LinkMessage message, ServiceCallback callback)
     {
       _ServiceCallbacks.Removed(callback);
     }

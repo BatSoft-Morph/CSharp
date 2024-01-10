@@ -1,25 +1,26 @@
-﻿using Morph.Base;
+﻿
+using Morph.Base;
 using Morph.Core;
 using Morph.Lib;
 
 namespace Morph.Internet
 {
-  public class ActionMessage : Action
+  public class ActionMessage : IAction
   {
-    public ActionMessage(LinkMessage Message)
+    public ActionMessage(LinkMessage message)
     {
-      if (Message == null)
+      if (message == null)
         throw new EMorphImplementation();
-      _Message = Message;
+      _message = message;
     }
 
-    private LinkMessage _Message;
+    private readonly LinkMessage _message;
 
     #region Action Members
 
     public void Execute()
     {
-      LinkTypes.ActionCurrentLink(_Message);
+      LinkTypes.ActionCurrentLink(_message);
     }
 
     #endregion
@@ -29,30 +30,30 @@ namespace Morph.Internet
   {
     static ActionHandler()
     {
-      Actions = new ThreadedActionQueue();
-      Actions.Error += ActionError;
+      s_Actions = new ThreadedActionQueue();
+      s_Actions.Error += ActionError;
     }
 
-    static internal ThreadedActionQueue Actions;
+    static internal ThreadedActionQueue s_Actions;
 
-    static public void Add(LinkMessage Message)
+    static public void Add(LinkMessage message)
     {
-      Actions.Push(new ActionMessage(Message));
+      s_Actions.Push(new ActionMessage(message));
     }
 
     static public int WaitingCount
     {
-      get { return Actions.Count; }
+      get => s_Actions.Count;
     }
 
-    static public void SetThreadCount(int ThreadCount)
+    static public void SetThreadCount(int threadCount)
     {
-      Actions.SetThreadCount(ThreadCount);
+      s_Actions.SetThreadCount(threadCount);
     }
 
     static public void Stop()
     {
-      Actions.WaitUntilNoThreads();
+      s_Actions.WaitUntilNoThreads();
     }
 
     static private void ActionError(object sender, ExceptionArgs e)

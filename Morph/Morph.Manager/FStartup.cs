@@ -6,10 +6,10 @@ namespace Morph.Manager
 {
   public partial class FStartup : Form
   {
-    public FStartup(bool IsNew)
+    public FStartup(bool isNew)
     {
       InitializeComponent();
-      textServiceName.Enabled = IsNew;
+      textServiceName.Enabled = isNew;
     }
 
     private void FStartup_Shown(object sender, EventArgs e)
@@ -24,10 +24,10 @@ namespace Morph.Manager
 
     private void numericTimeout_ValueChanged(object sender, EventArgs e)
     {
-      int Value = (int)numericTimeout.Value;
-      if (Value <= 0)
-        Value = 1;
-      numericTimeout.Value = Value;
+      int value = (int)numericTimeout.Value;
+      if (value <= 0)
+        value = 1;
+      numericTimeout.Value = value;
     }
 
     private void butBrowse_Click(object sender, EventArgs e)

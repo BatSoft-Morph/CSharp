@@ -5,30 +5,30 @@ namespace Morph.Sequencing
 {
   public abstract class LinkSequenceStart : LinkSequence
   {
-    public LinkSequenceStart(int SequenceID, int SenderID, bool IsLossless)
+    public LinkSequenceStart(int sequenceID, int senderID, bool IsLossless)
       : base()
     {
-      _SequenceID = SequenceID;
-      _SenderID = SenderID;
+      _sequenceID = sequenceID;
+      _senderID = senderID;
       _IsLossless = IsLossless;
     }
 
-    protected int _SequenceID;
+    protected int _sequenceID;
     public int SequenceID
     {
-      get { return _SequenceID; }
+      get => _sequenceID;
     }
 
-    protected int _SenderID;
+    protected int _senderID;
     public int SenderID
     {
-      get { return _SenderID; }
+      get => _senderID;
     }
 
     protected bool _IsLossless;
     public bool IsLossless
     {
-      get { return _IsLossless; }
+      get => _IsLossless;
     }
 
     protected abstract bool ToSender
@@ -38,11 +38,11 @@ namespace Morph.Sequencing
 
     #region Link
 
-    public override void Write(MorphWriter Writer)
+    public override void Write(MorphWriter writer)
     {
-      Writer.WriteLinkByte(LinkTypeID, true, ToSender, _IsLossless);
-      Writer.WriteInt32(_SequenceID);
-      Writer.WriteInt32(_SenderID);
+      writer.WriteLinkByte(LinkTypeID, true, ToSender, _IsLossless);
+      writer.WriteInt32(_sequenceID);
+      writer.WriteInt32(_senderID);
     }
 
     #endregion
@@ -50,8 +50,8 @@ namespace Morph.Sequencing
     public override string ToString()
     {
       string str = "{Sequence";
-      str += " SequenceID=" + _SequenceID.ToString();
-      str += " SenderID=" + _SenderID.ToString();
+      str += " SequenceID=" + _sequenceID.ToString();
+      str += " SenderID=" + _senderID.ToString();
       if (_IsLossless)
         str += " Lossless";
       else
@@ -62,83 +62,83 @@ namespace Morph.Sequencing
 
   public class LinkSequenceStartSend : LinkSequenceStart
   {
-    public LinkSequenceStartSend(int SequenceID, int SenderID, bool IsLossless)
-      : base(SequenceID, SenderID, IsLossless)
+    public LinkSequenceStartSend(int sequenceID, int senderID, bool isLossless)
+      : base(sequenceID, senderID, isLossless)
     {
     }
 
     protected override bool ToSender
     {
-      get { return false; }
+      get => false;
     }
 
     public override object FindLinkObject()
     {
-      return SequenceReceivers.Find(_SequenceID);
+      return SequenceReceivers.Find(_sequenceID);
     }
 
-    public override void Action(LinkMessage Message)
+    public override void Action(LinkMessage message)
     {
-      if (_SenderID == 0)
+      if (_senderID == 0)
         throw new EMorph("At sequence, SenderID cannot be 0.");
-      SequenceReceiver Sequence;
-      if (_SequenceID == 0)
+      SequenceReceiver sequence;
+      if (_sequenceID == 0)
         //  Start new sequence
-        Sequence = SequenceReceivers.New(_IsLossless);
+        sequence = SequenceReceivers.New(_IsLossless);
       else
       { //  Find existing sequence
-        Sequence = SequenceReceivers.Find(_SequenceID);
-        if (Sequence == null)
-          throw new EMorph("SequenceID " + _SequenceID.ToString() + " does not exist.");
-        Sequence.IsLossless = _IsLossless || Sequence.IsLossless;
-        if (Message.PathFrom != null)
-          Sequence.PathToProxy = Message.PathFrom.Clone();
+        sequence = SequenceReceivers.Find(_sequenceID);
+        if (sequence == null)
+          throw new EMorph("SequenceID " + _sequenceID.ToString() + " does not exist.");
+        sequence.IsLossless = _IsLossless || sequence.IsLossless;
+        if (message.PathFrom != null)
+          sequence.PathToProxy = message.PathFrom.Clone();
       }
       //  Set the sender's ID
-      Sequence.SenderID = _SenderID;
+      sequence.SenderID = _senderID;
       //  Done
-      Message.NextLinkAction();
+      message.NextLinkAction();
     }
   }
 
   public class LinkSequenceStartReply : LinkSequenceStart
   {
-    public LinkSequenceStartReply(int SequenceID, int SenderID, bool IsLossless)
-      : base(SequenceID, SenderID, IsLossless)
+    public LinkSequenceStartReply(int sequenceID, int senderID, bool isLossless)
+      : base(sequenceID, senderID, isLossless)
     {
     }
 
     protected override bool ToSender
     {
-      get { return true; }
+      get => true;
     }
 
     public override object FindLinkObject()
     {
-      return SequenceSenders.Find(_SenderID);
+      return SequenceSenders.Find(_senderID);
     }
 
-    public override void Action(LinkMessage Message)
+    public override void Action(LinkMessage message)
     {
-      if (Message.PathTo.Peek() == this)
-        Message.PathTo.Pop();
-      if (_SequenceID == 0)
+      if (message.PathTo.Peek() == this)
+        message.PathTo.Pop();
+      if (_sequenceID == 0)
         throw new EMorph("At sequence sender, SequenceID cannot be 0.");
       SequenceSender Sequence;
-      if (_SenderID == 0)
+      if (_senderID == 0)
       { //  Start new sequence
-        Sequence = SequenceSenders.New(Message.PathFrom, _IsLossless);
-        _SenderID = Sequence.SenderID;
+        Sequence = SequenceSenders.New(message.PathFrom, _IsLossless);
+        _senderID = Sequence.SenderID;
       }
       else
       { //  Find existing sequence
-        Sequence = SequenceSenders.Find(_SenderID);
+        Sequence = SequenceSenders.Find(_senderID);
         if (Sequence == null)
-          throw new EMorph("Sequence SenderID " + _SenderID.ToString() + " does not exist.");
+          throw new EMorph("Sequence SenderID " + _senderID.ToString() + " does not exist.");
         Sequence.IsLossless = _IsLossless || Sequence.IsLossless;
       }
       //  Set the sender's ID
-      Sequence.SequenceID = _SequenceID;
+      Sequence.SequenceID = _sequenceID;
     }
   }
 }

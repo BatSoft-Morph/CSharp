@@ -53,7 +53,7 @@ namespace Morph.Params
    */
   public interface IReferenceDecoder
   {
-    bool DecodeReference(ServletProxy Value, out object Reference);
+    bool DecodeReference(ServletProxy value, out object reference);
   }
 
   /** IInstanceEncoder
@@ -65,7 +65,7 @@ namespace Morph.Params
    */
   public interface IInstanceEncoder
   {
-    ValueInstance EncodeInstance(object Instance);
+    ValueInstance EncodeInstance(object instance);
   }
 
   /** IInstanceDecoder
@@ -80,7 +80,7 @@ namespace Morph.Params
    */
   public interface IInstanceDecoder
   {
-    bool DecodeInstance(ValueInstance Value, out object Instance);
+    bool DecodeInstance(ValueInstance value, out object instance);
   }
 
   /** ISimpleFactory
@@ -99,8 +99,8 @@ namespace Morph.Params
    */
   public interface ISimpleFactory
   {
-    bool EncodeSimple(out object Value, out string TypeName, object Instance);
-    bool DecodeSimple(object Value, string TypeName, out object Instance);
+    bool EncodeSimple(out object value, out string typeName, object instance);
+    bool DecodeSimple(object value, string typeName, out object instance);
   }
 
   #region Useful general implementations
@@ -122,43 +122,43 @@ namespace Morph.Params
   {
     #region Private
 
-    private Hashtable _Types = new Hashtable();
+    private readonly Hashtable _types = new Hashtable();
 
-    private Type FindType(string ValueTypeName)
+    private Type FindType(string valueTypeName)
     {
-      if (ValueTypeName == null)
+      if (valueTypeName == null)
         return null;
       else
-        return (Type)_Types[ValueTypeName];
+        return (Type)_types[valueTypeName];
     }
 
     #endregion
 
     public void AddStructType(Type type)
     {
-      _Types.Add(type.Name, type);
+      _types.Add(type.Name, type);
     }
 
     #region IInstanceFactory Members
 
-    static private Type[] NoParams = new Type[0];
+    private static readonly Type[] s_noParams = new Type[0];
 
-    public bool DecodeInstance(ValueInstance Value, out object Instance)
+    public bool DecodeInstance(ValueInstance value, out object instance)
     {
-      Instance = null;
+      instance = null;
       //  Find a type we are able to convert to
-      Type type = FindType(Value.TypeName);
+      Type type = FindType(value.TypeName);
       if (type == null)
         return false;
       //  Create the result instance
-      ConstructorInfo constructor = type.GetConstructor(NoParams);
+      ConstructorInfo constructor = type.GetConstructor(s_noParams);
       if (constructor != null)
-        Instance = constructor.Invoke(null);
+        instance = constructor.Invoke(null);
       else
-        Instance = Activator.CreateInstance(type);
+        instance = Activator.CreateInstance(type);
       //  Read the parameters into the instance
-      for (int i = Value.Struct.Count - 1; i >= 0; i--)
-        type.GetField(Value.Struct.Names[i]).SetValue(Instance, Value.Struct.Values[i]);
+      for (int i = value.Struct.Count - 1; i >= 0; i--)
+        type.GetField(value.Struct.Names[i]).SetValue(instance, value.Struct.Values[i]);
       //  Return success
       return true;
     }
@@ -179,42 +179,42 @@ namespace Morph.Params
   {
     #region Private
 
-    private Hashtable _Types = new Hashtable();
+    private readonly Hashtable _types = new Hashtable();
 
-    private Type FindType(string ValueTypeName)
+    private Type FindType(string valueTypeName)
     {
-      if (ValueTypeName == null)
+      if (valueTypeName == null)
         return null;
       else
-        return (Type)_Types[ValueTypeName];
+        return (Type)_types[valueTypeName];
     }
 
     #endregion
 
     public void AddArrayElemType(Type type)
     {
-      _Types.Add(type.Name + "[]", type);
+      _types.Add(type.Name + "[]", type);
     }
 
     #region IInstanceFactory Members
 
-    public bool DecodeInstance(ValueInstance Value, out object Instance)
+    public bool DecodeInstance(ValueInstance value, out object instance)
     {
-      Instance = null;
+      instance = null;
       //  This factory only deals with "pure" arrays
-      if ((Value.Array == null) || (Value.Struct != null))
+      if ((value.Array == null) || (value.Struct != null))
         return false;
       //  Find a type we are able to convert to
-      Type type = FindType(Value.TypeName);
+      Type type = FindType(value.TypeName);
       if (type == null)
         return false;
       //  Get as object[]
-      object[] values = Value.Array.Values.ToArray();
+      object[] values = value.Array.Values.ToArray();
       //  Convert to <type>[]
       Array array = Array.CreateInstance(type, values.Length);
       values.CopyTo(array, 0);
       //  Complete
-      Instance = array;
+      instance = array;
       return true;
     }
 
@@ -233,34 +233,34 @@ namespace Morph.Params
     private const Byte True = 0xFF;
     private const Byte False = 0x00;
 
-    public bool EncodeSimple(out object Value, out string TypeName, object Instance)
+    public bool EncodeSimple(out object value, out string typeName, object instance)
     {
-      TypeName = TypeNameBool;
-      if (Instance is Boolean)
+      typeName = TypeNameBool;
+      if (instance is Boolean)
       {
-        if ((Boolean)Instance)
-          Value = True; //  True as Byte 
+        if ((Boolean)instance)
+          value = True; //  True as Byte 
         else
-          Value = False; //  False as Byte 
+          value = False; //  False as Byte 
         return true;
       }
       else
       {
-        Value = null;
+        value = null;
         return false;
       }
     }
 
-    public bool DecodeSimple(object Value, string TypeName, out object Instance)
+    public bool DecodeSimple(object value, string typeName, out object instance)
     {
-      if (TypeNameBool.Equals(TypeName))
+      if (TypeNameBool.Equals(typeName))
       {
-        Instance = (Byte)Value != 0;
+        instance = (Byte)value != 0;
         return true;
       }
       else
       {
-        Instance = null;
+        instance = null;
         return false;
       }
     }
@@ -274,31 +274,31 @@ namespace Morph.Params
 
     private const string TypeNameDateTime = "DateTime";
 
-    public bool EncodeSimple(out object Value, out string TypeName, object Instance)
+    public bool EncodeSimple(out object value, out string typeName, object instance)
     {
-      TypeName = TypeNameDateTime;
-      if (Instance is DateTime)
+      typeName = TypeNameDateTime;
+      if (instance is DateTime)
       {
-        Value = Morph.Lib.Conversion.DateTimeToStr((DateTime)Instance);
+        value = Morph.Lib.Conversion.DateTimeToStr((DateTime)instance);
         return true;
       }
       else
       {
-        Value = null;
+        value = null;
         return false;
       }
     }
 
-    public bool DecodeSimple(object Value, string TypeName, out object Instance)
+    public bool DecodeSimple(object value, string typeName, out object instance)
     {
-      if ("DateTime".Equals(TypeName))
+      if ("DateTime".Equals(typeName))
       {
-        Instance = Morph.Lib.Conversion.StrToDateTime((String)Value);
+        instance = Morph.Lib.Conversion.StrToDateTime((String)value);
         return true;
       }
       else
       {
-        Instance = null;
+        instance = null;
         return false;
       }
     }
@@ -310,18 +310,18 @@ namespace Morph.Params
   {
     #region ISimpleFactory Members
 
-    public bool EncodeSimple(out object Value, out string TypeName, object Instance)
+    public bool EncodeSimple(out object value, out string typeName, object instance)
     {
-      Value = null;
-      TypeName = null;
+      value = null;
+      typeName = null;
       return false;
     }
 
-    public bool DecodeSimple(object Value, string TypeName, out object Instance)
+    public bool DecodeSimple(object value, string typeName, out object instance)
     {
-      if ("Date".Equals(TypeName) || "Time".Equals(TypeName) || "Currency".Equals(TypeName))
-        throw new EMorph("The type " + TypeName + " is not supported on this implementation.");
-      Instance = null;
+      if ("Date".Equals(typeName) || "Time".Equals(typeName) || "Currency".Equals(typeName))
+        throw new EMorph("The type " + typeName + " is not supported on this implementation.");
+      instance = null;
       return false;
     }
 
@@ -332,15 +332,15 @@ namespace Morph.Params
   {
     #region IInstanceFactory
 
-    public ValueInstance EncodeInstance(object Instance)
+    public ValueInstance EncodeInstance(object instance)
     {
-      if (!(Instance is Exception))
+      if (!(instance is Exception))
         return null;
-      Exception x = (Exception)Instance;
-      ValueInstance Value = new ValueInstance(Instance.GetType().Name, true, false);
-      Value.Struct.Add(x.Message, "message");
-      Value.Struct.Add(x.StackTrace, "trace");
-      return Value;
+      Exception x = (Exception)instance;
+      ValueInstance value = new ValueInstance(instance.GetType().Name, true, false);
+      value.Struct.Add(x.Message, "message");
+      value.Struct.Add(x.StackTrace, "trace");
+      return value;
     }
 
     #endregion
@@ -369,97 +369,97 @@ namespace Morph.Params
     #region Predefined types
 
     //  Very common, so saving memory by instantiating them once and then using for all InstanceFactories
-    static private ISimpleFactory FactoryBool = new SimpleFactoryBool();
-    static private ISimpleFactory FactoryDateTime = new SimpleFactoryDateTime();
-    static private ISimpleFactory FactoryNotSupported = new SimpleFactoryNotSupported();
-    static private IInstanceEncoder EncoderException = new InstanceEncoderException();
+    private static readonly ISimpleFactory FactoryBool = new SimpleFactoryBool();
+    private static readonly ISimpleFactory FactoryDateTime = new SimpleFactoryDateTime();
+    private static readonly ISimpleFactory FactoryNotSupported = new SimpleFactoryNotSupported();
+    private static readonly IInstanceEncoder EncoderException = new InstanceEncoderException();
 
     #endregion
 
-    private List<IReferenceDecoder> _ReferenceDecoders = new List<IReferenceDecoder>();
-    private List<IInstanceEncoder> _InstanceEncoders = new List<IInstanceEncoder>();
-    private List<IInstanceDecoder> _InstanceDecoders = new List<IInstanceDecoder>();
-    private List<ISimpleFactory> _SimpleFactories = new List<ISimpleFactory>();
+    private readonly List<IReferenceDecoder> s_referenceDecoders = new List<IReferenceDecoder>();
+    private readonly List<IInstanceEncoder> s_instanceEncoders = new List<IInstanceEncoder>();
+    private readonly List<IInstanceDecoder> s_instanceDecoders = new List<IInstanceDecoder>();
+    private readonly List<ISimpleFactory> s_simpleFactories = new List<ISimpleFactory>();
 
-    internal bool DecodeReference(ServletProxy Value, out object Reference)
+    internal bool DecodeReference(ServletProxy value, out object reference)
     {
       //  If the ServletProxy has a facade, then use that
-      Reference = Value.Facade;
-      if (Reference != null)
+      reference = value.Facade;
+      if (reference != null)
         return true;
       //  If none found, then create a new one
-      for (int i = 0; i < _ReferenceDecoders.Count; i++)
-        if (_ReferenceDecoders[i].DecodeReference(Value, out Reference))
+      for (int i = 0; i < s_referenceDecoders.Count; i++)
+        if (s_referenceDecoders[i].DecodeReference(value, out reference))
         {
-          Value.Facade = Reference;
+          value.Facade = reference;
           return true;
         }
       //  Oh well, just return the ServletProxy itself then
-      Reference = Value;
+      reference = value;
       return false;
     }
 
-    internal object EncodeInstance(object Instance)
+    internal object EncodeInstance(object instance)
     {
-      for (int i = 0; i < _InstanceEncoders.Count; i++)
+      for (int i = 0; i < s_instanceEncoders.Count; i++)
       {
-        ValueInstance result = _InstanceEncoders[i].EncodeInstance(Instance);
+        ValueInstance result = s_instanceEncoders[i].EncodeInstance(instance);
         //  We know that Instance is not null (because of where the params encoder calls this), so should not be encoded as null
         if (result != null)
           return result;
       }
-      return Instance;
+      return instance;
     }
 
-    internal bool DecodeInstance(ValueInstance Value, out object Instance)
+    internal bool DecodeInstance(ValueInstance value, out object instance)
     {
-      for (int i = 0; i < _InstanceDecoders.Count; i++)
-        if (_InstanceDecoders[i].DecodeInstance(Value, out Instance))
+      for (int i = 0; i < s_instanceDecoders.Count; i++)
+        if (s_instanceDecoders[i].DecodeInstance(value, out instance))
           return true;
-      Instance = Value;
+      instance = value;
       return false;
     }
 
-    internal bool EncodeSimple(out object Value, out string TypeName, object Instance)
+    internal bool EncodeSimple(out object value, out string typeName, object instance)
     {
-      for (int i = 0; i < _SimpleFactories.Count; i++)
-        if (_SimpleFactories[i].EncodeSimple(out Value, out TypeName, Instance))
+      for (int i = 0; i < s_simpleFactories.Count; i++)
+        if (s_simpleFactories[i].EncodeSimple(out value, out typeName, instance))
           return true;
-      TypeName = null;
-      Value = Instance;
+      typeName = null;
+      value = instance;
       return false;
     }
 
-    internal bool DecodeSimple(object Value, string TypeName, out object Reference)
+    internal bool DecodeSimple(object value, string typeName, out object reference)
     {
-      if (TypeName != null)
-        for (int i = 0; i < _SimpleFactories.Count; i++)
-          if (_SimpleFactories[i].DecodeSimple(Value, TypeName, out Reference))
+      if (typeName != null)
+        for (int i = 0; i < s_simpleFactories.Count; i++)
+          if (s_simpleFactories[i].DecodeSimple(value, typeName, out reference))
             return true;
-      Reference = Value;
+      reference = value;
       return false;
     }
 
     #endregion
 
-    public void Add(IReferenceDecoder Decoder)
+    public void Add(IReferenceDecoder decoder)
     {
-      _ReferenceDecoders.Add(Decoder);
+      s_referenceDecoders.Add(decoder);
     }
 
-    public void Add(IInstanceEncoder Encoder)
+    public void Add(IInstanceEncoder encoder)
     {
-      _InstanceEncoders.Add(Encoder);
+      s_instanceEncoders.Add(encoder);
     }
 
-    public void Add(IInstanceDecoder Decoder)
+    public void Add(IInstanceDecoder decoder)
     {
-      _InstanceDecoders.Add(Decoder);
+      s_instanceDecoders.Add(decoder);
     }
 
-    public void Add(ISimpleFactory Factory)
+    public void Add(ISimpleFactory factory)
     {
-      _SimpleFactories.Add(Factory);
+      s_simpleFactories.Add(factory);
     }
   }
 

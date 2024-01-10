@@ -8,34 +8,34 @@ namespace Morph.Endpoint
 {
   public class Device
   {
-    internal Device(LinkStack Path)
+    internal Device(LinkStack path)
     {
-      _Path = Path;
+      _path = path;
     }
 
-    internal Hashtable _ApartmentProxiesByApartmentID = new Hashtable();
+    internal Hashtable _apartmentProxiesByApartmentID = new Hashtable();
 
-    internal LinkStack _Path;
+    internal LinkStack _path;
     public LinkStack Path
     {
-      get { return _Path; }
+      get => _path;
     }
 
     public TimeSpan DefaultTimeout = new TimeSpan(0, 1, 0);
 
-    public MorphApartmentProxy Find(int ApartmentID)
+    public MorphApartmentProxy Find(int apartmentID)
     {
-      lock (_ApartmentProxiesByApartmentID)
-        return (MorphApartmentProxy)_ApartmentProxiesByApartmentID[ApartmentID];
+      lock (_apartmentProxiesByApartmentID)
+        return (MorphApartmentProxy)_apartmentProxiesByApartmentID[apartmentID];
     }
 
-    public MorphApartmentProxy Obtain(int ApartmentID, InstanceFactories InstanceFactories)
+    public MorphApartmentProxy Obtain(int apartmentID, InstanceFactories instanceFactories)
     {
-      lock (_ApartmentProxiesByApartmentID)
+      lock (_apartmentProxiesByApartmentID)
       {
-        MorphApartmentProxy result = Find(ApartmentID);
+        MorphApartmentProxy result = Find(apartmentID);
         if (result == null)
-          result = new MorphApartmentProxy(this, ApartmentID, DefaultTimeout, InstanceFactories);
+          result = new MorphApartmentProxy(this, apartmentID, DefaultTimeout, instanceFactories);
         return result;
       }
     }
@@ -43,25 +43,25 @@ namespace Morph.Endpoint
 
   public class Devices
   {
-    static private List<Device> All = new List<Device>();
+    private static readonly List<Device> s_all = new List<Device>();
 
-    static public Device Find(LinkStack Path)
+    static public Device Find(LinkStack path)
     {
-      for (int i = All.Count - 1; i >= 0; i--)
-        if (Path.Equals(All[i].Path))
-          return All[i];
+      for (int i = s_all.Count - 1; i >= 0; i--)
+        if (path.Equals(s_all[i].Path))
+          return s_all[i];
       return null;
     }
 
-    static public Device Obtain(LinkStack Path)
+    static public Device Obtain(LinkStack path)
     {
-      lock (All)
+      lock (s_all)
       {
-        Device result = Find(Path);
+        Device result = Find(path);
         if (result == null)
         {
-          result = new Device(Path);
-          All.Add(result);
+          result = new Device(path);
+          s_all.Add(result);
         }
         return result;
       }

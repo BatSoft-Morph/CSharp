@@ -6,18 +6,18 @@ namespace Morph.Internet
 {
   public class LinkInternetIPv6 : LinkInternet
   {
-    public LinkInternetIPv6(IPEndPoint EndPoint)
-      : base(EndPoint)
+    public LinkInternetIPv6(IPEndPoint endPoint)
+      : base(endPoint)
     {
     }
 
-    static public LinkInternetIPv6 ReadNew(MorphReader Reader, bool HasURI, bool HasPort)
+    static public LinkInternetIPv6 ReadNew(MorphReader reader, bool hasURI, bool hasPort)
     {
       //  Read host
-      string URI;
-      if (HasURI)
+      string uri;
+      if (hasURI)
         //  String
-        URI = Reader.ReadString();
+        uri = reader.ReadString();
       else
       { //  Binary
         //  Unfortunately one can't create an instance of IPAddress using short[8],
@@ -26,19 +26,19 @@ namespace Morph.Internet
         int i = 0;
         do
         {
-          short value = (short)Reader.ReadInt16();
+          short value = (short)reader.ReadInt16();
           stream.WriteInt16(value);
           if (i == 8)
             break;
           stream.WriteString(":");
         } while (true);
-        URI = stream.ToString();
+        uri = stream.ToString();
       }
       //  Parse the address
       IPAddress address;
       try
       {
-        address = IPAddress.Parse(URI);
+        address = IPAddress.Parse(uri);
       }
       catch
       {
@@ -46,8 +46,8 @@ namespace Morph.Internet
       }
       //  Read port
       int port = LinkInternet.MorphPort;
-      if (HasPort)
-        port = (short)Reader.ReadInt16();
+      if (hasPort)
+        port = (short)reader.ReadInt16();
       //  Done
       return new LinkInternetIPv6(new IPEndPoint(address, port));
     }
@@ -65,18 +65,18 @@ namespace Morph.Internet
       return size;
     }
 
-    public override void Write(MorphWriter Writer)
+    public override void Write(MorphWriter writer)
     {
-      bool IsIPv6 = true;
-      bool IsString = true;
-      bool HasPort = EndPoint.Port != LinkInternet.MorphPort;
+      bool isIPv6 = true;
+      bool isString = true;
+      bool hasPort = EndPoint.Port != LinkInternet.MorphPort;
       //  Link byte
-      Writer.WriteLinkByte(LinkTypeID, IsIPv6, IsString, HasPort);
+      writer.WriteLinkByte(LinkTypeID, isIPv6, isString, hasPort);
       //  Host
-      Writer.WriteString(EndPoint.Address.ToString());
+      writer.WriteString(EndPoint.Address.ToString());
       // Port
-      if (HasPort)
-        Writer.WriteInt16(EndPoint.Port);
+      if (hasPort)
+        writer.WriteInt16(EndPoint.Port);
     }
 
     #endregion

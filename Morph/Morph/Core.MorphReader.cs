@@ -5,24 +5,24 @@ namespace Morph.Core
 {
   public abstract class MorphReader
   {
-    public abstract MorphReaderSized SubReader(int Count);
+    public abstract MorphReaderSized SubReader(int count);
 
     static protected Encoding ASCII = new ASCIIEncoding();
     static protected Encoding Unicode = new UnicodeEncoding();
 
-    private int ReadByteCount(byte ByteCountSize)
+    private int ReadByteCount(byte byteCountSize)
     {
-      switch (ByteCountSize)
+      switch (byteCountSize)
       {
         case 0: return ReadInt8();
         case 1: return ReadInt16();
         case 2: return ReadInt32();
         case 3:
           { //  This implementation cannot handle byte lengths greater than int.MaxValue because of limitations in the Stream class.
-            long Count = ReadInt64();
-            if (Count >= int.MaxValue)
+            long count = ReadInt64();
+            if (count >= int.MaxValue)
               throw new EMorphImplementation();
-            return (int)Count;
+            return (int)count;
           }
         default: throw new EMorphImplementation();
       }
@@ -35,21 +35,21 @@ namespace Morph.Core
     private const byte BitZ = 0x40;
     private const byte BitMSB = 0x80;
 
-    static public LinkTypeID DecodeLinkByte(byte LinkByte, out bool x, out bool y, out bool z)
+    static public LinkTypeID DecodeLinkByte(byte linkByte, out bool x, out bool y, out bool z)
     {
-      x = (LinkByte & BitX) != 0;
-      y = (LinkByte & BitY) != 0;
-      z = (LinkByte & BitZ) != 0;
-      return (LinkTypeID)(LinkByte & 0x0F);
+      x = (linkByte & BitX) != 0;
+      y = (linkByte & BitY) != 0;
+      z = (linkByte & BitZ) != 0;
+      return (LinkTypeID)(linkByte & 0x0F);
     }
 
-    private LinkTypeID DecodeLinkByte(byte LinkByte, out bool x, out bool y, out bool z, out bool MSB)
+    private LinkTypeID DecodeLinkByte(byte linkByte, out bool x, out bool y, out bool z, out bool MSB)
     {
-      x = (LinkByte & BitX) != 0;
-      y = (LinkByte & BitY) != 0;
-      z = (LinkByte & BitZ) != 0;
-      MSB = (LinkByte & BitMSB) != 0;
-      return (LinkTypeID)(LinkByte & 0x0F);
+      x = (linkByte & BitX) != 0;
+      y = (linkByte & BitY) != 0;
+      z = (linkByte & BitZ) != 0;
+      MSB = (linkByte & BitMSB) != 0;
+      return (LinkTypeID)(linkByte & 0x0F);
     }
 
     public LinkTypeID PeekLinkByte(out bool x, out bool y, out bool z)
@@ -67,7 +67,7 @@ namespace Morph.Core
     protected bool _MSB;
     public bool MSB
     {
-      get { return _MSB; }
+      get => _MSB;
     }
 
     public abstract bool CanRead
@@ -124,9 +124,9 @@ namespace Morph.Core
     }
 
     //  ByteCountSize limited to 0..3
-    public string ReadString(byte ByteCountSize, bool AsUnicode)
+    public string ReadString(byte byteCountSize, bool asUnicode)
     {
-      return ReadChars(ReadByteCount(ByteCountSize), true);
+      return ReadChars(ReadByteCount(byteCountSize), true);
     }
 
     public string ReadIdentifier()
@@ -134,143 +134,143 @@ namespace Morph.Core
       return ReadChars(ReadInt16(), true);
     }
 
-    public virtual string ReadChars(int ByteCount, bool AsUnicode)
+    public virtual string ReadChars(int byteCount, bool asUnicode)
     {
-      byte[] bytes = ReadBytes(ByteCount);
-      if (AsUnicode)
+      byte[] bytes = ReadBytes(byteCount);
+      if (asUnicode)
         return Unicode.GetString(bytes);
       else
         return ASCII.GetString(bytes);
     }
 
-    public abstract byte[] ReadBytes(int Count);
+    public abstract byte[] ReadBytes(int count);
 
-    public abstract int ReadBytes(byte[] Buffer);
+    public abstract int ReadBytes(byte[] buffer);
   }
 
   public class MorphReaderSizeless : MorphReader
   {
-    public MorphReaderSizeless(MorphStream Stream)
+    public MorphReaderSizeless(MorphStream stream)
     {
-      _Stream = Stream;
+      _stream = stream;
     }
 
-    public override MorphReaderSized SubReader(int Count)
+    public override MorphReaderSized SubReader(int count)
     {
-      return new MorphReaderSized(_Stream.Read(Count), _MSB);
+      return new MorphReaderSized(_stream.Read(count), _MSB);
     }
 
-    private MorphStream _Stream;
+    private readonly MorphStream _stream;
 
     public override bool CanRead
     {
-      get { return _Stream.Remaining > 0; }
+      get => _stream.Remaining > 0;
     }
 
     public override long Remaining
     {
-      get { return (long)_Stream.Remaining; }
+      get => (long)_stream.Remaining;
     }
 
     public override byte PeekInt8()
     {
-      return _Stream.Peek();
+      return _stream.Peek();
     }
 
     public override byte ReadInt8()
     {
-      return (byte)_Stream.ReadByte();
+      return (byte)_stream.ReadByte();
     }
 
-    public override byte[] ReadBytes(int Count)
+    public override byte[] ReadBytes(int count)
     {
-      if (_Stream.Remaining < Count)
+      if (_stream.Remaining < count)
         throw new EMorph("EOS");
-      byte[] bytes = new byte[Count];
-      if (_Stream.Read(bytes, 0, Count) < Count)
+      byte[] bytes = new byte[count];
+      if (_stream.Read(bytes, 0, count) < count)
         throw new EMorphImplementation();
       return bytes;
     }
 
-    public override int ReadBytes(byte[] Buffer)
+    public override int ReadBytes(byte[] buffer)
     {
-      return _Stream.Read(Buffer, 0, Buffer.Length);
+      return _stream.Read(buffer, 0, buffer.Length);
     }
   }
 
   public class MorphReaderSized : MorphReader
   {
-    public MorphReaderSized(byte[] Bytes)
-      : this(Bytes, 0, Bytes.Length)
+    public MorphReaderSized(byte[] bytes)
+      : this(bytes, 0, bytes.Length)
     {
     }
 
-    internal MorphReaderSized(byte[] Bytes, bool MSB)
-      : this(Bytes, 0, Bytes.Length)
+    internal MorphReaderSized(byte[] bytes, bool MSB)
+      : this(bytes, 0, bytes.Length)
     {
       _MSB = MSB;
     }
 
-    private MorphReaderSized(byte[] Bytes, int Pos, int Count)
+    private MorphReaderSized(byte[] bytes, int position, int count)
     {
-      _Bytes = Bytes;
-      _Pos = Pos;
-      _End = Pos + Count;
-      if (_Bytes.Length < _End)
+      _bytes = bytes;
+      _pos = position;
+      _end = position + count;
+      if (_bytes.Length < _end)
         throw new EMorphUsage("");
     }
 
-    public override MorphReaderSized SubReader(int Count)
+    public override MorphReaderSized SubReader(int count)
     {
       try
       {
-        return new MorphReaderSized(_Bytes, _Pos, Count);
+        return new MorphReaderSized(_bytes, _pos, count);
       }
       finally
       {
-        _Pos += Count;
+        _pos += count;
       }
     }
 
-    private byte[] _Bytes;
-    private int _Pos;
-    private int _End;
+    private readonly byte[] _bytes;
+    private int _pos;
+    private readonly int _end;
 
     public override bool CanRead
     {
-      get { return _Pos < _End; }
+      get => _pos < _end;
     }
 
     public override long Remaining
     {
-      get { return _End - _Pos; }
+      get => _end - _pos;
     }
 
-    private void ValidateRead(int Count)
+    private void ValidateRead(int count)
     {
-      if (_Pos + Count > _End)
+      if (_pos + count > _end)
         throw new EMorph("EOS");
     }
 
     public override byte PeekInt8()
     {
-      if (_Pos >= _End)
+      if (_pos >= _end)
         throw new EMorph("EOS");
-      return _Bytes[_Pos];
+      return _bytes[_pos];
     }
 
     public override byte ReadInt8()
     {
-      if (_Pos >= _End)
+      if (_pos >= _end)
         throw new EMorph("EOS");
-      return _Bytes[_Pos++];
+      return _bytes[_pos++];
     }
 
     public override Int16 ReadInt16()
     {
       ValidateRead(2);
-      byte b0 = _Bytes[_Pos++];
-      byte b1 = _Bytes[_Pos++];
+      byte b0 = _bytes[_pos++];
+      byte b1 = _bytes[_pos++];
       if (_MSB)
         return (Int16)((b0 << 8) | b1);
       else
@@ -280,10 +280,10 @@ namespace Morph.Core
     public override Int32 ReadInt32()
     {
       ValidateRead(4);
-      byte b0 = _Bytes[_Pos++];
-      byte b1 = _Bytes[_Pos++];
-      byte b2 = _Bytes[_Pos++];
-      byte b3 = _Bytes[_Pos++];
+      byte b0 = _bytes[_pos++];
+      byte b1 = _bytes[_pos++];
+      byte b2 = _bytes[_pos++];
+      byte b3 = _bytes[_pos++];
       if (_MSB)
         return (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
       else
@@ -293,42 +293,42 @@ namespace Morph.Core
     public override Int64 ReadInt64()
     {
       ValidateRead(8);
-      byte b0 = _Bytes[_Pos++];
-      byte b1 = _Bytes[_Pos++];
-      byte b2 = _Bytes[_Pos++];
-      byte b3 = _Bytes[_Pos++];
-      byte b4 = _Bytes[_Pos++];
-      byte b5 = _Bytes[_Pos++];
-      byte b6 = _Bytes[_Pos++];
-      byte b7 = _Bytes[_Pos++];
+      byte b0 = _bytes[_pos++];
+      byte b1 = _bytes[_pos++];
+      byte b2 = _bytes[_pos++];
+      byte b3 = _bytes[_pos++];
+      byte b4 = _bytes[_pos++];
+      byte b5 = _bytes[_pos++];
+      byte b6 = _bytes[_pos++];
+      byte b7 = _bytes[_pos++];
       if (_MSB)
         return (b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) | (b4 << 24) | (b5 << 16) | (b6 << 8) | b7;
       else
         return (b7 << 56) | (b6 << 48) | (b5 << 40) | (b4 << 32) | (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
     }
 
-    public override byte[] ReadBytes(int Count)
+    public override byte[] ReadBytes(int count)
     {
-      ValidateRead(Count);
-      byte[] bytes = new byte[Count];
-      Array.Copy(_Bytes, _Pos, bytes, 0, Count);
-      _Pos += Count;
+      ValidateRead(count);
+      byte[] bytes = new byte[count];
+      Array.Copy(_bytes, _pos, bytes, 0, count);
+      _pos += count;
       return bytes;
     }
 
-    public override int ReadBytes(byte[] Buffer)
+    public override int ReadBytes(byte[] buffer)
     {
-      int Count = (int)Remaining < Buffer.Length ? (int)Remaining : Buffer.Length;
-      ValidateRead(Count);
-      Array.Copy(_Bytes, _Pos, Buffer, 0, Count);
-      _Pos += Count;
-      return Count;
+      int count = (int)Remaining < buffer.Length ? (int)Remaining : buffer.Length;
+      ValidateRead(count);
+      Array.Copy(_bytes, _pos, buffer, 0, count);
+      _pos += count;
+      return count;
     }
 
-    public override string ReadChars(int ByteCount, bool AsUnicode)
+    public override string ReadChars(int byteCount, bool asUnicode)
     {
-      ValidateRead(ByteCount);
-      return base.ReadChars(ByteCount, AsUnicode);
+      ValidateRead(byteCount);
+      return base.ReadChars(byteCount, asUnicode);
     }
   }
 }

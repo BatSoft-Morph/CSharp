@@ -5,84 +5,84 @@ namespace Morph.Endpoint
 {
   public class Servlet
   {
-    internal Servlet(MorphApartment Apartment, int ID, object Object, string TypeName)
+    internal Servlet(MorphApartment apartment, int id, object obj, string typeName)
     {
-      _Apartment = Apartment;
-      _ID = ID;
-      _Object = Object;
-      _TypeName = TypeName;
+      _apartment = apartment;
+      _id = id;
+      _object = obj;
+      _typeName = typeName;
     }
 
-    private MorphApartment _Apartment;
+    private readonly MorphApartment _apartment;
     public MorphApartment Apartment
     {
-      get { return _Apartment; }
+      get => _apartment;
     }
 
     public const int DefaultID = 0;
 
-    private int _ID;
+    private readonly int _id;
     public int ID
     {
-      get { return _ID; }
+      get => _id;
     }
 
-    private object _Object;
+    private readonly object _object;
     public object Object
     {
-      get { return _Object; }
+      get => _object;
     }
 
-    private string _TypeName;
+    private readonly string _typeName;
     public string TypeName
     {
-      get { return _TypeName; }
+      get => _typeName;
     }
   }
 
   public class Servlets
   {
-    internal Servlets(MorphApartment Apartment, object DefaultServletObject)
+    internal Servlets(MorphApartment apartment, object defaultServletObject)
     {
-      _Apartment = Apartment;
-      _Default = Obtain(DefaultServletObject);
+      _apartment = apartment;
+      _default = Obtain(defaultServletObject);
     }
 
-    private MorphApartment _Apartment;
+    private readonly MorphApartment _apartment;
 
-    private IDSeed _ServletIDSeed = new IDSeed(Servlet.DefaultID);
-    private Hashtable _Servlets = new Hashtable();
+    private readonly IDSeed _servletIDSeed = new IDSeed(Servlet.DefaultID);
+    private readonly Hashtable _servlets = new Hashtable();
 
-    private Servlet _Default;
+    private readonly Servlet _default;
     public Servlet Default
     {
-      get { return _Default; }
+      get => _default;
     }
     
-    public Servlet Obtain(object ServletObject)
+    public Servlet Obtain(object servletObject)
     {
-      return Obtain(ServletObject, null);
+      return Obtain(servletObject, null);
     }
     
-    public Servlet Obtain(object ServletObject, string TypeName)
+    public Servlet Obtain(object servletObject, string typeName)
     {
-      Servlet servlet = new Servlet(_Apartment, _ServletIDSeed.Generate(), ServletObject, TypeName);
-      _Servlets.Add(servlet.ID, servlet);
+      Servlet servlet = new Servlet(_apartment, _servletIDSeed.Generate(), servletObject, typeName);
+      _servlets.Add(servlet.ID, servlet);
       return servlet;
     }
 
-    public void Remove(int ServletID)
+    public void Remove(int servletID)
     {
-      if (ServletID == _Default.ID)
+      if (servletID == _default.ID)
         throw new EMorphUsage("Cannot deregister default servlet");
-      _Servlets.Remove(ServletID);
+      _servlets.Remove(servletID);
     }
 
-    public Servlet Find(int ServletID)
+    public Servlet Find(int servletID)
     {
-      if (ServletID == _Default.ID)
+      if (servletID == _default.ID)
         return Default;
-      return (Servlet)(_Servlets[ServletID]);
+      return (Servlet)(_servlets[servletID]);
     }
   }
 }

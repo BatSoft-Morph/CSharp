@@ -2,16 +2,16 @@
 {
   public class ValueReferenceIndex : ValueReference
   {
-    public ValueReferenceIndex(string TypeName, int ID, Value Index)
-      : base(TypeName, ID)
+    public ValueReferenceIndex(string typeName, int id, Value index)
+      : base(typeName, id)
     {
-      _Index = Index;
+      _index = index;
     }
 
-    private Value _Index;
+    private readonly Value _index;
     public Value Index
     {
-      get { return _Index; }
+      get => _index;
     }
   }
 }

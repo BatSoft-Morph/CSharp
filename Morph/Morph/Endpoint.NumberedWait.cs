@@ -37,83 +37,83 @@ namespace Morph.Endpoint
 
     #region Internals
 
-    private class NumberedWait : RegisterItemID
+    private class NumberedWait : IRegisterItemID
     {
-      internal NumberedWait(int ID)
+      internal NumberedWait(int id)
       {
-        _ID = ID;
+        _id = id;
       }
 
       #region RegisterItemID Members
 
-      private int _ID;
+      private int _id;
       public int ID
       {
-        get { return _ID; }
+        get => _id;
       }
 
       #endregion
 
-      internal AutoResetEvent _Gate = new AutoResetEvent(false);
-      internal bool _Hold = false;
-      internal bool _Held = false;
+      internal AutoResetEvent _gate = new AutoResetEvent(false);
+      internal bool _hold = false;
+      internal bool _held = false;
     }
 
-    private RegisterItems<NumberedWait> _Waits = new RegisterItems<NumberedWait>();
+    private RegisterItems<NumberedWait> _waits = new RegisterItems<NumberedWait>();
 
-    private bool Find(int ID, out NumberedWait Wait)
+    private bool Find(int id, out NumberedWait wait)
     {
-      lock (_Waits)
-        Wait = _Waits.Find(ID);
-      return Wait != null;
+      lock (_waits)
+        wait = _waits.Find(id);
+      return wait != null;
     }
 
-    private NumberedWait Obtain(int ID)
+    private NumberedWait Obtain(int id)
     {
-      NumberedWait Wait;
-      if (!Find(ID, out Wait))
+      NumberedWait wait;
+      if (!Find(id, out wait))
       { //  Doesn't already exist, so create and register a new wait
-        Wait = new NumberedWait(ID);
-        lock (_Waits)
-          _Waits.Add(Wait);
+        wait = new NumberedWait(id);
+        lock (_waits)
+          _waits.Add(wait);
       }
-      return Wait;
+      return wait;
     }
 
     #endregion
 
     #region For waiting thread
 
-    public void Prepare(int ID)
+    public void Prepare(int id)
     {
-      Obtain(ID);
+      Obtain(id);
     }
 
-    public void Unprepare(int ID)
+    public void Unprepare(int id)
     {
-      lock (_Waits)
-        _Waits.Remove(ID);
+      lock (_waits)
+        _waits.Remove(id);
     }
 
-    public bool Wait(int ID, TimeSpan Timeout)
+    public bool Wait(int id, TimeSpan timeout)
     {
       //  Obtain the wait
-      NumberedWait Wait = Obtain(ID);
+      NumberedWait wait = Obtain(id);
       try
       {
         //  Wait
-        bool Result = Wait._Gate.WaitOne(Timeout, false);
+        bool result = wait._gate.WaitOne(timeout, false);
         //  Might have been requested to hold
-        lock (Wait)
-          if (Wait._Hold)
-            Wait._Gate.WaitOne();
+        lock (wait)
+          if (wait._hold)
+            wait._gate.WaitOne();
         //  Done
-        return Result || Wait._Held;
+        return result || wait._held;
       }
       finally
       {
         //  Done, so deregister the wait
-        Unprepare(ID);
+        Unprepare(id);
       }
     }
 
@@ -121,26 +121,26 @@ namespace Morph.Endpoint
 
     #region For control thread
 
-    public bool Hold(int ID)
+    public bool Hold(int id)
     {
-      NumberedWait Wait;
-      bool IsFound = Find(ID, out Wait);
-      if (IsFound)
-        lock (Wait)
+      NumberedWait wait;
+      bool isFound = Find(id, out wait);
+      if (isFound)
+        lock (wait)
         {
-          Wait._Hold = true;
-          Wait._Held = true;
+          wait._hold = true;
+          wait._held = true;
         }
-      return IsFound;
+      return isFound;
     }
 
-    public void End(int ID)
+    public void End(int id)
     {
-      NumberedWait Wait;
-      if (Find(ID, out Wait))
+      NumberedWait wait;
+      if (Find(id, out wait))
       {
-        Wait._Hold = false; //  Don't hold
-        Wait._Gate.Set();   //  Release it
+        wait._hold = false; //  Don't hold
+        wait._gate.Set();   //  Release it
       }
     }
 

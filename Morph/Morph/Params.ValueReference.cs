@@ -2,16 +2,16 @@
 {
   public class ValueReference : ValueObject
   {
-    public ValueReference(string TypeName, int ID)
-      : base(TypeName)
+    public ValueReference(string typeName, int id)
+      : base(typeName)
     {
-      _ID = ID;
+      _id = id;
     }
 
-    private int _ID;
+    private readonly int _id;
     public int ID
     {
-      get { return _ID; }
+      get => _id;
     }
   }
 }

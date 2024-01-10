@@ -7,75 +7,75 @@ namespace Morph.Endpoint
 {
   public class LinkProperty : LinkMember
   {
-    public LinkProperty(string Name, bool IsSet, bool HasIndex)
+    public LinkProperty(string name, bool isSet, bool hasIndex)
       : base()
     {
-      _Name = Name;
-      _IsSet = IsSet;
-      _HasIndex = HasIndex;
+      _name = name;
+      _isSet = isSet;
+      _hasIndex = hasIndex;
     }
 
-    private string _Name;
+    private readonly string _name;
     public override string Name
     {
-      get { return _Name; }
+      get => _name;
     }
 
-    private bool _IsSet;
+    private readonly bool _isSet;
     public bool IsSet
     {
-      get { return _IsSet; }
+      get => _isSet;
     }
 
-    private bool _HasIndex;
+    private readonly bool _hasIndex;
     public bool HasIndex
     {
-      get { return _HasIndex; }
+      get => _hasIndex;
     }
 
     #region Link
 
     public override int Size()
     {
-      return 5 + MorphWriter.SizeOfString(_Name);
+      return 5 + MorphWriter.SizeOfString(_name);
     }
 
-    public override void Write(MorphWriter Writer)
+    public override void Write(MorphWriter writer)
     {
-      Writer.WriteLinkByte(LinkTypeID, true, _IsSet, _HasIndex);
-      Writer.WriteString(_Name);
+      writer.WriteLinkByte(LinkTypeID, true, _isSet, _hasIndex);
+      writer.WriteString(_name);
     }
 
     #endregion
 
-    protected internal override LinkData Invoke(LinkMessage Message, LinkStack SenderDevicePath, LinkData DataIn)
+    protected internal override LinkData Invoke(LinkMessage message, LinkStack senderDevicePath, LinkData dataIn)
     {
-      MorphApartment Apartment = _Servlet.Apartment; ;
+      MorphApartment apartment = _servlet.Apartment; ;
       //  Obtain the object
-      object Object = _Servlet.Object;
+      object obj = _servlet.Object;
       //  Obtain the property
-      PropertyInfo property = Object.GetType().GetProperty(Name);
+      PropertyInfo property = obj.GetType().GetProperty(Name);
       if (property == null)
-        if (_IsSet)
+        if (_isSet)
           throw new EMorph("Property setter not found");
         else
           throw new EMorph("Property getter not found");
       //  Decode input
-      object[] Index = null;
-      object Value = null;
-      if (DataIn != null)
-        Parameters.Decode(Apartment.InstanceFactories, SenderDevicePath, DataIn.Reader, out Index, out Value);
+      object[] index = null;
+      object value = null;
+      if (dataIn != null)
+        Parameters.Decode(apartment.InstanceFactories, senderDevicePath, dataIn.Reader, out index, out value);
       //  Invoke the property
       if (IsSet)
       {
-        property.SetValue(Object, Value, Index);
+        property.SetValue(obj, value, index);
         return null;
       }
       else
       {
-        Value = property.GetValue(Object, Index);
+        value = property.GetValue(obj, index);
         //  Encode output
-        return new LinkData(Parameters.Encode(null, Value, Apartment.InstanceFactories));
+        return new LinkData(Parameters.Encode(null, value, apartment.InstanceFactories));
       }
     }
 

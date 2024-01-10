@@ -11,12 +11,12 @@ namespace Morph.Endpoint
 {
   public class MorphApartmentSession : MorphApartment, IDisposable, IActionLinkSequence
   {
-    internal protected MorphApartmentSession(MorphApartmentFactory Owner, object DefaultObject, SequenceLevel Level)
-      : base(Owner, Owner.InstanceFactories, DefaultObject)
+    internal protected MorphApartmentSession(MorphApartmentFactory owner, object defaultObject, SequenceLevel level)
+      : base(owner, owner.InstanceFactories, defaultObject)
     {
-      if (Level != SequenceLevel.None)
-        _Sequence = SequenceReceivers.New(Level == SequenceLevel.Lossless);
-      _LinkApartment = new LinkApartment(ID);
+      if (level != SequenceLevel.None)
+        _sequence = SequenceReceivers.New(level == SequenceLevel.Lossless);
+      _linkApartment = new LinkApartment(ID);
     }
 
     #region IDisposable Members
@@ -24,62 +24,61 @@ namespace Morph.Endpoint
     public override void Dispose()
     {
       base.Dispose();
-      if (_Sequence != null)
-        _Sequence.Stop(true);
+      _sequence?.Stop(true);
     }
 
     #endregion
 
-    internal DateTime When;
-    internal Bookmark Bookmark = null;
+    internal DateTime _when;
+    internal IBookmark _bookmark = null;
 
     public override void ResetTimeout()
     {
       ((MorphApartmentFactorySession)Owner).ResetTimeout(this);
     }
 
-    private LinkApartment _LinkApartment;
-    private LinkStack _Path = null;
+    private readonly LinkApartment _linkApartment;
+    private LinkStack _path = null;
     public LinkStack Path
     {
-      get { return _Path; }
+      get => _path;
       set
       {
         if (value != null)
           lock (this)
           {
-            _Path = EndpointPathOf(value);
+            _path = EndpointPathOf(value);
             //  Apply path to Sequence
-            if (_Sequence != null)
-              _Sequence.PathToProxy = _Path;
+            if (_sequence != null)
+              _sequence.PathToProxy = _path;
           }
       }
     }
 
-    private LinkStack EndpointPathOf(LinkStack Path)
+    private LinkStack EndpointPathOf(LinkStack path)
     {
-      if (Path == null)
+      if (path == null)
         return null;
-      List<Link> Links = Path.ToLinks();
-      for (int i = Links.Count - 1; i >= 0; i--)
+      List<Link> links = path.ToLinks();
+      for (int i = links.Count - 1; i >= 0; i--)
       {
-        Link Link = Links[i];
-        if ((Link is LinkServlet) ||
-            (Link is LinkMember) ||
-            (Link is LinkData))
-          Links.RemoveAt(i);
+        Link link = links[i];
+        if ((link is LinkServlet) ||
+            (link is LinkMember) ||
+            (link is LinkData))
+          links.RemoveAt(i);
       }
-      return new LinkStack(Links);
+      return new LinkStack(links);
     }
 
-    private SequenceReceiver _Sequence;
+    private readonly SequenceReceiver _sequence;
     public SequenceLevel SequenceLevel
     {
       get
       {
-        if (_Sequence == null)
+        if (_sequence == null)
           return SequenceLevel.None;
-        if (_Sequence.IsLossless)
+        if (_sequence.IsLossless)
           return SequenceLevel.Lossless;
         else
           return SequenceLevel.Lossy;
@@ -88,18 +87,18 @@ namespace Morph.Endpoint
 
     internal LinkStack GenerateReturnPath()
     {
-      LinkStack ReturnPath = _Path.Clone();
-      ReturnPath.Push(_LinkApartment);
+      LinkStack ReturnPath = _path.Clone();
+      ReturnPath.Push(_linkApartment);
       if (SequenceLevel != SequenceLevel.None)
-        Path.Append(_Sequence.StartLink());
+        Path.Append(_sequence.StartLink());
       return ReturnPath;
     }
 
     #region IActionLinkSequence
 
-    public override void ActionLinkSequence(LinkMessage Message, LinkSequence LinkSequence)
+    public override void ActionLinkSequence(LinkMessage message, LinkSequence linkSequence)
     {
-      LinkSequence.Action(Message);
+      linkSequence.Action(message);
     }
 
     #endregion
@@ -107,12 +106,12 @@ namespace Morph.Endpoint
 
   public class MorphApartmentFactorySession : MorphApartmentFactory, IDisposable
   {
-    public MorphApartmentFactorySession(DefaultServletObjectFactory DefaultServletObject, InstanceFactories InstanceFactories, TimeSpan Timeout, SequenceLevel sequenceLevel)
-      : base(InstanceFactories)
+    public MorphApartmentFactorySession(IDefaultServletObjectFactory defaultServletObject, InstanceFactories instanceFactories, TimeSpan timeout, SequenceLevel sequenceLevel)
+      : base(instanceFactories)
     {
-      _DefaultServletObjectFactory = DefaultServletObject;
-      _Timeout = Timeout;
-      _SequenceLevel = sequenceLevel;
+      _defaultServletObjectFactory = defaultServletObject;
+      _timeout = timeout;
+      _sequenceLevel = sequenceLevel;
       new Thread(new ThreadStart(ThreadExecute));
     }
 
@@ -120,79 +119,79 @@ namespace Morph.Endpoint
 
     public void Dispose()
     {
-      ThreadRunning = false;
-      _ThreadWait.Set();
-      _Timeouts.Dispose();
+      _threadRunning = false;
+      _threadWait.Set();
+      _timeouts.Dispose();
     }
 
     #endregion
 
     #region Timeouts
 
-    private bool ThreadRunning = true;
-    private AutoResetEvent _ThreadWait = new AutoResetEvent(false);
-    private TimeSpan _Timeout;
-    private LinkedListTwoWay<MorphApartmentSession> _Timeouts = new LinkedListTwoWay<MorphApartmentSession>();
+    private bool _threadRunning = true;
+    private readonly AutoResetEvent _threadWait = new AutoResetEvent(false);
+    private TimeSpan _timeout;
+    private readonly LinkedListTwoWay<MorphApartmentSession> _timeouts = new LinkedListTwoWay<MorphApartmentSession>();
 
     private void ThreadExecute()
     {
       Thread.CurrentThread.Name = "ApartmentFactorySession";
-      while (ThreadRunning)
+      while (_threadRunning)
       {
         //  Are there any apartments to wait for?
         MorphApartmentSession apartment;
-        lock (_Timeouts)
-          apartment = _Timeouts.PeekLeft();
+        lock (_timeouts)
+          apartment = _timeouts.PeekLeft();
         //  No, so wait until triggered
         if (apartment == null)
-          _ThreadWait.WaitOne();
+          _threadWait.WaitOne();
         else
         { //  Might need to wait
-          int Wait = apartment.When.Subtract(DateTime.Now).Milliseconds;
-          if (Wait > 0)
-            _ThreadWait.WaitOne(Wait, false);
+          int wait = apartment._when.Subtract(DateTime.Now).Milliseconds;
+          if (wait > 0)
+            _threadWait.WaitOne(wait, false);
           else
           { //  Timed out, so remove apartment
             MorphApartmentFactory.UnregisterApartment(apartment);
-            lock (_Timeouts)
-              _Timeouts.Pop(apartment.Bookmark);
+            lock (_timeouts)
+              _timeouts.Pop(apartment._bookmark);
           }
         }
       }
     }
 
-    internal void ResetTimeout(MorphApartmentSession Apartment)
+    internal void ResetTimeout(MorphApartmentSession apartment)
     {
-      Apartment.When = DateTime.Now.Add(_Timeout);
-      lock (_Timeouts)
-        _Timeouts.MoveToRightEnd(Apartment.Bookmark);
+      apartment._when = DateTime.Now.Add(_timeout);
+      lock (_timeouts)
+        _timeouts.MoveToRightEnd(apartment._bookmark);
     }
 
     #endregion
 
-    private DefaultServletObjectFactory _DefaultServletObjectFactory;
+    private IDefaultServletObjectFactory _defaultServletObjectFactory;
 
-    protected virtual MorphApartmentSession CreateApartment(object DefaultObject, SequenceLevel Level)
+    protected virtual MorphApartmentSession CreateApartment(object defaultObject, SequenceLevel level)
     {
-      return new MorphApartmentSession(this, DefaultObject, Level);
+      return new MorphApartmentSession(this, defaultObject, level);
     }
 
     public override MorphApartment ObtainDefault()
     {
       //  Create session apartment
-      object DefaultServletObject = _DefaultServletObjectFactory.ObtainServlet();
-      if (DefaultServletObject == null)
+      object defaultServletObject = _defaultServletObjectFactory.ObtainServlet();
+      if (defaultServletObject == null)
         throw new EMorphUsage("Cannot create an apartment without a default service object");
-      MorphApartmentSession apartment = CreateApartment(DefaultServletObject, _SequenceLevel);
-      if (DefaultServletObject is IMorphReference)
-        ((IMorphReference)DefaultServletObject).MorphApartment = apartment;
+      MorphApartmentSession apartment = CreateApartment(defaultServletObject, _sequenceLevel);
+      if (defaultServletObject is IMorphReference morphReference)
+        morphReference.MorphApartment = apartment;
       //  Track timeout
-      apartment.When = DateTime.Now.Add(_Timeout);
-      lock (_Timeouts)
+      apartment._when = DateTime.Now.Add(_timeout);
+      lock (_timeouts)
       {
-        if (!_Timeouts.HasData)
-          _ThreadWait.Set();
-        apartment.Bookmark = _Timeouts.PushRight(apartment);
+        if (!_timeouts.HasData)
+          _threadWait.Set();
+        apartment._bookmark = _timeouts.PushRight(apartment);
       }
       return apartment;
     }
@@ -205,10 +204,10 @@ namespace Morph.Endpoint
       //  of the classes MorphApartmentFactory, ApartmentsShared, ApartmentsSession.
     }
 
-    private SequenceLevel _SequenceLevel;
+    private SequenceLevel _sequenceLevel;
     public SequenceLevel SequenceLevel
     {
-      get { return _SequenceLevel; }
+      get => _sequenceLevel;
     }
   }
 }

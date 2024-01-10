@@ -6,11 +6,11 @@ namespace Morph.Daemon
 {
   public class RegisteredRunningInternet : RegisteredRunning, IDisposable
   {
-    public RegisteredRunningInternet(RegisteredService RegisteredService, Connection Connection)
-      : base(RegisteredService)
+    public RegisteredRunningInternet(RegisteredService registeredService, Connection connection)
+      : base(registeredService)
     {
-      _Connection = Connection;
-      _Connection.OnClose += new EventHandler(ConnectionClose);
+      _connection = connection;
+      _connection.OnClose += new EventHandler(ConnectionClose);
     }
 
     private void ConnectionClose(object sender, EventArgs e)
@@ -27,20 +27,20 @@ namespace Morph.Daemon
     public void Dispose()
     {
       lock (this)
-        _Connection.OnClose -= new EventHandler(ConnectionClose);
+        _connection.OnClose -= new EventHandler(ConnectionClose);
     }
 
     #endregion
 
-    private Connection _Connection;
+    private readonly Connection _connection;
     public Connection Connection
     {
-      get { return _Connection; }
+      get => _connection;
     }
 
-    public override void HandleMessage(LinkMessage Message)
+    public override void HandleMessage(LinkMessage message)
     {
-      _Connection.Write(Message);
+      _connection.Write(message);
     }
   }
 }

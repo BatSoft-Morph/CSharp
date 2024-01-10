@@ -2,19 +2,19 @@
 
 namespace Morph.Endpoint
 {
-  public class DefaultServletObjectFactoryShared : DefaultServletObjectFactory
+  public class DefaultServletObjectFactoryShared : IDefaultServletObjectFactory
   {
-    public DefaultServletObjectFactoryShared(object DefaultServletObject)
+    public DefaultServletObjectFactoryShared(object defaultServletObject)
     {
-      _DefaultServletObject = DefaultServletObject;
+      _defaultServletObject = defaultServletObject;
     }
 
     #region DefaultServiceFactory Members
 
-    private object _DefaultServletObject;
+    private readonly object _defaultServletObject;
     public object ObtainServlet()
     {
-      return _DefaultServletObject;
+      return _defaultServletObject;
     }
 
     #endregion
@@ -22,39 +22,39 @@ namespace Morph.Endpoint
 
   public class MorphApartmentShared : MorphApartment
   {
-    public MorphApartmentShared(InstanceFactories InstanceFactories)
-      : base(null, InstanceFactories, null)
+    public MorphApartmentShared(InstanceFactories instanceFactories)
+      : base(null, instanceFactories, null)
     {
     }
 
-    public MorphApartmentShared(InstanceFactories InstanceFactories, object DefaultObject)
-      : base(null, InstanceFactories, DefaultObject)
+    public MorphApartmentShared(InstanceFactories instanceFactories, object defaultObject)
+      : base(null, instanceFactories, defaultObject)
     {
     }
 
-    internal MorphApartmentShared(MorphApartmentFactory Owner, InstanceFactories InstanceFactories, object DefaultObject)
-      : base(Owner, InstanceFactories, DefaultObject)
+    internal MorphApartmentShared(MorphApartmentFactory owner, InstanceFactories instanceFactories, object defaultObject)
+      : base(owner, instanceFactories, defaultObject)
     {
     }
   }
 
   public class MorphApartmentFactoryShared : MorphApartmentFactory
   {
-    public MorphApartmentFactoryShared(object DefaultServletObject, InstanceFactories InstanceFactories)
-      : base(InstanceFactories)
+    public MorphApartmentFactoryShared(object defaultServletObject, InstanceFactories instanceFactories)
+      : base(instanceFactories)
     {
-      if (DefaultServletObject == null)
+      if (defaultServletObject == null)
         throw new EMorphUsage("Cannot create an apartment without a default service object");
-      _Apartment = new MorphApartmentShared(this ,InstanceFactories, DefaultServletObject);
-      if (DefaultServletObject is IMorphReference)
-        ((IMorphReference)DefaultServletObject).MorphApartment = _Apartment;
+      _apartment = new MorphApartmentShared(this ,instanceFactories, defaultServletObject);
+      if (defaultServletObject is IMorphReference morphReference)
+        morphReference.MorphApartment = _apartment;
     }
 
-    private MorphApartment _Apartment;
+    private readonly MorphApartment _apartment;
 
     public override MorphApartment ObtainDefault()
     {
-      return _Apartment;
+      return _apartment;
     }
 
     protected internal override void ShutDown()

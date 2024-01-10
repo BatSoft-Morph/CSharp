@@ -133,73 +133,73 @@ namespace Morph.Daemon
   {
     #region Internal
 
-    static internal ServiceCallbacks _ServiceCallbacks = new ServiceCallbacks();
+    static internal ServiceCallbacks s_serviceCallbacks = new ServiceCallbacks();
 
-    private void VerifyAccess(LinkMessage Message)
+    private void VerifyAccess(LinkMessage message)
     {
-      if (Message is LinkMessageFromIP)
+      if (message is LinkMessageFromIP)
       {
-        LinkMessageFromIP MessageIP = (LinkMessageFromIP)Message;
-        if (!Connections.IsEndPointOnThisDevice((IPEndPoint)MessageIP.Connection.RemoteEndPoint))
+        LinkMessageFromIP messageIP = (LinkMessageFromIP)message;
+        if (!Connections.IsEndPointOnThisDevice((IPEndPoint)messageIP.Connection.RemoteEndPoint))
           throw new EMorphDaemon("Unauthorised access");
       }
     }
 
     #endregion
 
-    public void refresh(LinkMessage Message)
+    public void Refresh(LinkMessage message)
     {
       RegisteredServices.LoadStartups();
     }
 
-    public void add(LinkMessage Message, string serviceName, string fileName, string parameters, int timeout)
+    public void Add(LinkMessage message, string serviceName, string fileName, string parameters, int timeout)
     {
-      VerifyAccess(Message);
+      VerifyAccess(message);
       //  Add startup
       RegisteredServices.ObtainByName(serviceName).Startup = new RegisteredStartup(fileName, parameters, timeout);
       //  Fire event
-      StartupImpl._ServiceCallbacks.DoCallbackAdded(serviceName);
+      StartupImpl.s_serviceCallbacks.DoCallbackAdded(serviceName);
     }
 
-    public void remove(LinkMessage Message, string serviceName)
+    public void Remove(LinkMessage message, string serviceName)
     {
-      VerifyAccess(Message);
+      VerifyAccess(message);
       //  Remove startup
       RegisteredServices.ObtainByName(serviceName).Startup = null;
       //  Fire event
-      StartupImpl._ServiceCallbacks.DoCallbackRemoved(serviceName);
+      StartupImpl.s_serviceCallbacks.DoCallbackRemoved(serviceName);
     }
 
-    public DaemonStartup[] listServices(LinkMessage Message)
+    public DaemonStartup[] ListServices(LinkMessage message)
     {
       //  List services
-      RegisteredService[] AllServices = RegisteredServices.ListAll();
+      RegisteredService[] allServices = RegisteredServices.ListAll();
       //  Filter in running services
       List<DaemonStartup> result = new List<DaemonStartup>();
-      for (int i = 0; i < AllServices.Length; i++)
+      for (int i = 0; i < allServices.Length; i++)
       {
-        RegisteredService Service = AllServices[i];
-        lock (Service)
-          if (Service.Startup != null)
+        RegisteredService service = allServices[i];
+        lock (service)
+          if (service.Startup != null)
           {
-            DaemonStartup RunningService = new DaemonStartup();
-            RunningService.serviceName = Service.Name;
-            RunningService.fileName = Service.Startup.FileName;
-            RunningService.timeout = (int)Service.Startup.Timeout.TotalSeconds;
-            result.Add(RunningService);
+            DaemonStartup runningService = new DaemonStartup();
+            runningService.serviceName = service.Name;
+            runningService.fileName = service.Startup.FileName;
+            runningService.timeout = (int)service.Startup.Timeout.TotalSeconds;
+            result.Add(runningService);
           }
       }
       return result.ToArray();
     }
 
-    public void listen(LinkMessage Message, ServiceCallback callback)
+    public void Listen(LinkMessage message, ServiceCallback callback)
     {
-      _ServiceCallbacks.Listen(callback);
+      s_serviceCallbacks.Listen(callback);
     }
 
-    public void unlisten(LinkMessage Message, ServiceCallback callback)
+    public void Unlisten(LinkMessage message, ServiceCallback callback)
     {
-      _ServiceCallbacks.Removed(callback);
+      s_serviceCallbacks.Removed(callback);
     }
   }
 

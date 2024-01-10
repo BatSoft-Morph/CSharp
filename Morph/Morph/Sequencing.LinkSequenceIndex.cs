@@ -5,57 +5,57 @@ namespace Morph.Sequencing
 {
   public class LinkSequenceIndexSend : LinkSequence
   {
-    public LinkSequenceIndexSend(int SequenceID, int Index, bool IsLast)
+    public LinkSequenceIndexSend(int sequenceID, int index, bool isLast)
       : base()
     {
-      _SequenceID = SequenceID;
-      _Index = Index;
-      _IsLast = IsLast;
+      _sequenceID = sequenceID;
+      _index = index;
+      _isLast = isLast;
     }
 
-    private int _SequenceID;
+    private readonly int _sequenceID;
     public int SequenceID
     {
-      get { return _SequenceID; }
+      get => _sequenceID;
     }
 
-    private int _Index;
+    private readonly int _index;
     public int Index
     {
-      get { return _Index; }
+      get => _index;
     }
 
-    private bool _IsLast;
+    private readonly bool _isLast;
     public bool IsLast
     {
-      get { return _IsLast; }
+      get => _isLast;
     }
 
     public override object FindLinkObject()
     {
-      return SequenceReceivers.Find(_SequenceID);
+      return SequenceReceivers.Find(_sequenceID);
     }
 
     #region Link
 
-    public override void Write(MorphWriter Writer)
+    public override void Write(MorphWriter writer)
     {
-      Writer.WriteLinkByte(LinkTypeID, false, false, _IsLast);
-      Writer.WriteInt32(_SequenceID);
-      Writer.WriteInt32(_Index);
+      writer.WriteLinkByte(LinkTypeID, false, false, _isLast);
+      writer.WriteInt32(_sequenceID);
+      writer.WriteInt32(_index);
     }
 
-    public override void Action(LinkMessage Message)
+    public override void Action(LinkMessage message)
     {
-      if (Message.PathTo.Peek() == this)
-        Message.PathTo.Pop();
-      SequenceReceiver Sequence = SequenceReceivers.Find(_SequenceID);
+      if (message.PathTo.Peek() == this)
+        message.PathTo.Pop();
+      SequenceReceiver Sequence = SequenceReceivers.Find(_sequenceID);
       if (Sequence == null)
-        throw new EMorph("SequenceID " + _SequenceID.ToString() + " not found.");
-      if (_IsLast)
-        Sequence.Stop(_Index);
+        throw new EMorph("SequenceID " + _sequenceID.ToString() + " not found.");
+      if (_isLast)
+        Sequence.Stop(_index);
       else
-        Sequence.Index(_Index, Message);
+        Sequence.Index(_index, message);
     }
 
     #endregion
@@ -63,9 +63,9 @@ namespace Morph.Sequencing
     public override string ToString()
     {
       string str = "{Sequence";
-      str += " SequenceID=" + _SequenceID.ToString();
-      str += " Index=" + _Index.ToString();
-      if (_IsLast)
+      str += " SequenceID=" + _sequenceID.ToString();
+      str += " Index=" + _index.ToString();
+      if (_isLast)
         str += " IsLast";
       return str + '}';
     }
@@ -73,56 +73,56 @@ namespace Morph.Sequencing
 
   public class LinkSequenceIndexReply : LinkSequence
   {
-    public LinkSequenceIndexReply(int SenderID, int Index, bool Resend)
+    public LinkSequenceIndexReply(int senderID, int index, bool resend)
       : base()
     {
-      _SenderID = SenderID;
-      _Index = Index;
-      _Resend = Resend;
+      _senderID = senderID;
+      _index = index;
+      _resend = resend;
     }
 
-    private int _SenderID;
+    private readonly int _senderID;
     public int SenderID
     {
-      get { return _SenderID; }
+      get => _senderID;
     }
 
-    private int _Index;
+    private readonly int _index;
     public int Index
     {
-      get { return _Index; }
+      get => _index;
     }
 
-    private bool _Resend;
+    private readonly bool _resend;
     public bool Resend
     {
-      get { return _Resend; }
+      get => _resend;
     }
 
     public override object FindLinkObject()
     {
-      return SequenceSenders.Find(_SenderID);
+      return SequenceSenders.Find(_senderID);
     }
 
     #region Link
 
-    public override void Write(MorphWriter Writer)
+    public override void Write(MorphWriter writer)
     {
-      Writer.WriteLinkByte(LinkTypeID, false, true, _Resend);
-      Writer.WriteInt32(_SenderID);
-      Writer.WriteInt32(_Index);
+      writer.WriteLinkByte(LinkTypeID, false, true, _resend);
+      writer.WriteInt32(_senderID);
+      writer.WriteInt32(_index);
     }
 
-    public override void Action(LinkMessage Message)
+    public override void Action(LinkMessage message)
     {
-      SequenceSender Sender = SequenceSenders.Find(_SenderID);
+      SequenceSender Sender = SequenceSenders.Find(_senderID);
       if (Sender == null)
-        throw new EMorph("Sequence SenderID " + _SenderID.ToString() + " not found.");
-      if (_Resend)
-        Sender.Resend(_Index);
+        throw new EMorph("Sequence SenderID " + _senderID.ToString() + " not found.");
+      if (_resend)
+        Sender.Resend(_index);
       else
-        Sender.Ack(_Index);
-      Message.NextLinkAction();
+        Sender.Ack(_index);
+      message.NextLinkAction();
     }
 
     #endregion
@@ -130,9 +130,9 @@ namespace Morph.Sequencing
     public override string ToString()
     {
       string str = "{Sequence";
-      str += " SenderID=" + _SenderID.ToString();
-      str += " Index=" + _Index.ToString();
-      if (_Resend)
+      str += " SenderID=" + _senderID.ToString();
+      str += " Index=" + _index.ToString();
+      if (_resend)
         str += " Resend";
       else
         str += " Ack";

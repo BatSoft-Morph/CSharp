@@ -18,8 +18,7 @@ namespace Morph.Lib
 
     static public void NotifyAbout(object sender, ExceptionArgs e)
     {
-      if (Event != null)
-        Event(sender, e);
+      Event?.Invoke(sender, e);
     }
   }
 
@@ -30,16 +29,13 @@ namespace Morph.Lib
     internal ExceptionArgs(Exception Exception)
       : base()
     {
-      _Exception = Exception;
+      _exception = Exception;
     }
 
-    private Exception _Exception;
+    private readonly Exception _exception;
     public Exception Exception
     {
-      get
-      {
-        return _Exception;
-      }
+      get =>_exception;
     }
   }
 }

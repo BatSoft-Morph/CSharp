@@ -15,16 +15,16 @@ namespace Morph.Daemon
     {
       #region IReferenceFactory Members
 
-      public bool DecodeReference(ServletProxy Value, out object Reference)
+      public bool DecodeReference(ServletProxy value, out object reference)
       {
-        if (!"ServiceCallback".Equals(Value.TypeName))
+        if (!"ServiceCallback".Equals(value.TypeName))
         {
-          Reference = null;
+          reference = null;
           return false;
         }
         else
         {
-          Reference = new ServiceCallback(Value);
+          reference = new ServiceCallback(value);
           return true;
         }
       }

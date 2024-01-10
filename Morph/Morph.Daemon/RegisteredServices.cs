@@ -19,16 +19,16 @@ namespace Morph.Daemon
     public bool AccessLocal = true;
     public bool AccessRemote = false;
 
-    public abstract void HandleMessage(LinkMessage Message);
+    public abstract void HandleMessage(LinkMessage message);
   }
 
   public class RegisteredStartup
   {
-    public RegisteredStartup(string FileName, string Parameters, int Timeout)
+    public RegisteredStartup(string fileName, string parameters, int timeout)
     {
-      this.FileName = FileName;
-      this.Parameters = Parameters;
-      this.Timeout = new TimeSpan(0, 0, 0, Timeout);
+      FileName = fileName;
+      Parameters = parameters;
+      Timeout = new TimeSpan(0, 0, 0, timeout);
     }
 
     public string FileName;
@@ -37,7 +37,7 @@ namespace Morph.Daemon
 
     #region Internal
 
-    internal ManualResetEvent _StartupGate = new ManualResetEvent(false);
+    internal ManualResetEvent _startupGate = new ManualResetEvent(false);
 
     internal void Run()
     {
@@ -60,7 +60,7 @@ namespace Morph.Daemon
       //Wait for process to finish
       //pProcess.WaitForExit();
       //  Wait for start up to complete
-      _StartupGate.WaitOne(Timeout);
+      _startupGate.WaitOne(Timeout);
     }
 
     #endregion
@@ -70,21 +70,21 @@ namespace Morph.Daemon
   {
     internal RegisteredService(string ServiceName)
     {
-      _Name = ServiceName;
+      _name = ServiceName;
     }
 
-    private string _Name;
+    private readonly string _name;
     public string Name
     {
-      get { return _Name; }
+      get => _name;
     }
 
     public bool IsRunning
     {
-      get { return _Running != null; }
+      get => _running != null;
     }
 
-    private RegisteredRunning _Running = null;
+    private RegisteredRunning _running = null;
     public RegisteredRunning Running
     {
       get
@@ -92,19 +92,19 @@ namespace Morph.Daemon
         RegisteredStartup Starter = null;
         //  Either return the service handler, or...
         lock (this)
-          if (_Running == null)
-            Starter = _Startup;
+          if (_running == null)
+            Starter = _startup;
           else
-            return _Running;
+            return _running;
         //  ...try to start the service
         if (Starter == null)
           throw new EMorphDaemon("Service " + Name + " is not available.");
         Starter.Run();
         lock (this)
-          if (_Running == null)
+          if (_running == null)
             throw new EMorphDaemon("Service " + Name + " failed to start.");
           else
-            return _Running;
+            return _running;
       }
 
       set
@@ -114,33 +114,33 @@ namespace Morph.Daemon
           //  Prepare for change
           if (value == null)
           { //  - Need to tidy up "dying" service
-            if ((_Running != null) && (_Running is IDisposable))
-              ((IDisposable)_Running).Dispose();
+            if ((_running != null) && (_running is IDisposable))
+              ((IDisposable)_running).Dispose();
           }
           else
           { //  - Not allowed to replace an existing service
-            if (_Running != null)
+            if (_running != null)
               throw new EMorphDaemon("Service " + Name + " is already running.");
           }
           //  Callback: Notify listeners that the service is no longer running
-          if (_Running != null)
+          if (_running != null)
             ServicesImpl._ServiceCallbacks.DoCallbackRemoved(Name);
           //  Apply the change
-          _Running = value;
-          if (_Running == null)
+          _running = value;
+          if (_running == null)
           {
             //  Will need to wait for startup to complete
-            if (_Startup != null)
-              _Startup._StartupGate.Reset();
+            if (_startup != null)
+              _startup._startupGate.Reset();
             //  Tidy up self
-            if (_Startup == null)
+            if (_startup == null)
               RegisteredServices.ReleaseByName(Name);
           }
           else
           {
             //  Release any threads that are waiting for startup
-            if (_Startup != null)
-              _Startup._StartupGate.Set();
+            if (_startup != null)
+              _startup._startupGate.Set();
             //  Callback: Notify listeners about the newly running service
             ServicesImpl._ServiceCallbacks.DoCallbackAdded(Name);
           }
@@ -148,31 +148,31 @@ namespace Morph.Daemon
       }
     }
 
-    internal RegisteredStartup _Startup = null;
+    internal RegisteredStartup _startup = null;
     public RegisteredStartup Startup
     {
-      get { return _Startup; }
+      get => _startup;
       set
       {
         lock (this)
         {
-          RegistryKey MorphStartups = RegisteredServices.MorphStartupsKey();
+          RegistryKey morphStartups = RegisteredServices.MorphStartupsKey();
           //  Save
-          MorphStartups.DeleteValue(_Name, false);
+          morphStartups.DeleteValue(_name, false);
           //  Assign new startup
-          _Startup = value;
-          if (_Startup != null)
+          _startup = value;
+          if (_startup != null)
           {
             //  Save
-            RegistryKey StartupKey = MorphStartups.CreateSubKey(_Name);
-            StartupKey.SetValue("Filename", value.FileName, RegistryValueKind.String);
-            StartupKey.SetValue("Parameters", value.Parameters, RegistryValueKind.String);
-            StartupKey.SetValue("Timeout", (int)value.Timeout.TotalSeconds, RegistryValueKind.DWord);
+            RegistryKey startupKey = morphStartups.CreateSubKey(_name);
+            startupKey.SetValue("Filename", value.FileName, RegistryValueKind.String);
+            startupKey.SetValue("Parameters", value.Parameters, RegistryValueKind.String);
+            startupKey.SetValue("Timeout", (int)value.Timeout.TotalSeconds, RegistryValueKind.DWord);
             //  Correct the start gate
-            if (_Running == null)
-              _Startup._StartupGate.Reset();  //  Will need to wait for startup to complete
+            if (_running == null)
+              _startup._startupGate.Reset();  //  Will need to wait for startup to complete
             else
-              _Startup._StartupGate.Set();  //  Release any threads that are waiting for startup
+              _startup._startupGate.Set();  //  Release any threads that are waiting for startup
           }
         }
       }
@@ -192,8 +192,8 @@ namespace Morph.Daemon
   {
     #region Internal
 
-    static Hashtable Services = new Hashtable();
-    static Hashtable Connections = new Hashtable();
+    static readonly Hashtable Services = new Hashtable();
+    static readonly Hashtable Connections = new Hashtable();
 
     static RegisteredServices()
     {
@@ -202,30 +202,30 @@ namespace Morph.Daemon
 
     #endregion
 
-    static public RegisteredService FindByName(string ServiceName)
+    static public RegisteredService FindByName(string serviceName)
     {
       lock (Services)
-        return (RegisteredService)Services[ServiceName];
+        return (RegisteredService)Services[serviceName];
     }
 
-    static public RegisteredService ObtainByName(string ServiceName)
+    static public RegisteredService ObtainByName(string serviceName)
     {
       lock (Services)
       {
-        RegisteredService Service = (RegisteredService)Services[ServiceName];
-        if (Service == null)
+        RegisteredService service = (RegisteredService)Services[serviceName];
+        if (service == null)
         {
-          Service = new RegisteredService(ServiceName);
-          Services.Add(ServiceName, Service);
+          service = new RegisteredService(serviceName);
+          Services.Add(serviceName, service);
         }
-        return Service;
+        return service;
       }
     }
 
-    static public void ReleaseByName(string ServiceName)
+    static public void ReleaseByName(string serviceName)
     {
       lock (Services)
-        Services.Remove(ServiceName);
+        Services.Remove(serviceName);
     }
 
     static public RegisteredService[] ListAll()
@@ -255,16 +255,16 @@ namespace Morph.Daemon
 
     static public void LoadStartups()
     {
-      RegistryKey Key = MorphStartupsKey();
-      foreach (string serviceName in Key.GetSubKeyNames())
+      RegistryKey key = MorphStartupsKey();
+      foreach (string serviceName in key.GetSubKeyNames())
       {
         //  Load
-        RegistryKey StartupKey = Key.OpenSubKey(serviceName);
-        string Filename = (string)StartupKey.GetValue("Filename");
-        string Parameters = (string)StartupKey.GetValue("Parameters");
-        Int32 Timeout = (Int32)StartupKey.GetValue("Timeout");
+        RegistryKey startupKey = key.OpenSubKey(serviceName);
+        string filename = (string)startupKey.GetValue("Filename");
+        string parameters = (string)startupKey.GetValue("Parameters");
+        Int32 timeout = (Int32)startupKey.GetValue("Timeout");
         //  Apply
-        ObtainByName(serviceName)._Startup = new RegisteredStartup(Filename, Parameters, Timeout);
+        ObtainByName(serviceName)._startup = new RegisteredStartup(filename, parameters, timeout);
       }
     }
 

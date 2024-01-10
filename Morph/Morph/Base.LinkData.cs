@@ -6,81 +6,81 @@ namespace Morph.Base
 {
   public class LinkData : Link
   {
-    public LinkData(byte[] Data, bool MSB, bool IsException, int ErrorCode)
+    public LinkData(byte[] Data, bool MSB, bool isException, int errorCode)
       : base(LinkTypeID.Data)
     {
-      _Data = Data;
+      _data = Data;
       _MSB = MSB;
-      _IsException = IsException;
-      _ErrorCode = ErrorCode;
+      _isException = isException;
+      _errorCode = errorCode;
     }
 
-    public LinkData(MorphWriter Writer)
+    public LinkData(MorphWriter writer)
       : base(LinkTypeID.Data)
     {
-      _Data = Writer.ToArray();
-      _MSB = Writer.MSB;
-      _IsException = false;
+      _data = writer.ToArray();
+      _MSB = writer.MSB;
+      _isException = false;
     }
 
     public LinkData(Exception x)
       : base(LinkTypeID.Data)
     {
-      MorphWriter Writer = Parameters.Encode(null, x, ExceptionInstanceFactory);
-      _Data = Writer.ToArray();
-      _MSB = Writer.MSB;
-      _IsException = true;
+      MorphWriter writer = Parameters.Encode(null, x, s_exceptionInstanceFactory);
+      _data = writer.ToArray();
+      _MSB = writer.MSB;
+      _isException = true;
       if (x is EMorph)
-        _ErrorCode = ((EMorph)x).ErrorCode;
+        _errorCode = ((EMorph)x).ErrorCode;
       else
-        _ErrorCode = 0;
+        _errorCode = 0;
     }
 
-    static private InstanceFactories ExceptionInstanceFactory = new InstanceFactories();
+    private static readonly InstanceFactories s_exceptionInstanceFactory = new InstanceFactories();
 
-    private byte[] _Data;
+    private readonly byte[] _data;
     public byte[] Data
     {
-      get { return _Data; }
+      get => _data;
     }
 
-    private bool _MSB;
+    private readonly bool _MSB;
     public bool MSB
     {
-      get { return _MSB; }
+      get => _MSB;
     }
 
-    private bool _IsException;
+    private readonly bool _isException;
     public bool IsException
     {
-      get { return _IsException; }
+      get => _isException;
     }
 
-    private int _ErrorCode;
+    private readonly int _errorCode;
     public int ErrorCode
     {
-      get { return _ErrorCode; }
+      get => _errorCode;
     }
 
     public MorphReader Reader
     {
-      get { return new MorphReaderSized(_Data, _MSB); }
+      get => new MorphReaderSized(_data, _MSB);
     }
 
     #region Link
 
     public override int Size()
     {
-      return 5 + (_IsException ? 4 : 0) + _Data.Length;
+      return 5 + (_isException ? 4 : 0) + _data.Length;
     }
 
-    public override void Write(MorphWriter Writer)
+    public override void Write(MorphWriter writer)
     {
-      Writer.WriteLinkByte(LinkTypeID, _IsException, false, false);
-      if (_IsException)
-        Writer.WriteInt32(_ErrorCode);
-      Writer.WriteInt32(_Data.Length);
-      Writer.WriteBytes(_Data);
+      writer.WriteLinkByte(LinkTypeID, _isException, false, false);
+      if (_isException)
+        writer.WriteInt32(_errorCode);
+      writer.WriteInt32(_data.Length);
+      writer.WriteBytes(_data);
     }
 
     #endregion
@@ -92,7 +92,7 @@ namespace Morph.Base
 
     public override int GetHashCode()
     {
-      return _Data.GetHashCode();
+      return _data.GetHashCode();
     }
 
     public override string ToString()
@@ -110,7 +110,7 @@ namespace Morph.Base
 
   public interface IActionLinkData
   {
-    void ActionLinkData(LinkMessage Message, LinkData Data);
+    void ActionLinkData(LinkMessage message, LinkData data);
   }
 
   public class LinkTypeData : ILinkTypeReader, ILinkTypeAction
@@ -119,26 +119,26 @@ namespace Morph.Base
 
     public LinkTypeID ID
     {
-      get { return LinkTypeID.Data; }
+      get => LinkTypeID.Data;
     }
 
-    public Link ReadLink(MorphReader Reader)
+    public Link ReadLink(MorphReader reader)
     {
-      bool IsException, y, z;
-      Reader.ReadLinkByte(out IsException, out y, out z);
-      int ErrorCode = 0;
-      if (IsException)
-        ErrorCode = Reader.ReadInt32();
-      int Size = Reader.ReadInt32();
-      byte[] Data = Reader.ReadBytes(Size);
-      return new LinkData(Data, Reader.MSB, IsException, ErrorCode);
+      bool isException, y, z;
+      reader.ReadLinkByte(out isException, out y, out z);
+      int errorCode = 0;
+      if (isException)
+        errorCode = reader.ReadInt32();
+      int size = reader.ReadInt32();
+      byte[] data = reader.ReadBytes(size);
+      return new LinkData(data, reader.MSB, isException, errorCode);
     }
 
-    public void ActionLink(LinkMessage Message, Link CurrentLink)
+    public void ActionLink(LinkMessage message, Link currentLink)
     {
-      if (!Message.ContextIs(typeof(IActionLinkData)))
+      if (!message.ContextIs(typeof(IActionLinkData)))
         throw new EMorph("Link type not supported by context");
-      ((IActionLinkData)Message.Context).ActionLinkData(Message, (LinkData)CurrentLink);
+      ((IActionLinkData)message.Context).ActionLinkData(message, (LinkData)currentLink);
     }
 
     #endregion

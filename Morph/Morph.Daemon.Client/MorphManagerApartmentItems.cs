@@ -5,8 +5,8 @@ namespace Morph.Daemon.Client
 {
   internal class MorphManagerApartmentItems : DaemonClient, IIDFactory
   {
-    internal MorphManagerApartmentItems(string ServiceName, TimeSpan DefaultTimeout)
-      : base(ServiceName, DefaultTimeout)
+    internal MorphManagerApartmentItems(string serviceName, TimeSpan defaultTimeout)
+      : base(serviceName, defaultTimeout)
     {
     }
 
@@ -14,12 +14,12 @@ namespace Morph.Daemon.Client
 
     public int Generate()
     {
-      return (int)ServletProxy.CallMethod("obtain", null);
+      return (int)ServletProxy.CallMethod("Obtain", null);
     }
 
     public void Release(int id)
     {
-      ServletProxy.SendMethod("release", new object[] { id });
+      ServletProxy.SendMethod("Release", new object[] { id });
     }
 
     #endregion

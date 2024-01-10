@@ -7,38 +7,38 @@ namespace Morph.Internet
 {
   public abstract class LinkInternet : Link
   {
-    protected LinkInternet(IPEndPoint EndPoint)
+    protected LinkInternet(IPEndPoint endPoint)
       : base(LinkTypeID.Internet)
     {
-      _EndPoint = EndPoint;
+      _endPoint = endPoint;
     }
 
     public const int MorphPort = 0x3000;
 
-    private IPEndPoint _EndPoint;
+    private readonly IPEndPoint _endPoint;
     public IPEndPoint EndPoint
     {
-      get { return _EndPoint; }
+      get => _endPoint;
     }
 
-    static public LinkInternet New(EndPoint EndPoint)
+    static public LinkInternet New(EndPoint endPoint)
     {
-      if (!(EndPoint is IPEndPoint))
+      if (!(endPoint is IPEndPoint))
         throw new EMorphImplementation();
-      if (EndPoint.AddressFamily == AddressFamily.InterNetworkV6)
-        return new LinkInternetIPv6((IPEndPoint)EndPoint);
+      if (endPoint.AddressFamily == AddressFamily.InterNetworkV6)
+        return new LinkInternetIPv6((IPEndPoint)endPoint);
       else
-        return new LinkInternetIPv4((IPEndPoint)EndPoint);
+        return new LinkInternetIPv4((IPEndPoint)endPoint);
     }
 
     public override bool Equals(object obj)
     {
-      return (obj is LinkInternet) && (((LinkInternet)obj).EndPoint.Equals(_EndPoint));
+      return (obj is LinkInternet linkInternet) && (linkInternet.EndPoint.Equals(_endPoint));
     }
 
     public override int GetHashCode()
     {
-      return _EndPoint.GetHashCode();
+      return _endPoint.GetHashCode();
     }
 
     public override string ToString()
@@ -56,56 +56,56 @@ namespace Morph.Internet
 
     public LinkTypeID ID
     {
-      get { return LinkTypeID.Internet; }
+      get => LinkTypeID.Internet;
     }
 
-    public Link ReadLink(MorphReader Reader)
+    public Link ReadLink(MorphReader reader)
     {
-      bool IsIPv6, IsString, HasPort;
-      Reader.ReadLinkByte(out IsIPv6, out IsString, out HasPort);
-      if (IsIPv6)
-        return LinkInternetIPv6.ReadNew(Reader, IsString, HasPort);
+      bool isIPv6, isString, hasPort;
+      reader.ReadLinkByte(out isIPv6, out isString, out hasPort);
+      if (isIPv6)
+        return LinkInternetIPv6.ReadNew(reader, isString, hasPort);
       else
-        return LinkInternetIPv4.ReadNew(Reader, IsString, HasPort);
+        return LinkInternetIPv4.ReadNew(reader, isString, hasPort);
     }
 
-    public void ActionLink(LinkMessage Message, Link CurrentLink)
+    public void ActionLink(LinkMessage message, Link currentLink)
     {
-      LinkInternet Link = (LinkInternet)CurrentLink;
+      LinkInternet link = (LinkInternet)currentLink;
       //  If this link represents here, then move on to the next link
-      if (Connections.IsEndPointOnThisProcess(Link.EndPoint))
+      if (Connections.IsEndPointOnThisProcess(link.EndPoint))
       {
-        Message.Context = Link.EndPoint;
-        Message.NextLinkAction();
+        message.Context = link.EndPoint;
+        message.NextLinkAction();
         return;
       }
       //  Obtain a connection to the device that link refers to.
-      Connection Connection;
-      if (Message.IsForceful)
-        Connection = Connections.Obtain(Link.EndPoint);
+      Connection connection;
+      if (message.IsForceful)
+        connection = Connections.Obtain(link.EndPoint);
       else
-        Connection = Connections.Find(Link.EndPoint);
+        connection = Connections.Find(link.EndPoint);
       //  If not forceful and connection not found, then stop the message here
-      if (Connection == null)
+      if (connection == null)
         return;
       //  Remove this address (this is done only in IPv4 due to NAT)
-      if (Link is LinkInternetIPv4)
-        Message.PathTo.Pop();
+      if (link is LinkInternetIPv4)
+        message.PathTo.Pop();
       else
         //  Ensure we have a link representing this device in Message.PathFrom
-        if (Message.HasPathFrom)
+        if (message.HasPathFrom)
         {
-          bool AddLocalLink = false;
-          Link LastLink = Message.PathFrom.Peek();
-          if (LastLink is LinkInternet)
-            AddLocalLink = !Connections.IsEndPointOnThisProcess(((LinkInternet)LastLink).EndPoint);
+          bool addLocalLink = false;
+          Link lastLink = message.PathFrom.Peek();
+          if (lastLink is LinkInternet)
+            addLocalLink = !Connections.IsEndPointOnThisProcess(((LinkInternet)lastLink).EndPoint);
           else
-            AddLocalLink = true;
-          if (AddLocalLink)
-            Message.PathFrom.Push(LinkInternet.New(Connection.LocalEndPoint));
+            addLocalLink = true;
+          if (addLocalLink)
+            message.PathFrom.Push(LinkInternet.New(connection.LocalEndPoint));
         }
       //  Send the message on
-      Connection.Write(Message);
+      connection.Write(message);
     }
   }
 }

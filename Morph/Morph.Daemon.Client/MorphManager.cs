@@ -34,35 +34,35 @@ namespace Morph.Daemon.Client
       set { ActionHandler.SetThreadCount(value); }
     }
 
-    static private MorphManagerServices _Services = null;
+    static private MorphManagerServices s_services = null;
     static public MorphManagerServices Services
     {
       get
       {
-        if (_Services == null)
-          _Services = new MorphManagerServices(ReplyTimeout);
-        return _Services;
+        if (s_services == null)
+          s_services = new MorphManagerServices(ReplyTimeout);
+        return s_services;
       }
     }
 
-    static private MorphManagerStartups _Startups = null;
+    static private MorphManagerStartups s_startups = null;
     static public MorphManagerStartups Startups
     {
       get
       {
-        if (_Startups == null)
-          _Startups = new MorphManagerStartups(ReplyTimeout);
-        return _Startups;
+        if (s_startups == null)
+          s_startups = new MorphManagerStartups(ReplyTimeout);
+        return s_startups;
       }
     }
 
-    static public void startup(int threadCount)
+    static public void Startup(int threadCount)
     {
       ThreadCount = threadCount;
       //      ListenerManager.Obtain(LinkInternet.MorphPort).StartAll();
     }
 
-    static public void shutdown()
+    static public void Shutdown()
     {
       //      ListenerManager.Find(LinkInternet.MorphPort).StopAll();
       ActionHandler.SetThreadCount(0);

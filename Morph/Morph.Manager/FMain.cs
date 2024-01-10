@@ -12,8 +12,8 @@ namespace Morph.Manager
       InitializeComponent();
       try
       {
-        MorphManager.Services.listen(new DaemonEvent(this, new DelegateVoid(PopulateServices)));
-        MorphManager.Startups.listen(new DaemonEvent(this, new DelegateVoid(PopulateStartups)));
+        MorphManager.Services.Listen(new DaemonEvent(this, new DelegateVoid(PopulateServices)));
+        MorphManager.Startups.Listen(new DaemonEvent(this, new DelegateVoid(PopulateStartups)));
       }
       catch (Exception x)
       {
@@ -59,8 +59,8 @@ namespace Morph.Manager
     public void PopulateStartups()
     {
       //  Remember selected service
-      string ServiceName = GetSelectedServiceName(listStartups);
-      DaemonStartup[] startups = MorphManager.Startups.listServices();
+      string serviceName = GetSelectedServiceName(listStartups);
+      DaemonStartup[] startups = MorphManager.Startups.ListServices();
       listStartups.Items.Clear();
       if (startups != null)
         for (int i = 0; i < startups.Length; i++)
@@ -70,16 +70,16 @@ namespace Morph.Manager
           item.SubItems.Add(Startup.timeout.ToString());
           item.SubItems.Add(Startup.fileName);
         }
-      SetSelectedServiceName(listStartups, ServiceName);
+      SetSelectedServiceName(listStartups, serviceName);
     }
 
     private void butAddStartup_Click(object sender, EventArgs e)
     {
-      FStartup StartupDialog = new FStartup(true);
-      if (DialogResult.OK == StartupDialog.ShowDialog(this))
+      FStartup startupDialog = new FStartup(true);
+      if (DialogResult.OK == startupDialog.ShowDialog(this))
         try
         {
-          MorphManager.Startups.add(StartupDialog.ServiceName, StartupDialog.FileName, StartupDialog.Parameters, StartupDialog.Timeout);
+          MorphManager.Startups.Add(startupDialog.ServiceName, startupDialog.FileName, startupDialog.Parameters, startupDialog.Timeout);
         }
         catch (Exception x)
         {
@@ -89,18 +89,18 @@ namespace Morph.Manager
 
     private void butEditStartup_Click(object sender, EventArgs e)
     {
-      ListViewItem Item = listStartups.FocusedItem;
-      if (Item == null)
+      ListViewItem item = listStartups.FocusedItem;
+      if (item == null)
         return;
-      FStartup StartupDialog = new FStartup(false);
-      StartupDialog.ServiceName = Item.SubItems[0].Text;
-      StartupDialog.Timeout = int.Parse(Item.SubItems[1].Text);
-      StartupDialog.FileName = Item.SubItems[2].Text;
-      if (DialogResult.OK == StartupDialog.ShowDialog(this))
+      FStartup startupDialog = new FStartup(false);
+      startupDialog.ServiceName = item.SubItems[0].Text;
+      startupDialog.Timeout = int.Parse(item.SubItems[1].Text);
+      startupDialog.FileName = item.SubItems[2].Text;
+      if (DialogResult.OK == startupDialog.ShowDialog(this))
         try
         {
-          MorphManager.Startups.remove(StartupDialog.ServiceName);
-          MorphManager.Startups.add(StartupDialog.ServiceName, StartupDialog.FileName, StartupDialog.Parameters, StartupDialog.Timeout);
+          MorphManager.Startups.Remove(startupDialog.ServiceName);
+          MorphManager.Startups.Add(startupDialog.ServiceName, startupDialog.FileName, startupDialog.Parameters, startupDialog.Timeout);
         }
         catch (Exception x)
         {
@@ -110,16 +110,16 @@ namespace Morph.Manager
 
     private void butRemStartup_Click(object sender, EventArgs e)
     {
-      string ServiceName = listStartups.FocusedItem.Text;
-      if (DialogResult.Yes == MessageBox.Show(this, "Are you sure you want to remove automotic startup of service \"" + ServiceName + "\"?", "Removing startup", MessageBoxButtons.YesNo, MessageBoxIcon.Warning))
-        MorphManager.Startups.remove(ServiceName);
+      string serviceName = listStartups.FocusedItem.Text;
+      if (DialogResult.Yes == MessageBox.Show(this, "Are you sure you want to remove automotic startup of service \"" + serviceName + "\"?", "Removing startup", MessageBoxButtons.YesNo, MessageBoxIcon.Warning))
+        MorphManager.Startups.Remove(serviceName);
     }
 
     private void listStartups_SelectedIndexChanged(object sender, EventArgs e)
     {
-      bool IsSelected = listStartups.FocusedItem != null;
-      butEditStartup.Enabled = IsSelected;
-      butRemStartup.Enabled = IsSelected;
+      bool isSelected = listStartups.FocusedItem != null;
+      butEditStartup.Enabled = isSelected;
+      butRemStartup.Enabled = isSelected;
     }
 
     private void listStartups_DoubleClick(object sender, EventArgs e)
@@ -134,8 +134,8 @@ namespace Morph.Manager
     public void PopulateServices()
     {
       //  Remember selected service
-      string ServiceName = GetSelectedServiceName(listServices);
-      DaemonService[] services = MorphManager.Services.listServices();
+      string serviceName = GetSelectedServiceName(listServices);
+      DaemonService[] services = MorphManager.Services.ListServices();
       listServices.Items.Clear();
       if (services != null)
         for (int i = 0; i < services.Length; i++)
@@ -144,7 +144,7 @@ namespace Morph.Manager
           item.SubItems.Add(services[i].accessLocal ? "Yes" : "No");
           item.SubItems.Add(services[i].accessRemote ? "Yes" : "No");
         }
-      SetSelectedServiceName(listServices, ServiceName);
+      SetSelectedServiceName(listServices, serviceName);
     }
 
     #endregion
@@ -171,7 +171,7 @@ namespace Morph.Manager
 
     private void FMain_FormClosed(object sender, FormClosedEventArgs e)
     {
-      MorphManager.shutdown();
+      MorphManager.Shutdown();
     }
   }
 
@@ -184,7 +184,7 @@ namespace Morph.Manager
     {
       _owner = Owner;
       _method = method;
-      this.MorphApartment = _MorphApartment;
+      MorphApartment = _MorphApartment;
     }
 
     static DaemonEvent()
@@ -192,16 +192,16 @@ namespace Morph.Manager
       _MorphApartment = new MorphApartmentShared(DaemonClient.InstanceFactory);
     }
 
-    private FMain _owner;
-    private DelegateVoid _method;
-    static private MorphApartment _MorphApartment;
+    private readonly FMain _owner;
+    private readonly DelegateVoid _method;
+    private static readonly MorphApartment _MorphApartment;
 
-    public override void added(string serviceName)
+    public override void Added(string serviceName)
     {
       _owner.Invoke(_method);
     }
 
-    public override void removed(string serviceName)
+    public override void Removed(string serviceName)
     {
       _owner.Invoke(_method);
     }

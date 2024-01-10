@@ -11,12 +11,12 @@ namespace Morph.Core
 
     void IDisposable.Dispose()
     {
-      lock (_Queue)
-        if (_TotalRemaining >= 0)
+      lock (_queue)
+        if (_totalRemaining >= 0)
         {
-          _TotalRemaining = -1;
-          _Queue.Clear();
-          _Gate.Set();
+          _totalRemaining = -1;
+          _queue.Clear();
+          _gate.Set();
         }
     }
 
@@ -24,39 +24,39 @@ namespace Morph.Core
 
     #region Internal
 
-    private Queue _Queue = new Queue();
-    private long _TotalRemaining = 0;
-    private int _WaitingFor = 0;
+    private readonly Queue _queue = new Queue();
+    private long _totalRemaining = 0;
+    private int _waitingFor = 0;
 
     private void WaitFor(int count)
     {
       //  If not enough data is available, then we wait
-      lock (_Queue)
-        if (count <= _TotalRemaining)
+      lock (_queue)
+        if (count <= _totalRemaining)
           return;
         else
-          _WaitingFor = count;
-      _Gate.WaitOne();
+          _waitingFor = count;
+      _gate.WaitOne();
       //  Stream may no longer be valid
-      if (_Queue == null)
+      if (_queue == null)
         throw new ObjectDisposedException("MorphStream is disposed");
     }
 
-    private int _SegmentPos = 0;
-    private byte[] _Segment = new byte[0];
+    private int _segmentPos = 0;
+    private byte[] _segment = new byte[0];
 
-    private ManualResetEvent _Gate = new ManualResetEvent(false);
+    private readonly ManualResetEvent _gate = new ManualResetEvent(false);
 
     private byte[] Segment()
     {
-      lock (_Gate)
+      lock (_gate)
       {
-        if (_SegmentPos == _Segment.Length)
+        if (_segmentPos == _segment.Length)
         {
-          _Segment = (byte[])_Queue.Dequeue();
-          _SegmentPos = 0;
+          _segment = (byte[])_queue.Dequeue();
+          _segmentPos = 0;
         }
-        return _Segment;
+        return _segment;
       }
     }
 
@@ -64,16 +64,16 @@ namespace Morph.Core
 
     public long Remaining
     {
-      get { return _TotalRemaining; }
+      get => _totalRemaining;
     }
 
     public byte Peek()
     {
-      if (_Queue == null)
+      if (_queue == null)
         throw new ObjectDisposedException("MorphStream is disposed");
       WaitFor(1);
-      lock (_Segment)
-        return Segment()[_SegmentPos];
+      lock (_segment)
+        return Segment()[_segmentPos];
     }
 
     public byte[] Read(int count)
@@ -90,22 +90,22 @@ namespace Morph.Core
 
     public override bool CanRead
     {
-      get { return true; }
+      get => true;
     }
 
     public override bool CanSeek
     {
-      get { return false; }
+      get => false;
     }
 
     public override bool CanWrite
     {
-      get { return true; }
+      get => true;
     }
 
     public override void Flush()
     {
-      _Queue.Clear();
+      _queue.Clear();
     }
 
     public override long Length
@@ -127,35 +127,35 @@ namespace Morph.Core
         throw new ArgumentNullException();
       if ((offset < 0) || (count < 0))
         throw new ArgumentOutOfRangeException();
-      if (_Queue == null)
+      if (_queue == null)
         throw new ObjectDisposedException("MorphStream is disposed");
       //  If no data is available, then we must wait
-      _Gate.WaitOne();
+      _gate.WaitOne();
       //  Can't copy more than we have
-      if (_TotalRemaining < count)
-        count = (int)_TotalRemaining;
+      if (_totalRemaining < count)
+        count = (int)_totalRemaining;
       int result = count;
       //  Might have to copy from several segments
       while (count > 0)
-        lock (_Segment)
+        lock (_segment)
         {
           //  Might have to "page" to next segment
           Segment();
           //  Determine copy count for this segment
-          int CopyCount = _Segment.Length - _SegmentPos;
-          if (CopyCount > count)
-            CopyCount = count;
+          int copyCount = _segment.Length - _segmentPos;
+          if (copyCount > count)
+            copyCount = count;
           //  Copy from segment
-          lock (_Gate)
+          lock (_gate)
           {
-            Array.Copy(_Segment, _SegmentPos, buffer, offset, CopyCount);
-            offset += CopyCount;
-            _TotalRemaining -= CopyCount;
-            _SegmentPos += CopyCount;
-            if (_TotalRemaining == 0)
-              _Gate.Reset();
+            Array.Copy(_segment, _segmentPos, buffer, offset, copyCount);
+            offset += copyCount;
+            _totalRemaining -= copyCount;
+            _segmentPos += copyCount;
+            if (_totalRemaining == 0)
+              _gate.Reset();
           }
-          count -= CopyCount;
+          count -= copyCount;
         }
       return result;
     }
@@ -177,14 +177,14 @@ namespace Morph.Core
       if (count == 0)
         return;
       //  Copy data
-      byte[] NewSegment = new byte[count];
-      Array.Copy(buffer, offset, NewSegment, 0, NewSegment.Length);
+      byte[] newSegment = new byte[count];
+      Array.Copy(buffer, offset, newSegment, 0, newSegment.Length);
       //  Add data to queue
-      lock (_Gate)
+      lock (_gate)
       {
-        _Queue.Enqueue(NewSegment);
-        _TotalRemaining += NewSegment.Length;
-        _Gate.Set();
+        _queue.Enqueue(newSegment);
+        _totalRemaining += newSegment.Length;
+        _gate.Set();
       }
     }
 

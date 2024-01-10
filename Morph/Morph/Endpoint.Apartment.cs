@@ -21,16 +21,16 @@ using Morph.Sequencing;
 
 namespace Morph.Endpoint
 {
-  public abstract class MorphApartment : RegisterItemID, IDisposable, IActionLinkSequence, IActionLast
+  public abstract class MorphApartment : IRegisterItemID, IDisposable, IActionLinkSequence, IActionLast
   {
-    protected MorphApartment(MorphApartmentFactory Owner, InstanceFactories InstanceFactories, object DefaultObject)
+    protected MorphApartment(MorphApartmentFactory owner, InstanceFactories instanceFactories, object defaultObject)
     {
-      if (InstanceFactories == null)
+      if (instanceFactories == null)
         throw new EMorphUsage("Apartment must have InstanceFactories object");
-      _InstanceFactories = InstanceFactories;
-      _Owner = Owner;
-      _ID = IDFactory.Generate();
-      _Servlets = new Servlets(this, DefaultObject);
+      _instanceFactories = instanceFactories;
+      _owner = owner;
+      _id = IDFactory.Generate();
+      _servlets = new Servlets(this, defaultObject);
       MorphApartmentFactory.RegisterApartment(this);
     }
 
@@ -52,10 +52,10 @@ namespace Morph.Endpoint
 
     #region RegisterItemID Members
 
-    private int _ID;
+    private readonly int _id;
     public int ID
     {
-      get { return _ID; }
+      get => _id;
     }
 
     #endregion
@@ -64,10 +64,10 @@ namespace Morph.Endpoint
 
     static public IIDFactory IDFactory = new IDSeed(DefaultID + 1);
 
-    private MorphApartmentFactory _Owner;
+    private readonly MorphApartmentFactory _owner;
     public MorphApartmentFactory Owner
     {
-      get { return _Owner; }
+      get => _owner;
     }
 
     public virtual void ResetTimeout()
@@ -77,24 +77,24 @@ namespace Morph.Endpoint
 
     public virtual Servlet DefaultServlet
     {
-      get { return Servlets.Find(Servlet.DefaultID); }
+      get => Servlets.Find(Servlet.DefaultID);
     }
 
-    private Servlets _Servlets;
+    private readonly Servlets _servlets;
     public Servlets Servlets
     {
-      get { return _Servlets; }
+      get => _servlets;
     }
 
-    private InstanceFactories _InstanceFactories;
+    private readonly InstanceFactories _instanceFactories;
     public InstanceFactories InstanceFactories
     {
-      get { return _InstanceFactories; }
+      get => _instanceFactories;
     }
 
     #region IActionLinkSequence
 
-    public virtual void ActionLinkSequence(LinkMessage Message, LinkSequence LinkSequence)
+    public virtual void ActionLinkSequence(LinkMessage message, LinkSequence linkSequence)
     {
       //  Shared apartments don't use sequences
       throw new EMorph("Unexpected link type");
@@ -104,60 +104,60 @@ namespace Morph.Endpoint
 
     #region IActionLast
 
-    public void ActionLast(LinkMessage Message)
+    public void ActionLast(LinkMessage message)
     {
-      Message.CreateReply().NextLinkAction();
+      message.CreateReply().NextLinkAction();
     }
 
     #endregion
   }
 
-  public interface DefaultServletObjectFactory
+  public interface IDefaultServletObjectFactory
   {
     object ObtainServlet();
   }
 
   public abstract class MorphApartmentFactory
   {
-    protected MorphApartmentFactory(InstanceFactories InstanceFactories)
+    protected MorphApartmentFactory(InstanceFactories instanceFactories)
     {
-      _InstanceFactories = InstanceFactories;
+      _instanceFactories = instanceFactories;
     }
 
-    internal MorphService _Service;
+    internal MorphService _service;
 
-    private InstanceFactories _InstanceFactories;
+    private readonly InstanceFactories _instanceFactories;
     public InstanceFactories InstanceFactories
     {
-      get { return _InstanceFactories; }
+      get => _instanceFactories;
     }
 
-    static private RegisterItems<MorphApartment> All = new RegisterItems<MorphApartment>();
+    static private RegisterItems<MorphApartment> s_all = new RegisterItems<MorphApartment>();
 
-    static internal void RegisterApartment(MorphApartment Apartment)
+    static internal void RegisterApartment(MorphApartment apartment)
     {
-      lock (All)
-        MorphApartmentFactory.All.Add(Apartment);
+      lock (s_all)
+        MorphApartmentFactory.s_all.Add(apartment);
     }
 
-    static internal void UnregisterApartment(MorphApartment Apartment)
+    static internal void UnregisterApartment(MorphApartment apartment)
     {
-      lock (All)
-        MorphApartmentFactory.All.Remove(Apartment);
+      lock (s_all)
+        MorphApartmentFactory.s_all.Remove(apartment);
     }
 
-    static public MorphApartment Find(int ApartmentID)
+    static public MorphApartment Find(int apartmentID)
     {
-      lock (All)
-        return All.Find(ApartmentID);
+      lock (s_all)
+        return s_all.Find(apartmentID);
     }
 
-    static public MorphApartment Obtain(int ApartmentID)
+    static public MorphApartment Obtain(int apartmentID)
     {
-      if (ApartmentID == MorphApartment.DefaultID)
+      if (apartmentID == MorphApartment.DefaultID)
         throw new EMorph("Obtain a default apartment by specifing a service.");
       //  Lookup existing apartment
-      MorphApartment apartment = Find(ApartmentID);
+      MorphApartment apartment = Find(apartmentID);
       if (apartment == null)
         throw new EMorph("Apartment not found");
       //  Keep session apartments alive
@@ -169,10 +169,10 @@ namespace Morph.Endpoint
 
     protected internal virtual void ShutDown()
     {
-      lock (All)
+      lock (s_all)
       {
-        List<MorphApartment> AllApartments = All.List();
-        foreach (MorphApartment apartment in AllApartments)
+        List<MorphApartment> allApartments = s_all.List();
+        foreach (MorphApartment apartment in allApartments)
           apartment.Dispose();
       }
     }

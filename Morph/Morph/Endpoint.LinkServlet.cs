@@ -5,16 +5,16 @@ namespace Morph.Endpoint
 {
   public class LinkServlet : Link
   {
-    internal LinkServlet(int ServletID)
+    internal LinkServlet(int servletID)
       : base(LinkTypeID.Servlet)
     {
-      _ServetID = ServletID;
+      _servetID = servletID;
     }
 
-    private int _ServetID;
+    private readonly int _servetID;
     public int ServletID
     {
-      get { return _ServetID; }
+      get => _servetID;
     }
 
     #region Link implementation
@@ -24,22 +24,22 @@ namespace Morph.Endpoint
       return 5;
     }
 
-    public override void Write(MorphWriter Writer)
+    public override void Write(MorphWriter writer)
     {
-      Writer.WriteLinkByte(LinkTypeID, false, false, false);
-      Writer.WriteInt32(ServletID);
+      writer.WriteLinkByte(LinkTypeID, false, false, false);
+      writer.WriteInt32(ServletID);
     }
 
     #endregion
 
     public override bool Equals(object obj)
     {
-      return (obj is LinkServlet) && (((LinkServlet)obj).ServletID == _ServetID);
+      return (obj is LinkServlet linkServlet) && (linkServlet.ServletID == _servetID);
     }
 
     public override int GetHashCode()
     {
-      return _ServetID;
+      return _servetID;
     }
 
     public override string ToString()
@@ -52,28 +52,28 @@ namespace Morph.Endpoint
   {
     public LinkTypeID ID
     {
-      get { return LinkTypeID.Servlet; }
+      get => LinkTypeID.Servlet;
     }
 
-    public Link ReadLink(MorphReader Reader)
+    public Link ReadLink(MorphReader reader)
     {
-      Reader.ReadInt8();
-      return new LinkServlet(Reader.ReadInt32());
+      reader.ReadInt8();
+      return new LinkServlet(reader.ReadInt32());
     }
 
-    public void ActionLink(LinkMessage Message, Link CurrentLink)
+    public void ActionLink(LinkMessage message, Link currentLink)
     {
       //  Find the apartment
-      if (!Message.ContextIs(typeof(MorphApartment)))
+      if (!message.ContextIs(typeof(MorphApartment)))
         throw new EMorph("Link type not supported by context");
-      MorphApartment Apartment = (MorphApartment)Message.Context;
+      MorphApartment apartment = (MorphApartment)message.Context;
       //  Find the servlet
-      Servlet Servlet = Apartment.Servlets.Find(((LinkServlet)CurrentLink).ServletID);
-      if (Servlet == null)
+      Servlet servlet = apartment.Servlets.Find(((LinkServlet)currentLink).ServletID);
+      if (servlet == null)
         throw new EMorph("Servlet not found");
       //  Move along
-      Message.Context = Servlet;
-      Message.NextLinkAction();
+      message.Context = servlet;
+      message.NextLinkAction();
     }
   }
 }

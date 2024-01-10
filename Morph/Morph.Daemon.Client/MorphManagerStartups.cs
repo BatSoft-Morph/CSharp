@@ -4,42 +4,42 @@ namespace Morph.Daemon.Client
 {
   public class MorphManagerStartups : DaemonClient
   {
-    public MorphManagerStartups(TimeSpan DefaultTimeout)
-      : base("Morph.Startup", DefaultTimeout)
+    public MorphManagerStartups(TimeSpan defaultTimeout)
+      : base("Morph.Startup", defaultTimeout)
     {
     }
 
-    public void refresh()
+    public void Refresh()
     {
-      ServletProxy.SendMethod("refresh", null);
+      ServletProxy.SendMethod("Refresh", null);
     }
 
     /**
      * Timeout in in seconds
      */
-    public void add(string serviceName, string fileName, string parameters, int timeout)
+    public void Add(string serviceName, string fileName, string parameters, int timeout)
     {
-      ServletProxy.CallMethod("add", new object[] { serviceName, fileName, parameters, timeout });
+      ServletProxy.CallMethod("Add", new object[] { serviceName, fileName, parameters, timeout });
     }
 
-    public void remove(string serviceName)
+    public void Remove(string serviceName)
     {
-      ServletProxy.CallMethod("remove", new object[] { serviceName });
+      ServletProxy.CallMethod("Remove", new object[] { serviceName });
     }
 
-    public DaemonStartup[] listServices()
+    public DaemonStartup[] ListServices()
     {
-      return (DaemonStartup[])ServletProxy.CallMethod("listServices", null);
+      return (DaemonStartup[])ServletProxy.CallMethod("ListServices", null);
     }
 
-    public void listen(DaemonServiceCallback callback)
+    public void Listen(DaemonServiceCallback callback)
     {
-      ServletProxy.CallMethod("listen", new object[] { callback });
+      ServletProxy.CallMethod("Listen", new object[] { callback });
     }
 
-    public void unlisten(DaemonServiceCallback callback)
+    public void Unlisten(DaemonServiceCallback callback)
     {
-      ServletProxy.CallMethod("unlisten", new object[] { callback });
+      ServletProxy.CallMethod("Unlisten", new object[] { callback });
     }
   }
 

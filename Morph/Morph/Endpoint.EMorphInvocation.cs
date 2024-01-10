@@ -2,26 +2,23 @@ namespace Morph.Endpoint
 {
   public class EMorphInvocation : EMorph
   {
-    public EMorphInvocation(string ClassName, string Message, string StackTrace)
-      : base(Message)
+    public EMorphInvocation(string className, string message, string stackTrace)
+      : base(message)
     {
-      _ClassName = ClassName;
-      _StackTrace = StackTrace;
+      _className = className;
+      _stackTrace = stackTrace;
     }
 
-    private string _ClassName;
+    private readonly string _className;
     public string ClassName
     {
-      get { return _ClassName; }
+      get => _className;
     }
 
-    private string _StackTrace;
+    private readonly string _stackTrace;
     public override string StackTrace
     {
-      get
-      {
-        return _StackTrace;
-      }
+      get => _stackTrace;
     }
   }
 }

@@ -8,16 +8,16 @@ namespace Morph.Endpoint
 {
   public class LinkMethod : LinkMember
   {
-    public LinkMethod(string Name)
+    public LinkMethod(string name)
       : base()
     {
-      _Name = Name;
+      _name = name;
     }
 
-    private string _Name;
+    private readonly string _name;
     public override string Name
     {
-      get { return _Name; }
+      get => _name;
     }
 
     #region Link
@@ -27,51 +27,51 @@ namespace Morph.Endpoint
       return 5 + MorphWriter.SizeOfString(Name);
     }
 
-    public override void Write(MorphWriter Writer)
+    public override void Write(MorphWriter writer)
     {
-      Writer.WriteLinkByte(LinkTypeID, false, false, false);
-      Writer.WriteString(Name);
+      writer.WriteLinkByte(LinkTypeID, false, false, false);
+      writer.WriteString(Name);
     }
 
     #endregion
 
-    protected internal override LinkData Invoke(LinkMessage Message, LinkStack SenderDevicePath, LinkData DataIn)
+    protected internal override LinkData Invoke(LinkMessage message, LinkStack senderDevicePath, LinkData dataIn)
     {
-      MorphApartment Apartment = _Servlet.Apartment;
+      MorphApartment apartment = _servlet.Apartment;
       //  Obtain the object
-      object Object = _Servlet.Object;
+      object obj = _servlet.Object;
       //  Obtain the method
-      MethodInfo method = Object.GetType().GetMethod(Name);
+      MethodInfo method = obj.GetType().GetMethod(Name);
       if (method == null)
         throw new EMorph("Method not found");
       //  Decode input
-      object[] ParamsIn = null;
-      object Special = null;
-      if (DataIn != null)
-        Parameters.Decode(Apartment.InstanceFactories, SenderDevicePath, DataIn.Reader, out ParamsIn, out Special);
+      object[] paramsIn = null;
+      object special = null;
+      if (dataIn != null)
+        Parameters.Decode(apartment.InstanceFactories, senderDevicePath, dataIn.Reader, out paramsIn, out special);
       //  Might insert Message as the first parameter
-      if (Object is IMorphParameters)
+      if (obj is IMorphParameters)
       {
-        List<object> Params = new List<object>((ParamsIn == null ? 0 : ParamsIn.Length) + 1);
-        Params.Add(Message);
-        if (ParamsIn != null)
-          for (int i = 0; i < ParamsIn.Length; i++)
-            Params.Add(ParamsIn[i]);
-        ParamsIn = Params.ToArray();
+        List<object> Params = new List<object>((paramsIn == null ? 0 : paramsIn.Length) + 1);
+        Params.Add(message);
+        if (paramsIn != null)
+          for (int i = 0; i < paramsIn.Length; i++)
+            Params.Add(paramsIn[i]);
+        paramsIn = Params.ToArray();
       }
       //  Invoke the method
-      object result = method.Invoke(Object, ParamsIn);
+      object result = method.Invoke(obj, paramsIn);
       //  Encode output
-      MorphWriter DataOutWriter;
+      MorphWriter dataOutWriter;
       if (method.ReturnType == typeof(void))
-        DataOutWriter = Parameters.Encode(null, Apartment.InstanceFactories);
+        dataOutWriter = Parameters.Encode(null, apartment.InstanceFactories);
       else
-        DataOutWriter = Parameters.Encode(null, result, Apartment.InstanceFactories);
+        dataOutWriter = Parameters.Encode(null, result, apartment.InstanceFactories);
       //  Return output
-      if (DataOutWriter == null)
+      if (dataOutWriter == null)
         return null;
       else
-        return new LinkData(DataOutWriter);
+        return new LinkData(dataOutWriter);
     }
 
     public override string ToString()

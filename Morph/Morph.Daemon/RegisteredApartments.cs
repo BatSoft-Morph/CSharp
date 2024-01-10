@@ -8,38 +8,38 @@ namespace Morph.Daemon
 {
   public abstract class RegisteredApartment : IDisposable
   {
-    public RegisteredApartment(RegisteredApartments Owner, int ID)
+    public RegisteredApartment(RegisteredApartments owner, int id)
     {
-      _Owner = Owner;
-      _ID = ID;
-      _Owner.Register(this);
+      _owner = owner;
+      _id = id;
+      _owner.Register(this);
     }
 
     #region IDisposable
 
     public virtual void Dispose()
     {
-      _Owner.Unregister(_ID);
+      _owner.Unregister(_id);
     }
 
     #endregion
 
-    protected RegisteredApartments _Owner;
+    protected RegisteredApartments _owner;
 
-    private int _ID;
+    private readonly int _id;
     public int ID
-    { get { return _ID; } }
+    { get => _id; }
 
     public abstract bool CanUnregister
     { get; }
 
-    public abstract void HandleMessage(LinkMessage Message);
+    public abstract void HandleMessage(LinkMessage message);
   }
 
   public class RegisteredApartmentDaemon : RegisteredApartment
   {
-    public RegisteredApartmentDaemon(RegisteredApartments Owner, int ID)
-      : base(Owner, ID)
+    public RegisteredApartmentDaemon(RegisteredApartments owner, int id)
+      : base(owner, id)
     { }
 
     public override bool CanUnregister
@@ -47,22 +47,22 @@ namespace Morph.Daemon
       get { return false; }
     }
 
-    private LinkTypeService _LinkTypeService = new LinkTypeService();
+    private readonly LinkTypeService _linkTypeService = new LinkTypeService();
 
-    public override void HandleMessage(LinkMessage Message)
+    public override void HandleMessage(LinkMessage message)
     {
-      _LinkTypeService.ActionLink(Message, Message.Current);
+      _linkTypeService.ActionLink(message, message.Current);
     }
   }
 
   public class RegisteredApartmentInternet : RegisteredApartment
   {
-    public RegisteredApartmentInternet(RegisteredApartments Owner, int ID, Connection Connection)
-      : base(Owner, ID)
+    public RegisteredApartmentInternet(RegisteredApartments owner, int id, Connection connection)
+      : base(owner, id)
     {
       lock (this)
       {
-        _Connection = Connection;
+        _Connection = connection;
         _Connection.OnClose += ConnectionClose;
       }
     }
@@ -87,48 +87,48 @@ namespace Morph.Daemon
 
     public override bool CanUnregister
     {
-      get { return true; }
+      get => true;
     }
 
-    public override void HandleMessage(LinkMessage Message)
+    public override void HandleMessage(LinkMessage message)
     {
-      _Connection.Write(Message);
+      _Connection.Write(message);
     }
   }
 
   public class RegisteredApartments
   {
-    private Hashtable _Apartments = new Hashtable();
+    private readonly Hashtable _apartments = new Hashtable();
 
-    public void Register(RegisteredApartment Apartment)
+    public void Register(RegisteredApartment apartment)
     {
-      lock (_Apartments)
-        if (_Apartments[Apartment.ID] == null)
-          _Apartments.Add(Apartment.ID, Apartment);
+      lock (_apartments)
+        if (_apartments[apartment.ID] == null)
+          _apartments.Add(apartment.ID, apartment);
         else
           throw new EMorphDaemon("Duplicate apartment ID");
     }
 
-    public void Unregister(int ApartmentID)
+    public void Unregister(int apartmentID)
     {
-      lock (_Apartments)
+      lock (_apartments)
       {
-        RegisteredApartment Apartment = (RegisteredApartment)_Apartments[ApartmentID];
-        if (Apartment != null)
-          if (Apartment.CanUnregister)
-            _Apartments.Remove(ApartmentID);
+        RegisteredApartment apartment = (RegisteredApartment)_apartments[apartmentID];
+        if (apartment != null)
+          if (apartment.CanUnregister)
+            _apartments.Remove(apartmentID);
           else
             throw new EMorphDaemon("Cannot deregister this apartment");
       }
     }
 
-    public RegisteredApartment Find(int ApartmentID)
+    public RegisteredApartment Find(int apartmentID)
     {
-      lock (_Apartments)
+      lock (_apartments)
       {
-        RegisteredApartment apartment = (RegisteredApartment)_Apartments[ApartmentID];
+        RegisteredApartment apartment = (RegisteredApartment)_apartments[apartmentID];
         if (apartment == null)
-          throw new EMorphDaemon("Apartment ID not found: " + ApartmentID.ToString());
+          throw new EMorphDaemon("Apartment ID not found: " + apartmentID.ToString());
         return apartment;
       }
     }

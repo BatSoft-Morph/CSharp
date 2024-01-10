@@ -5,22 +5,22 @@ namespace Morph.Daemon
 {
   public class LinkTypeServiceDaemon : LinkTypeService
   {
-    protected override void ActionLinkService(LinkMessage Message, LinkService LinkService)
+    protected override void ActionLinkService(LinkMessage message, LinkService linkService)
     {
-      RegisteredService Service = RegisteredServices.FindByName(LinkService.ServiceName);
-      if (Service == null)
-        throw new EMorphDaemon("Service not registered: \"" + LinkService.ServiceName + "\"");
-      Service.Running.HandleMessage(Message);
+      RegisteredService service = RegisteredServices.FindByName(linkService.ServiceName);
+      if (service == null)
+        throw new EMorphDaemon("Service not registered: \"" + linkService.ServiceName + "\"");
+      service.Running.HandleMessage(message);
     }
 
-    protected override void ActionLinkApartment(LinkMessage Message, LinkApartment LinkApartment)
+    protected override void ActionLinkApartment(LinkMessage message, LinkApartment linkApartment)
     {
-      RegisteredApartments.Apartments.Find(LinkApartment.ApartmentID).HandleMessage(Message);
+      RegisteredApartments.Apartments.Find(linkApartment.ApartmentID).HandleMessage(message);
     }
 
-    protected override void ActionLinkApartmentProxy(LinkMessage Message, LinkApartmentProxy LinkApartmentProxy)
+    protected override void ActionLinkApartmentProxy(LinkMessage message, LinkApartmentProxy linkApartmentProxy)
     {
-      RegisteredApartments.ApartmentProxies.Find(LinkApartmentProxy.ApartmentProxyID).HandleMessage(Message);
+      RegisteredApartments.ApartmentProxies.Find(linkApartmentProxy.ApartmentProxyID).HandleMessage(message);
     }
   }
 
@@ -30,11 +30,11 @@ namespace Morph.Daemon
       : base(RegisteredService)
     { }
 
-    static private LinkTypeService LinkType = new LinkTypeService();
+    private static readonly LinkTypeService s_linkType = new LinkTypeService();
 
     public override void HandleMessage(LinkMessage Message)
     {
-      LinkType.ActionLink(Message, Message.Current);
+      s_linkType.ActionLink(Message, Message.Current);
     }
   }
 }

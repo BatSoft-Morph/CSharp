@@ -48,44 +48,44 @@ using Morph.Lib;
 
 namespace Morph.Endpoint
 {
-  public class MorphService : RegisterItemID, RegisterItemName
+  public class MorphService : IRegisterItemID, IRegisterItemName
   {
-    internal MorphService(string Name, MorphApartmentFactory ApartmentFactory)
+    internal MorphService(string name, MorphApartmentFactory apartmentFactory)
     {
-      if ((Name == null) || (Name.Length == 0))
+      if ((name == null) || (name.Length == 0))
         throw new EMorphUsage("A service needs a proper name.");
-      if (ApartmentFactory == null)
+      if (apartmentFactory == null)
         throw new EMorphUsage("A service needs an Apartments strategy.");
-      if (ApartmentFactory._Service != null)
+      if (apartmentFactory._service != null)
         throw new EMorphUsage("Services cannot share the same ApartmentFactory object.");
-      _Name = Name.ToLower();
-      _ApartmentFactory = ApartmentFactory;
-      _ApartmentFactory._Service = this;
+      _name = name.ToLower();
+      _apartmentFactory = apartmentFactory;
+      _apartmentFactory._service = this;
     }
 
     #region MorphItemID Members
 
     public int ID
     {
-      get { return _Name.GetHashCode(); }
+      get => _name.GetHashCode();
     }
 
     #endregion
 
     #region MorphItemName Members
 
-    private string _Name;
+    private readonly string _name;
     public string Name
     {
-      get { return _Name; }
+      get => _name;
     }
 
     #endregion
 
-    private MorphApartmentFactory _ApartmentFactory;
+    private readonly MorphApartmentFactory _apartmentFactory;
     public MorphApartmentFactory ApartmentFactory
     {
-      get { return _ApartmentFactory; }
+      get => _apartmentFactory;
     }
 
     public void Deregister()
@@ -96,38 +96,38 @@ namespace Morph.Endpoint
 
   static public class MorphServices
   {
-    static private RegisterItems<MorphService> All = new RegisterItems<MorphService>();
+    private static readonly RegisterItems<MorphService> s_all = new RegisterItems<MorphService>();
 
-    static public MorphService Register(string Name, MorphApartmentFactory ApartmentFactory)
+    static public MorphService Register(string name, MorphApartmentFactory apartmentFactory)
     {
-      MorphService service = new MorphService(Name.ToLower(), ApartmentFactory);
-      lock (All)
-        All.Add(service);
+      MorphService service = new MorphService(name.ToLower(), apartmentFactory);
+      lock (s_all)
+        s_all.Add(service);
       return service;
     }
 
-    static public void Deregister(string Name)
+    static public void Deregister(string name)
     {
-      lock (All)
-        Deregister(All.Find(Name.ToLower()));
+      lock (s_all)
+        Deregister(s_all.Find(name.ToLower()));
     }
 
     static public void Deregister(MorphService service)
     {
       if (service == null)
         throw new EMorphUsage("Cannot stop a non-registered service");
-      lock (All)
-        All.Remove(service);
+      lock (s_all)
+        s_all.Remove(service);
       service.ApartmentFactory.ShutDown();
     }
 
-    static public MorphService Obtain(string Name)
+    static public MorphService Obtain(string name)
     {
       MorphService service;
-      lock (All)
-        service = All.Find(Name.ToLower());
+      lock (s_all)
+        service = s_all.Find(name.ToLower());
       if (service == null)
-        throw new EMorph("Service not available: \"" + Name + '\"');
+        throw new EMorph("Service not available: \"" + name + '\"');
       return service;
     }
   }

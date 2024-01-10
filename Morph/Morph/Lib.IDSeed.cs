@@ -15,15 +15,15 @@
   {
     public IDSeed()
     {
-      _Seed = 1;
+      _seed = 1;
     }
 
-    public IDSeed(int StartID)
+    public IDSeed(int startID)
     {
-      _Seed = StartID;
+      _seed = startID;
     }
 
-    private int _Seed;
+    private int _seed;
 
     #region IIDFactory Members
 
@@ -31,9 +31,9 @@
     {
       lock (this)
       {
-        if (_Seed == int.MaxValue)
-          _Seed = 1;
-        return _Seed++;
+        if (_seed == int.MaxValue)
+          _seed = 1;
+        return _seed++;
       }
     }
 

@@ -8,19 +8,19 @@ namespace Morph.Daemon.Client
 {
   public class DaemonClient
   {
-    protected DaemonClient(string ServiceName, TimeSpan DefaultTimeout)
+    protected DaemonClient(string serviceName, TimeSpan defaultTimeout)
     {
-      IPEndPoint DaemonEndPoint = new IPEndPoint(IPAddress.Loopback, LinkInternet.MorphPort);
-      _ServletProxy = MorphApartmentProxy.ViaEndPoint(ServiceName, DefaultTimeout, InstanceFactory, DaemonEndPoint).DefaultServlet;
+      IPEndPoint daemonEndPoint = new IPEndPoint(IPAddress.Loopback, LinkInternet.MorphPort);
+      _servletProxy = MorphApartmentProxy.ViaEndPoint(serviceName, defaultTimeout, InstanceFactory, daemonEndPoint).DefaultServlet;
     }
 
     #region Instance factory
 
-    static private InstanceFactories _InstanceFactory = new DaemonInstanceFactory();
+    static private InstanceFactories s_instanceFactory = new DaemonInstanceFactory();
     public static InstanceFactories InstanceFactory
     {
-      get { return _InstanceFactory; }
-      set { _InstanceFactory = value; }
+      get => s_instanceFactory;
+      set => s_instanceFactory = value;
     }
 
     private class DaemonInstanceFactory : InstanceFactories
@@ -29,24 +29,24 @@ namespace Morph.Daemon.Client
         : base()
       {
         //  Struct factory
-        InstanceFactoryStruct StructFactory = new InstanceFactoryStruct();
-        StructFactory.AddStructType(typeof(DaemonService));
-        StructFactory.AddStructType(typeof(DaemonStartup));
-        Add(StructFactory);
+        InstanceFactoryStruct structFactory = new InstanceFactoryStruct();
+        structFactory.AddStructType(typeof(DaemonService));
+        structFactory.AddStructType(typeof(DaemonStartup));
+        Add(structFactory);
         //  Array factory
-        InstanceFactoryArray ArrayFactory = new InstanceFactoryArray();
-        ArrayFactory.AddArrayElemType(typeof(DaemonService));
-        ArrayFactory.AddArrayElemType(typeof(DaemonStartup));
-        Add(ArrayFactory);
+        InstanceFactoryArray arrayFactory = new InstanceFactoryArray();
+        arrayFactory.AddArrayElemType(typeof(DaemonService));
+        arrayFactory.AddArrayElemType(typeof(DaemonStartup));
+        Add(arrayFactory);
       }
     }
 
     #endregion
 
-    private ServletProxy _ServletProxy;
+    private readonly ServletProxy _servletProxy;
     protected ServletProxy ServletProxy
     {
-      get { return _ServletProxy; }
+      get => _servletProxy;
     }
   }
 }

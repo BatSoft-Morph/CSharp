@@ -2,32 +2,32 @@
 
 namespace Morph.Lib.LinkedList
 {
-  public interface Bookmark
+  public interface IBookmark
   {
   }
 
-  internal class LinkedListLinkTwoWay<T> : Bookmark
+  internal class LinkedListLinkTwoWay<T> : IBookmark
   {
-    public LinkedListLinkTwoWay(T Data, LinkedListLinkTwoWay<T> LinkFalse, LinkedListLinkTwoWay<T> LinkTrue)
+    public LinkedListLinkTwoWay(T data, LinkedListLinkTwoWay<T> linkFalse, LinkedListLinkTwoWay<T> linkTrue)
     {
-      this.Data = Data;
-      this.LinkFalse = LinkFalse;
-      this.LinkTrue = LinkTrue;
+      Data = data;
+      _linkFalse = linkFalse;
+      _linkTrue = linkTrue;
     }
 
     public T Data;
 
-    //  Use two separate fields instead of creating another objeect, ie. LinkedListLinkTwoWay[]
-    private LinkedListLinkTwoWay<T> LinkFalse = null, LinkTrue = null;
+    //  Use two separate fields instead of creating another object, ie. LinkedListLinkTwoWay[]
+    private LinkedListLinkTwoWay<T> _linkFalse = null, _linkTrue = null;
     public LinkedListLinkTwoWay<T> this[bool i]
     {
-      get { return i ? LinkTrue : LinkFalse; }
+      get => i ? _linkTrue : _linkFalse;
       set
       {
         if (i)
-          LinkTrue = value;
+          _linkTrue = value;
         else
-          LinkFalse = value;
+          _linkFalse = value;
       }
     }
   }
@@ -36,119 +36,119 @@ namespace Morph.Lib.LinkedList
   {
     #region IDisposable Members
 
-    private void DisassembleList(LinkedListLinkTwoWay<T> Link)
+    private void DisassembleList(LinkedListLinkTwoWay<T> link)
     {
-      if (Left != null)
+      if (_left != null)
       {
-        Link[false] = null;
-        DisassembleList(Link[true]);
-        Link[true] = null;
+        link[false] = null;
+        DisassembleList(link[true]);
+        link[true] = null;
       }
     }
 
     public void Dispose()
     {
-      DisassembleList(Left);
+      DisassembleList(_left);
     }
 
     #endregion
 
-    private LinkedListLinkTwoWay<T> Left = null;
-    private LinkedListLinkTwoWay<T> Right = null;
+    private LinkedListLinkTwoWay<T> _left = null;
+    private LinkedListLinkTwoWay<T> _right = null;
 
     public bool HasData
     {
-      get { return Left != null; }
+      get => _left != null;
     }
 
-    public Bookmark PushLeft(T Data)
+    public IBookmark PushLeft(T data)
     {
-      LinkedListLinkTwoWay<T> Link = new LinkedListLinkTwoWay<T>(Data, null, Left);
-      Left = Link;
-      if (Right == null)
-        Right = Link;
-      return Link;
+      LinkedListLinkTwoWay<T> link = new LinkedListLinkTwoWay<T>(data, null, _left);
+      _left = link;
+      if (_right == null)
+        _right = link;
+      return link;
     }
 
-    public Bookmark PushRight(T Data)
+    public IBookmark PushRight(T data)
     {
-      LinkedListLinkTwoWay<T> Link = new LinkedListLinkTwoWay<T>(Data, Right, null);
-      Right = Link;
-      if (Left == null)
-        Left = Link;
-      return Link;
+      LinkedListLinkTwoWay<T> link = new LinkedListLinkTwoWay<T>(data, _right, null);
+      _right = link;
+      if (_left == null)
+        _left = link;
+      return link;
     }
 
     public T PeekLeft()
     {
-      if (Left == null)
+      if (_left == null)
         return default(T);
-      return Left.Data;
+      return _left.Data;
     }
 
     public T PeekRight()
     {
-      if (Right == null)
+      if (_right == null)
         return default(T);
-      return Right.Data;
+      return _right.Data;
     }
 
     public T PopLeft()
     {
-      if (Left == null)
+      if (_left == null)
         return default(T);
-      return Pop(Left);
+      return Pop(_left);
     }
 
     public T PopRight()
     {
-      if (Right == null)
+      if (_right == null)
         return default(T);
-      return Pop(Right);
+      return Pop(_right);
     }
 
-    public T Pop(Bookmark Bookmark)
+    public T Pop(IBookmark bookmark)
     {
-      LinkedListLinkTwoWay<T> Link = (LinkedListLinkTwoWay<T>)Bookmark;
+      LinkedListLinkTwoWay<T> link = (LinkedListLinkTwoWay<T>)bookmark;
       //  Make neighbours look past Link
-      if (Link[false] != null)
-        Link[false][true] = Link[true];
-      if (Link[true] != null)
-        Link[true][false] = Link[false];
+      if (link[false] != null)
+        link[false][true] = link[true];
+      if (link[true] != null)
+        link[true][false] = link[false];
       //  Make sure that Left and Right are pointing to the ends
-      if (Left == Link)
-        Left = Link[true];
-      if (Right == Link)
-        Right = Link[false];
+      if (_left == link)
+        _left = link[true];
+      if (_right == link)
+        _right = link[false];
       //  Prevent corruption
-      Link[false] = null;
-      Link[true] = null;
+      link[false] = null;
+      link[true] = null;
       //  Done
-      return Link.Data;
+      return link.Data;
     }
 
-    public void MoveToLeftEnd(Bookmark Bookmark)
+    public void MoveToLeftEnd(IBookmark bookmark)
     {
-      if (Left == Bookmark)
+      if (_left == bookmark)
         return;
-      Pop(Bookmark);
-      LinkedListLinkTwoWay<T> Link = (LinkedListLinkTwoWay<T>)Bookmark;
-      Link[true] = Left;
-      Left = Link;
-      if (Right == null)
-        Right = Link;
+      Pop(bookmark);
+      LinkedListLinkTwoWay<T> link = (LinkedListLinkTwoWay<T>)bookmark;
+      link[true] = _left;
+      _left = link;
+      if (_right == null)
+        _right = link;
     }
 
-    public void MoveToRightEnd(Bookmark Bookmark)
+    public void MoveToRightEnd(IBookmark bookmark)
     {
-      if (Right == Bookmark)
+      if (_right == bookmark)
         return;
-      Pop(Bookmark);
-      LinkedListLinkTwoWay<T> Link = (LinkedListLinkTwoWay<T>)Bookmark;
-      Link[false] = Right;
-      Right = Link;
-      if (Left == null)
-        Left = Link;
+      Pop(bookmark);
+      LinkedListLinkTwoWay<T> link = (LinkedListLinkTwoWay<T>)bookmark;
+      link[false] = _right;
+      _right = link;
+      if (_left == null)
+        _left = link;
     }
   }
 }

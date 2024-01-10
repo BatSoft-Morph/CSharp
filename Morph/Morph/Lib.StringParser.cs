@@ -4,86 +4,86 @@ namespace Morph.Lib
 {
   public class StringParser
   {
-    public StringParser(string Str)
+    public StringParser(string str)
     {
-      _Str = Str;
-      _Len = _Str.Length;
+      _str = str;
+      _len = _str.Length;
     }
 
-    private string _Str;
-    private int _Len;
-    private int _Pos = 0;
+    private string _str;
+    private int _len;
+    private int _pos = 0;
 
     public int Position
     {
-      get { return _Pos; }
-      set { _Pos = value; }
+      get => _pos;
+      set => _pos = value;
     }
 
     private void Validate()
     {
-      if (_Pos < 0)
+      if (_pos < 0)
         throw new StringParserException("Position must not be negative.");
-      if (_Pos >= _Len)
+      if (_pos >= _len)
         throw new StringParserException("End of string has been reached.");
     }
 
     public char Current()
     {
-      return _Str[_Pos];
+      return _str[_pos];
     }
 
-    public string Current(int Length)
+    public string Current(int length)
     {
       Validate();
-      return _Str.Substring(_Pos, Length);
+      return _str.Substring(_pos, length);
     }
 
-    public void Move(int Steps)
+    public void Move(int steps)
     {
       Validate();
-      _Pos += Steps;
+      _pos += steps;
     }
 
-    public void MoveTo(string SubStr, bool Absorb)
+    public void MoveTo(string subStr, bool absorb)
     {
       Validate();
-      _Pos = _Str.IndexOf(SubStr, _Pos);
-      if (Absorb)
-        _Pos += SubStr.Length;
+      _pos = _str.IndexOf(subStr, _pos);
+      if (absorb)
+        _pos += subStr.Length;
     }
 
-    public string ReadTo(string SubStr, bool Absorb)
+    public string ReadTo(string subStr, bool absorb)
     {
       Validate();
-      int OldPos = _Pos;
-      _Pos = _Str.IndexOf(SubStr, OldPos);
-      int SubStrLen = _Pos - OldPos;
-      if (Absorb)
-        _Pos += SubStr.Length;
-      if (SubStrLen > 0)
-        return _Str.Substring(OldPos, SubStrLen);
+      int oldPos = _pos;
+      _pos = _str.IndexOf(subStr, oldPos);
+      int subStrLen = _pos - oldPos;
+      if (absorb)
+        _pos += subStr.Length;
+      if (subStrLen > 0)
+        return _str.Substring(oldPos, subStrLen);
       return null;
     }
 
-    public string ReadTo(char[] chars, bool Absorb)
+    public string ReadTo(char[] chars, bool absorb)
     {
       Validate();
-      int OldPos = _Pos;
-      int NewPos = Int32.MaxValue;
+      int oldPos = _pos;
+      int newPos = Int32.MaxValue;
       foreach (char c in chars)
       {
-        int Pos = _Str.IndexOf(c, OldPos);
-        if (NewPos < Pos)
-          Pos = NewPos;
+        int pos = _str.IndexOf(c, oldPos);
+        if (newPos < pos)
+          pos = newPos;
       }
-      if (NewPos == Int32.MaxValue)
+      if (newPos == Int32.MaxValue)
         return null;
-      int SubStrLen = _Pos - OldPos;
-      if (Absorb)
-        _Pos++;
-      if (SubStrLen > 0)
-        return _Str.Substring(OldPos, SubStrLen);
+      int subStrLen = _pos - oldPos;
+      if (absorb)
+        _pos++;
+      if (subStrLen > 0)
+        return _str.Substring(oldPos, subStrLen);
       return null;
     }
 
@@ -98,24 +98,24 @@ namespace Morph.Lib
     public string ReadChars(char[] chars)
     {
       Validate();
-      int OldPos = _Pos;
-      while ((_Pos < _Len) && CharInChars(_Str[_Pos], chars))
-        _Pos++;
-      if (OldPos == _Pos)
+      int oldPos = _pos;
+      while ((_pos < _len) && CharInChars(_str[_pos], chars))
+        _pos++;
+      if (oldPos == _pos)
         return null;
-      return _Str.Substring(OldPos, _Pos - OldPos);
+      return _str.Substring(oldPos, _pos - oldPos);
     }
 
     public bool ReadChar(char Char)
     {
       Validate();
-      if (_Str[_Pos] != Char)
+      if (_str[_pos] != Char)
         return false;
-      _Pos++;
+      _pos++;
       return true;
     }
 
-    static private char[] Digits = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+    private static readonly char[] Digits = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
     public string ReadDigits()
     {
       return ReadChars(Digits);
@@ -123,19 +123,19 @@ namespace Morph.Lib
 
     public string ReadToEnd()
     {
-      return _Str.Substring(_Pos);
+      return _str.Substring(_pos);
     }
 
     public bool IsEnded()
     {
-      return _Pos >= _Len;
+      return _pos >= _len;
     }
   }
 
   public class StringParserException : Exception
   {
-    public StringParserException(string Message)
-      : base(Message)
+    public StringParserException(string message)
+      : base(message)
     {
     }
   }

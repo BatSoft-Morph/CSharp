@@ -57,9 +57,9 @@ namespace Morph.Params
    */
   public class MorphReference : IMorphReference, IDisposable
   {
-    protected MorphReference(string TypeName)
+    protected MorphReference(string typeName)
     {
-      _MorphTypeName = TypeName;
+      _morphTypeName = typeName;
     }
 
     ~MorphReference()
@@ -76,34 +76,34 @@ namespace Morph.Params
 
     #endregion
 
-    private string _MorphTypeName;
+    private readonly string _morphTypeName;
     public string MorphTypeName
     {
-      get { return _MorphTypeName; }
+      get => _morphTypeName;
     }
 
     #region IMorphReference Members
 
-    private Servlet _MorphServlet = null;
+    private Servlet _morphServlet = null;
     public Servlet MorphServlet
     {
-      get { return _MorphServlet; }
+      get => _morphServlet;
     }
 
-    private MorphApartment _MorphApartment = null;
+    private MorphApartment _morphApartment = null;
     public virtual MorphApartment MorphApartment
     {
-      get { return _MorphApartment; }
+      get => _morphApartment;
       set
       {
-        if (_MorphServlet != null)
+        if (_morphServlet != null)
         {
-          _MorphApartment.Servlets.Remove(_MorphServlet.ID);
-          _MorphServlet = null;
+          _morphApartment.Servlets.Remove(_morphServlet.ID);
+          _morphServlet = null;
         }
-        _MorphApartment = value;
-        if (_MorphApartment != null)
-          _MorphServlet = _MorphApartment.Servlets.Obtain(this, _MorphTypeName);
+        _morphApartment = value;
+        if (_morphApartment != null)
+          _morphServlet = _morphApartment.Servlets.Obtain(this, _morphTypeName);
       }
     }
 

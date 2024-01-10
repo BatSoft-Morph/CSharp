@@ -5,25 +5,25 @@ namespace Morph.Core
 {
   public class MorphWriter
   {
-    public MorphWriter(MemoryStream Stream)
+    public MorphWriter(MemoryStream stream)
     {
-      _Stream = Stream;
+      _stream = stream;
     }
 
-    static private Encoding ASCII = new ASCIIEncoding();
-    static private Encoding Unicode = new UnicodeEncoding();
+    private static readonly Encoding ASCII = new ASCIIEncoding();
+    private static readonly Encoding Unicode = new UnicodeEncoding();
 
-    private MemoryStream _Stream;
+    private readonly MemoryStream _stream;
     private const int BufferSize = 256;
 
     public Stream Stream
     {
-      get { return _Stream; }
+      get => _stream;
     }
 
-    static public int SizeOfString(string Chars)
+    static public int SizeOfString(string chars)
     {
-      return Unicode.GetByteCount(Chars);
+      return Unicode.GetByteCount(chars);
     }
 
     #region Link byte
@@ -34,109 +34,109 @@ namespace Morph.Core
     private const byte BitZ = 0x40;
     private const byte BitMSB = 0x80;
 
-    static public byte EncodeLinkByte(LinkTypeID LinkTypeID, bool x, bool y, bool z)
+    static public byte EncodeLinkByte(LinkTypeID linkTypeID, bool x, bool y, bool z)
     {
-      return (byte)(BitMSB | (z ? BitZ : Zero) | (y ? BitY : Zero) | (x ? BitX : Zero) | (byte)LinkTypeID);
+      return (byte)(BitMSB | (z ? BitZ : Zero) | (y ? BitY : Zero) | (x ? BitX : Zero) | (byte)linkTypeID);
     }
 
-    public void WriteLinkByte(LinkTypeID LinkTypeID, bool x, bool y, bool z)
+    public void WriteLinkByte(LinkTypeID linkTypeID, bool x, bool y, bool z)
     {
-      WriteInt8(BitMSB | (z ? BitZ : Zero) | (y ? BitY : Zero) | (x ? BitX : Zero) | (byte)LinkTypeID);
+      WriteInt8(BitMSB | (z ? BitZ : Zero) | (y ? BitY : Zero) | (x ? BitX : Zero) | (byte)linkTypeID);
     }
 
     #endregion
 
     public bool MSB
     {
-      get { return true; }
+      get => true;
     }
 
-    public void WriteInt8(int Value)
+    public void WriteInt8(int value)
     {
-      _Stream.WriteByte((byte)Value);
+      _stream.WriteByte((byte)value);
     }
 
-    public void WriteInt16(int Value)
+    public void WriteInt16(int value)
     {
-      _Stream.WriteByte((byte)(Value >> 8));
-      _Stream.WriteByte((byte)(Value));
+      _stream.WriteByte((byte)(value >> 8));
+      _stream.WriteByte((byte)(value));
     }
 
-    public void WriteInt32(int Value)
+    public void WriteInt32(int value)
     {
-      _Stream.WriteByte((byte)(Value >> 24));
-      _Stream.WriteByte((byte)(Value >> 16));
-      _Stream.WriteByte((byte)(Value >> 8));
-      _Stream.WriteByte((byte)(Value));
+      _stream.WriteByte((byte)(value >> 24));
+      _stream.WriteByte((byte)(value >> 16));
+      _stream.WriteByte((byte)(value >> 8));
+      _stream.WriteByte((byte)(value));
     }
 
-    public void WriteInt64(long Value)
+    public void WriteInt64(long value)
     {
-      _Stream.WriteByte((byte)(Value >> 56));
-      _Stream.WriteByte((byte)(Value >> 48));
-      _Stream.WriteByte((byte)(Value >> 40));
-      _Stream.WriteByte((byte)(Value >> 32));
-      _Stream.WriteByte((byte)(Value >> 24));
-      _Stream.WriteByte((byte)(Value >> 16));
-      _Stream.WriteByte((byte)(Value >> 8));
-      _Stream.WriteByte((byte)(Value));
+      _stream.WriteByte((byte)(value >> 56));
+      _stream.WriteByte((byte)(value >> 48));
+      _stream.WriteByte((byte)(value >> 40));
+      _stream.WriteByte((byte)(value >> 32));
+      _stream.WriteByte((byte)(value >> 24));
+      _stream.WriteByte((byte)(value >> 16));
+      _stream.WriteByte((byte)(value >> 8));
+      _stream.WriteByte((byte)(value));
     }
 
-    public void WriteString(string Value)
+    public void WriteString(string value)
     {
-      byte[] buffer = Unicode.GetBytes(Value);
+      byte[] buffer = Unicode.GetBytes(value);
       WriteInt32(buffer.Length);
-      _Stream.Write(buffer, 0, buffer.Length);
+      _stream.Write(buffer, 0, buffer.Length);
     }
 
-    public void WriteIdentifier(string Value)
+    public void WriteIdentifier(string value)
     {
-      byte[] buffer = Unicode.GetBytes(Value);
+      byte[] buffer = Unicode.GetBytes(value);
       WriteInt16(buffer.Length);
-      _Stream.Write(buffer, 0, buffer.Length);
+      _stream.Write(buffer, 0, buffer.Length);
     }
 
-    public void WriteChars(string Chars, bool AsUnicode)
+    public void WriteChars(string chars, bool asUnicode)
     {
       byte[] buffer;
-      if (AsUnicode)
-        buffer = Unicode.GetBytes(Chars);
+      if (asUnicode)
+        buffer = Unicode.GetBytes(chars);
       else
-        buffer = ASCII.GetBytes(Chars);
-      _Stream.Write(buffer, 0, buffer.Length);
+        buffer = ASCII.GetBytes(chars);
+      _stream.Write(buffer, 0, buffer.Length);
     }
 
-    public void WriteBytes(byte[] Buffer)
+    public void WriteBytes(byte[] buffer)
     {
-      _Stream.Write(Buffer, 0, Buffer.Length);
+      _stream.Write(buffer, 0, buffer.Length);
     }
 
-    public void WriteStream(MorphReader Reader)
+    public void WriteStream(MorphReader reader)
     {
-      while (Reader.Remaining > 0)
-        WriteStream(Reader, Reader.Remaining < int.MaxValue ? (int)Reader.Remaining : int.MaxValue);
+      while (reader.Remaining > 0)
+        WriteStream(reader, reader.Remaining < int.MaxValue ? (int)reader.Remaining : int.MaxValue);
     }
 
-    public void WriteStream(MorphReader Reader, int Count)
+    public void WriteStream(MorphReader reader, int count)
     {
-      if (Count == 0)
+      if (count == 0)
         return;
-      byte[] Buffer = new byte[Count < BufferSize ? Count : BufferSize];
-      int Length;
+      byte[] buffer = new byte[count < BufferSize ? count : BufferSize];
+      int length;
       do
       {
-        Length = Reader.ReadBytes(Buffer);
-        _Stream.Write(Buffer, 0, Length);
-        Count -= Length;
+        length = reader.ReadBytes(buffer);
+        _stream.Write(buffer, 0, length);
+        count -= length;
       }
-      while ((Count > 0) && (Length > 0));
-      if (Count > 0)
+      while ((count > 0) && (length > 0));
+      if (count > 0)
         throw new EMorph("EOS");
     }
 
     public byte[] ToArray()
     {
-      return _Stream.ToArray();
+      return _stream.ToArray();
     }
   }
 }

@@ -17,9 +17,9 @@ namespace Morph.Base
       return 1;
     }
 
-    public override void Write(MorphWriter Writer)
+    public override void Write(MorphWriter writer)
     {
-      Writer.WriteInt8((byte)LinkTypeID.End);
+      writer.WriteInt8((byte)LinkTypeID.End);
     }
 
     #endregion
@@ -42,27 +42,27 @@ namespace Morph.Base
 
   public class LinkTypeEnd : ILinkTypeReader, ILinkTypeAction
   {
-    static private LinkEnd _End = new LinkEnd();
+    private static readonly LinkEnd s_linkEnd = new LinkEnd();
     static public LinkEnd End
     {
-      get { return _End; }
+      get => s_linkEnd;
     }
 
     public LinkTypeID ID
     {
-      get { return LinkTypeID.End; }
+      get => LinkTypeID.End;
     }
 
-    public Link ReadLink(MorphReader Reader)
+    public Link ReadLink(MorphReader reader)
     {
-      Reader.ReadInt8();
-      return _End;
+      reader.ReadInt8();
+      return s_linkEnd;
     }
 
-    public void ActionLink(LinkMessage Message, Link CurrentLink)
+    public void ActionLink(LinkMessage message, Link currentLink)
     {
-      if (Message.ContextIs(typeof(IDisposable)))
-        ((IDisposable)Message.Context).Dispose();
+      if (message.ContextIs(typeof(IDisposable)))
+        ((IDisposable)message.Context).Dispose();
     }
   }
 }

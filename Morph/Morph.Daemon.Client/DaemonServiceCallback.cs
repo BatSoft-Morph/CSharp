@@ -9,7 +9,7 @@ namespace Morph.Daemon.Client
     {
     }
 
-    public abstract void added(string serviceName);
-    public abstract void removed(string serviceName);
+    public abstract void Added(string serviceName);
+    public abstract void Removed(string serviceName);
   }
 }

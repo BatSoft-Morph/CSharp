@@ -12,87 +12,85 @@ using Morph.Params;
 
 namespace Morph.Endpoint
 {
-  public class ServletProxy : RegisterItemID
+  public class ServletProxy : IRegisterItemID
   {
-    internal ServletProxy(MorphApartmentProxy ApartmentProxy, int ID, string TypeName)
+    internal ServletProxy(MorphApartmentProxy apartmentProxy, int ID, string typeName)
     {
-      _ApartmentProxy = ApartmentProxy;
-      _ID = ID;
-      _TypeName = TypeName;
+      _apartmentProxy = apartmentProxy;
+      _id = ID;
+      _typeName = typeName;
     }
 
-    private MorphApartmentProxy _ApartmentProxy;
+    private readonly MorphApartmentProxy _apartmentProxy;
     public MorphApartmentProxy ApartmentProxy
     {
-      get { return _ApartmentProxy; }
+      get => _apartmentProxy;
     }
 
     #region RegisterItemID Members
 
-    private int _ID;
+    private readonly int _id;
     public int ID
     {
-      get { return _ID; }
+      get => _id;
     }
 
     #endregion
 
     #region Private
 
-    private LinkData ParamsToLink(object Special, object[] Params)
+    private LinkData ParamsToLink(object special, object[] Params)
     {
-      if (Special != null)
-        return new LinkData(Parameters.Encode(Params, Special, _ApartmentProxy.InstanceFactories));
+      if (special != null)
+        return new LinkData(Parameters.Encode(Params, special, _apartmentProxy.InstanceFactories));
       if (Params != null)
-        return new LinkData(Parameters.Encode(Params, _ApartmentProxy.InstanceFactories));
+        return new LinkData(Parameters.Encode(Params, _apartmentProxy.InstanceFactories));
       return null;
     }
 
-    private void Send(LinkMember Member, object Special, object[] InParams)
+    private void Send(LinkMember member, object special, object[] inParams)
     {
-      LinkMessage Message = new LinkMessage(new LinkStack(), null, false);
+      LinkMessage message = new LinkMessage(new LinkStack(), null, false);
       //  Params
-      Message.PathTo.Push(ParamsToLink(Special, InParams));
+      message.PathTo.Push(ParamsToLink(special, inParams));
       //  Method
-      Message.PathTo.Push(Member);
+      message.PathTo.Push(member);
       //  Servlet
-      Message.PathTo.Push(new LinkServlet(ID));
+      message.PathTo.Push(new LinkServlet(ID));
       //  Sequence
-      if (_ApartmentProxy._SequenceSender != null)
-        _ApartmentProxy._SequenceSender.AddNextLink(false, Message);
+      _apartmentProxy._sequenceSender?.AddNextLink(false, message);
       //  Request
-      _ApartmentProxy.Send(Message);
+      _apartmentProxy.Send(message);
     }
 
-    private object Call(LinkMember Member, object Special, object[] InParams, out object[] OutParams)
+    private object Call(LinkMember member, object special, object[] inParams, out object[] outParams)
     {
       //  Determine if we need a path to the apartment in the reply
-      LinkStack FromPath = null;
-      if (_ApartmentProxy.RequiresFromPath)
-        FromPath = new LinkStack();
+      LinkStack fromPath = null;
+      if (_apartmentProxy.RequiresFromPath)
+        fromPath = new LinkStack();
       //  Create the message
-      LinkMessage Message = new LinkMessage(new LinkStack(), FromPath, true);
+      LinkMessage Message = new LinkMessage(new LinkStack(), fromPath, true);
       //  Params
-      Message.PathTo.Push(ParamsToLink(Special, InParams));
+      Message.PathTo.Push(ParamsToLink(special, inParams));
       //  Method
-      Message.PathTo.Push(Member);
+      Message.PathTo.Push(member);
       //  Servlet
       Message.PathTo.Push(new LinkServlet(ID));
       //  Sequence
-      if (_ApartmentProxy._SequenceSender != null)
-        _ApartmentProxy._SequenceSender.AddNextLink(false, Message);
+      _apartmentProxy._sequenceSender?.AddNextLink(false, Message);
       //  Request/Response
-      return _ApartmentProxy.Call(Message, out OutParams);
+      return _apartmentProxy.Call(Message, out outParams);
     }
 
     #endregion
 
     #region Public
 
-    private string _TypeName = null;
+    private readonly string _typeName = null;
     public string TypeName
     {
-      get { return _TypeName; }
+      get => _typeName;
     }
 
     public object Facade = null;
@@ -102,41 +100,41 @@ namespace Morph.Endpoint
       get
       {
         LinkStack result = new LinkStack();
-        result.Append(_ApartmentProxy.Path);
-        result.Append(new LinkServlet(_ID));
+        result.Append(_apartmentProxy.Path);
+        result.Append(new LinkServlet(_id));
         return result;
       }
     }
 
-    public void SendMethod(string MethodName, object[] InParams)
+    public void SendMethod(string methodName, object[] inParams)
     {
-      Send(new LinkMethod(MethodName), null, InParams);
+      Send(new LinkMethod(methodName), null, inParams);
     }
 
-    public object CallMethod(string MethodName, object[] InParams, out object[] OutParams)
+    public object CallMethod(string methodName, object[] inParams, out object[] outParams)
     {
-      return Call(new LinkMethod(MethodName), null, InParams, out OutParams);
+      return Call(new LinkMethod(methodName), null, inParams, out outParams);
     }
 
-    public object CallMethod(string MethodName, object[] InParams)
+    public object CallMethod(string methodName, object[] inParams)
     {
-      object[] NoParams = null;
-      return CallMethod(MethodName, InParams, out NoParams);
+      object[] noParams = null;
+      return CallMethod(methodName, inParams, out noParams);
     }
 
-    public void SendSetProperty(string PropertyName, object Value, object[] Index)
+    public void SendSetProperty(string propertyName, object value, object[] index)
     {
-      Send(new LinkProperty(PropertyName, true, Index != null), Value, Index);
+      Send(new LinkProperty(propertyName, true, index != null), value, index);
     }
 
-    public void CallSetProperty(string PropertyName, object Value, object[] Index)
+    public void CallSetProperty(string propertyName, object value, object[] index)
     {
-      Call(new LinkProperty(PropertyName, true, Index != null), Value, Index, out Index);
+      Call(new LinkProperty(propertyName, true, index != null), value, index, out index);
     }
 
-    public object CallGetProperty(string PropertyName, object[] Index)
+    public object CallGetProperty(string propertyName, object[] index)
     {
-      return Call(new LinkProperty(PropertyName, false, Index != null), null, Index, out Index);
+      return Call(new LinkProperty(propertyName, false, index != null), null, index, out index);
     }
 
     #endregion
@@ -144,33 +142,33 @@ namespace Morph.Endpoint
 
   internal class ServletProxies
   {
-    internal ServletProxies(MorphApartmentProxy ApartmentProxy)
+    internal ServletProxies(MorphApartmentProxy apartmentProxy)
     {
-      _ApartmentProxy = ApartmentProxy;
+      _apartmentProxy = apartmentProxy;
     }
 
-    private MorphApartmentProxy _ApartmentProxy;
-    private RegisterItems<ServletProxy> _ServletProxies = new RegisterItems<ServletProxy>();
+    private readonly MorphApartmentProxy _apartmentProxy;
+    private readonly RegisterItems<ServletProxy> _servletProxies = new RegisterItems<ServletProxy>();
 
-    public ServletProxy Obtain(int ID, string TypeName)
+    public ServletProxy Obtain(int id, string typeName)
     {
       ServletProxy result;
-      lock (_ServletProxies)
+      lock (_servletProxies)
       {
-        result = _ServletProxies.Find(ID);
+        result = _servletProxies.Find(id);
         if (result == null)
         {
-          result = new ServletProxy(_ApartmentProxy, ID, TypeName);
-          _ServletProxies.Add(result);
+          result = new ServletProxy(_apartmentProxy, id, typeName);
+          _servletProxies.Add(result);
         }
       }
       return result;
     }
 
-    public ServletProxy Find(int ID)
+    public ServletProxy Find(int id)
     {
-      lock (_ServletProxies)
-        return _ServletProxies.Find(ID);
+      lock (_servletProxies)
+        return _servletProxies.Find(id);
     }
   }
 
@@ -178,13 +176,13 @@ namespace Morph.Endpoint
 
   public class ObjectProxy
   {
-    protected ObjectProxy(ServletProxy Proxy)
+    protected ObjectProxy(ServletProxy proxy)
       : base()
     {
-      _Proxy = Proxy;
+      _proxy = proxy;
     }
 
-    protected ServletProxy _Proxy;
+    protected ServletProxy _proxy;
   }
 
   #endregion
