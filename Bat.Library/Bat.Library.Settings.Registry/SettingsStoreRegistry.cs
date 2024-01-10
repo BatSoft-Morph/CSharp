@@ -5,44 +5,44 @@ namespace Bat.Library.Settings
 {
   public class SettingsStoreRegistry : ISettingsStoreReader, ISettingsStoreWriter
   {
-    public SettingsStoreRegistry(RegistryKey Key)
+    public SettingsStoreRegistry(RegistryKey key)
     {
-      _RootKey = Key;
+      _rootKey = key;
     }
 
-    private RegistryKey _RootKey;
+    private readonly RegistryKey _rootKey;
 
-    private RegistryKey _LastKey = null;
-    private SettingsNode _LastPath = null;
+    private RegistryKey _lastKey = null;
+    private SettingsNode _lastPath = null;
 
-    private RegistryKey ObtainKey(bool Writing, SettingsNode Path)
+    private RegistryKey ObtainKey(bool writing, SettingsNode path)
     {
       //  Optimise a little
-      if (_LastPath == Path)
-        return _LastKey;
-      _LastPath = Path;
+      if (_lastPath == path)
+        return _lastKey;
+      _lastPath = path;
       //  Build the full path
-      Stack<string> FullPath = new Stack<string>();
-      while (Path != null)
+      Stack<string> fullPath = new Stack<string>();
+      while (path != null)
       {
-        FullPath.Push(Path.SettingsName());
-        Path = Path.SettingsParent();
+        fullPath.Push(path.SettingsName());
+        path = path.SettingsParent();
       }
       //  Find the key by following the full path
-      RegistryKey Key = _RootKey;
-      while ((FullPath.Count > 0) && (Key != null))
-        if (Writing)
-          Key = Key.CreateSubKey(FullPath.Pop());
+      RegistryKey key = _rootKey;
+      while ((fullPath.Count > 0) && (key != null))
+        if (writing)
+          key = key.CreateSubKey(fullPath.Pop());
         else
-          Key = Key.OpenSubKey(FullPath.Pop());
+          key = key.OpenSubKey(fullPath.Pop());
       //  Done
-      _LastKey = Key;
-      return Key;
+      _lastKey = key;
+      return key;
     }
 
-    private object GetValue(bool Writing, SettingsNode Path, string Name, object Default)
+    private object GetValue(bool writing, SettingsNode path, string name, object Default)
     {
-      object obj = ObtainKey(Writing, Path).GetValue(Name);
+      object obj = ObtainKey(writing, path).GetValue(name);
       if (obj == null)
         return Default;
       else
@@ -51,68 +51,68 @@ namespace Bat.Library.Settings
 
     #region ISettingsStoreReader
 
-    public bool ReadBool(SettingsNode Path, string Name, bool Default)
+    public bool ReadBool(SettingsNode path, string name, bool Default)
     {
-      return (int)GetValue(false, Path, Name, Default) != 0;
+      return (int)GetValue(false, path, name, Default) != 0;
     }
 
-    public byte ReadInt8(SettingsNode Path, string Name, byte Default)
+    public byte ReadInt8(SettingsNode path, string name, byte Default)
     {
-      return (byte)ReadInt32(Path, Name, Default);
+      return (byte)ReadInt32(path, name, Default);
     }
 
-    public short ReadInt16(SettingsNode Path, string Name, short Default)
+    public short ReadInt16(SettingsNode path, string name, short Default)
     {
-      return (short)ReadInt32(Path, Name, Default);
+      return (short)ReadInt32(path, name, Default);
     }
 
-    public int ReadInt32(SettingsNode Path, string Name, int Default)
+    public int ReadInt32(SettingsNode path, string name, int Default)
     {
-      return (int)GetValue(false, Path, Name, Default);
+      return (int)GetValue(false, path, name, Default);
     }
 
-    public long ReadInt64(SettingsNode Path, string Name, long Default)
+    public long ReadInt64(SettingsNode path, string name, long Default)
     {
-      return (long)GetValue(false, Path, Name, Default);
+      return (long)GetValue(false, path, name, Default);
     }
 
-    public string ReadString(SettingsNode Path, string Name, string Default)
+    public string ReadString(SettingsNode path, string name, string Default)
     {
-      return (string)GetValue(false, Path, Name, Default);
+      return (string)GetValue(false, path, name, Default);
     }
 
     #endregion
 
     #region ISettingsStoreWriter
 
-    public void WriteBool(SettingsNode Path, string Name, bool Value)
+    public void WriteBool(SettingsNode path, string name, bool value)
     {
-      ObtainKey(true, Path).SetValue(Name, Value ? 1 : 0, RegistryValueKind.DWord);
+      ObtainKey(true, path).SetValue(name, value ? 1 : 0, RegistryValueKind.DWord);
     }
 
-    public void WriteInt8(SettingsNode Path, string Name, byte Value)
+    public void WriteInt8(SettingsNode path, string name, byte value)
     {
-      ObtainKey(true, Path).SetValue(Name, Value, RegistryValueKind.DWord);
+      ObtainKey(true, path).SetValue(name, value, RegistryValueKind.DWord);
     }
 
-    public void WriteInt16(SettingsNode Path, string Name, short Value)
+    public void WriteInt16(SettingsNode path, string name, short value)
     {
-      ObtainKey(true, Path).SetValue(Name, Value, RegistryValueKind.DWord);
+      ObtainKey(true, path).SetValue(name, value, RegistryValueKind.DWord);
     }
 
-    public void WriteInt32(SettingsNode Path, string Name, int Value)
+    public void WriteInt32(SettingsNode path, string name, int value)
     {
-      ObtainKey(true, Path).SetValue(Name, Value, RegistryValueKind.DWord);
+      ObtainKey(true, path).SetValue(name, value, RegistryValueKind.DWord);
     }
 
-    public void WriteInt64(SettingsNode Path, string Name, long Value)
+    public void WriteInt64(SettingsNode path, string name, long value)
     {
-      ObtainKey(true, Path).SetValue(Name, Value, RegistryValueKind.QWord);
+      ObtainKey(true, path).SetValue(name, value, RegistryValueKind.QWord);
     }
 
-    public void WriteString(SettingsNode Path, string Name, string Value)
+    public void WriteString(SettingsNode path, string name, string value)
     {
-      ObtainKey(true, Path).SetValue(Name, Value, RegistryValueKind.String);
+      ObtainKey(true, path).SetValue(name, value, RegistryValueKind.String);
     }
 
     #endregion

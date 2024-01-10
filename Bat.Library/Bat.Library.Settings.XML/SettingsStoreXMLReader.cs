@@ -5,117 +5,112 @@ namespace Bat.Library.Settings
 {
   public class SettingsStoreXMLReader : ISettingsStoreReader
   {
-    public SettingsStoreXMLReader(string FileName)
+    public SettingsStoreXMLReader(string fileName)
     {
-      _XMLDoc = new XmlDocument();
-      _XMLDoc.Load(FileName);
+      _xmlDoc = new XmlDocument();
+      _xmlDoc.Load(fileName);
     }
 
-    public SettingsStoreXMLReader(XmlDocument XMLDoc)
+    public SettingsStoreXMLReader(XmlDocument xmlDoc)
     {
-      _XMLDoc = XMLDoc;
+      _xmlDoc = xmlDoc;
     }
 
-    private XmlDocument _XMLDoc;
+    private readonly XmlDocument _xmlDoc;
     public XmlDocument XMLDoc
     {
-      get { return _XMLDoc; }
+      get { return _xmlDoc; }
     }
 
     #region Internal
 
-    private XmlNode _LastNode = null;
-    private SettingsNode _LastPath = null;
+    private XmlNode _lastNode = null;
+    private SettingsNode _lastPath = null;
 
-    private XmlNode FindNode(SettingsNode Path)
+    private XmlNode FindNode(SettingsNode path)
     {
       //  Optimise a little
-      if (_LastPath == Path)
-        return _LastNode;
-      _LastPath = Path;
+      if (_lastPath == path)
+        return _lastNode;
+      _lastPath = path;
       //  Build the full path
-      Stack<string> FullPath = new Stack<string>();
-      while (Path != null)
+      Stack<string> fullPath = new Stack<string>();
+      while (path != null)
       {
-        FullPath.Push(Path.SettingsName());
-        Path = Path.SettingsParent();
+        fullPath.Push(path.SettingsName());
+        path = path.SettingsParent();
       }
       //  Find the node by following the full path
-      XmlNode Node = _XMLDoc.DocumentElement;
-      if (!Node.Name.Equals(FullPath.Pop()))
-        Node = null;
-      while ((FullPath.Count > 0) && (Node != null))
-        Node = Node[FullPath.Pop()];
+      XmlNode node = _xmlDoc.DocumentElement;
+      if (!node.Name.Equals(fullPath.Pop()))
+        node = null;
+      while ((fullPath.Count > 0) && (node != null))
+        node = node[fullPath.Pop()];
       //  Done
-      _LastNode = Node;
-      return Node;
+      _lastNode = node;
+      return node;
     }
 
-    private string GetValue(SettingsNode Path, string Name)
+    private string GetValue(SettingsNode path, string name)
     {
       //  Find the node
-      XmlNode Node = FindNode(Path);
-      if (Node == null)
+      XmlNode node = FindNode(path);
+      if (node == null)
         return null;
       //  Find the value
-      if (Node.Attributes[Name] == null)
+      if (node.Attributes[name] == null)
         return null;
       else
-        return Node.Attributes[Name].Value;
+        return node.Attributes[name].Value;
     }
 
     #endregion
 
     #region ISettingsStore
 
-    public bool ReadBool(SettingsNode Path, string Name, bool Default)
+    public bool ReadBool(SettingsNode path, string name, bool Default)
     {
-      string Value = GetValue(Path, Name);
-      bool Result;
-      if ((Value != null) && bool.TryParse(Value, out Result))
-        return Result;
+      string value = GetValue(path, name);
+      if ((value != null) && bool.TryParse(value, out bool result))
+        return result;
       return Default;
     }
 
-    public byte ReadInt8(SettingsNode Path, string Name, byte Default)
+    public byte ReadInt8(SettingsNode path, string name, byte Default)
     {
-      string Value = GetValue(Path, Name);
-      byte Result;
-      if ((Value != null) && byte.TryParse(Value, out Result))
-        return Result;
+      string value = GetValue(path, name);
+      if ((value != null) && byte.TryParse(value, out byte result))
+        return result;
       return Default;
     }
 
-    public short ReadInt16(SettingsNode Path, string Name, short Default)
+    public short ReadInt16(SettingsNode path, string name, short Default)
     {
-      string Value = GetValue(Path, Name);
-      short Result;
-      if ((Value != null) && short.TryParse(Value, out Result))
-        return Result;
+      string value = GetValue(path, name);
+      if ((value != null) && short.TryParse(value, out short result))
+        return result;
       return Default;
     }
 
-    public int ReadInt32(SettingsNode Path, string Name, int Default)
+    public int ReadInt32(SettingsNode path, string name, int Default)
     {
-      string Value = GetValue(Path, Name);
-      int Result;
-      if ((Value != null) && int.TryParse(Value, out Result))
-        return Result;
+      string value = GetValue(path, name);
+      if ((value != null) && int.TryParse(value, out int result))
+        return result;
       return Default;
     }
 
-    public long ReadInt64(SettingsNode Path, string Name, long Default)
+    public long ReadInt64(SettingsNode path, string name, long Default)
     {
-      string Value = GetValue(Path, Name);
-      long Result;
-      if ((Value != null) && long.TryParse(Value, out Result))
-        return Result;
+      string value = GetValue(path, name);
+      if ((value != null) && long.TryParse(value, out long result))
+        return result;
       return Default;
     }
 
-    public string ReadString(SettingsNode Path, string Name, string Default)
+    public string ReadString(SettingsNode path, string name, string Default)
     {
-      return GetValue(Path, Name);
+      return GetValue(path, name);
     }
 
     #endregion

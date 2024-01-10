@@ -174,72 +174,72 @@ namespace Bat.Library.Threading
     {
       internal Waiters(WaitHandle[] handles)
       {
-        _Handles = handles;
-        _Waiters = new Waiter[handles.Length];
-        _Gate = new ManualResetEvent(false);
+        _handles = handles;
+        _waiters = new Waiter[handles.Length];
+        _gate = new ManualResetEvent(false);
       }
 
-      private WaitHandle[] _Handles;
-      private Waiter[] _Waiters;
-      private ManualResetEvent _Gate;
-      private int _Index = WaitTimeout;
+      private readonly WaitHandle[] _handles;
+      private Waiter[] _waiters;
+      private readonly ManualResetEvent _gate;
+      private int _index = WaitTimeout;
 
       public int WaitForFirst(int Timeout, bool exitContext)
       {
-        int Count = _Handles.Length;
+        int count = _handles.Length;
         //  Spawn waiting threads
-        for (int i = 0; i < Count; i++)
-          _Waiters[i] = new Waiter(this, i);
+        for (int i = 0; i < count; i++)
+          _waiters[i] = new Waiter(this, i);
         //  Wait for one to signal this thread
-        _Gate.WaitOne(Timeout, exitContext);
+        _gate.WaitOne(Timeout, exitContext);
         //  Tidy up
-        for (int i = 0; i < Count; i++)
-          _Waiters[i].Abort();
-        _Waiters = null;
+        for (int i = 0; i < count; i++)
+          _waiters[i].Abort();
+        _waiters = null;
         //  Return the lowest index
-        return _Index;
+        return _index;
       }
 
       internal void SetIndex(int i)
       {
         lock (this)
         {
-          if (_Index > i)
-            _Index = i;
+          if (_index > i)
+            _index = i;
         }
       }
 
       private class Waiter
       {
-        internal Waiter(Waiters Group, int Index)
+        internal Waiter(Waiters group, int index)
         {
-          _Group = Group;
-          _Index = Index;
-          _Done = false;
-          _Thread = new Thread(new ThreadStart(ThreadedWait));
+          _group = group;
+          _index = index;
+          _done = false;
+          _thread = new Thread(new ThreadStart(ThreadedWait));
         }
 
-        private Waiters _Group;
-        private int _Index;
-        private Thread _Thread;
-        private bool _Done;
+        private readonly Waiters _group;
+        private readonly int _index;
+        private readonly Thread _thread;
+        private bool _done;
 
         internal void ThreadedWait()
         {
           //  Wait for the WaitHandle allocatated to this thread
-          _Group._Handles[_Index].WaitOne();
+          _group._handles[_index].WaitOne();
           //  No need to spend resources aborting this thread
-          _Done = true;
+          _done = true;
           //  Volunteer this index as the result
-          _Group.SetIndex(_Index);
+          _group.SetIndex(_index);
           //  Let the parent thread go
-          _Group._Gate.Set();
+          _group._gate.Set();
         }
 
         internal void Abort()
         {
-          if (!_Done) // Avoid many Abort() calls.  If some slip through, then tough.
-            _Thread.Abort();
+          if (!_done) // Avoid many Abort() calls.  If some slip through, then tough.
+            _thread.Abort();
         }
       }
     }

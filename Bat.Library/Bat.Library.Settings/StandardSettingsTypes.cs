@@ -2,45 +2,45 @@
 
 namespace Bat.Library.Settings
 {
-  class SettingsTypeInteger : SettingsType
+  class SettingsTypeInteger : ISettingsType
   {
-    public SettingsTypeInteger(Type IntegerType)
+    public SettingsTypeInteger(Type integerType)
     {
-      _DataType = IntegerType;
+      _dataType = integerType;
     }
 
     #region SettingType Members
 
-    private Type _DataType;
+    private readonly Type _dataType;
     public Type DataType
     {
-      get { return _DataType; }
+      get { return _dataType; }
     }
 
-    public object Read(ISettingsStoreReader Store, SettingsNode Path, string Name, object Default)
+    public object Read(ISettingsStoreReader store, SettingsNode path, string name, object Default)
     {
       if (Default is byte)
-        return Store.ReadInt8(Path, Name, (byte)Default);
+        return store.ReadInt8(path, name, (byte)Default);
       else if (Default is short)
-        return Store.ReadInt16(Path, Name, (short)Default);
+        return store.ReadInt16(path, name, (short)Default);
       else if (Default is int)
-        return Store.ReadInt32(Path, Name, (int)Default);
+        return store.ReadInt32(path, name, (int)Default);
       else if (Default is long)
-        return Store.ReadInt64(Path, Name, (long)Default);
+        return store.ReadInt64(path, name, (long)Default);
       else
         throw new Exception("Value is not a form of integer.");
     }
 
-    public void Write(ISettingsStoreWriter Store, SettingsNode Path, string Name, object Value)
+    public void Write(ISettingsStoreWriter store, SettingsNode path, string name, object Value)
     {
       if (Value is byte)
-        Store.WriteInt8(Path, Name, (byte)Value);
+        store.WriteInt8(path, name, (byte)Value);
       else if (Value is short)
-        Store.WriteInt16(Path, Name, (short)Value);
+        store.WriteInt16(path, name, (short)Value);
       else if (Value is int)
-        Store.WriteInt32(Path, Name, (int)Value);
+        store.WriteInt32(path, name, (int)Value);
       else if (Value is long)
-        Store.WriteInt64(Path, Name, (long)Value);
+        store.WriteInt64(path, name, (long)Value);
       else
         throw new Exception("Value is not a form of integer.");
     }
@@ -48,7 +48,7 @@ namespace Bat.Library.Settings
     #endregion
   }
 
-  class SettingsTypeString : SettingsType
+  class SettingsTypeString : ISettingsType
   {
     #region SettingType Members
 
@@ -57,20 +57,20 @@ namespace Bat.Library.Settings
       get { return typeof(string); }
     }
 
-    public object Read(ISettingsStoreReader Store, SettingsNode Path, string Name, object Default)
+    public object Read(ISettingsStoreReader store, SettingsNode path, string name, object Default)
     {
-      return Store.ReadString(Path, Name, (string)Default);
+      return store.ReadString(path, name, (string)Default);
     }
 
-    public void Write(ISettingsStoreWriter Store, SettingsNode Path, string Name, object Value)
+    public void Write(ISettingsStoreWriter store, SettingsNode path, string name, object value)
     {
-      Store.WriteString(Path, Name, (string)Value);
+      store.WriteString(path, name, (string)value);
     }
 
     #endregion
   }
 
-  class SettingsTypeBool : SettingsType
+  class SettingsTypeBool : ISettingsType
   {
     #region SettingType Members
 
@@ -79,20 +79,20 @@ namespace Bat.Library.Settings
       get { return typeof(bool); }
     }
 
-    public object Read(ISettingsStoreReader Store, SettingsNode Path, string Name, object Default)
+    public object Read(ISettingsStoreReader store, SettingsNode path, string name, object Default)
     {
-      return Store.ReadBool(Path, Name, (bool)Default);
+      return store.ReadBool(path, name, (bool)Default);
     }
 
-    public void Write(ISettingsStoreWriter Store, SettingsNode Path, string Name, object Value)
+    public void Write(ISettingsStoreWriter store, SettingsNode path, string name, object value)
     {
-      Store.WriteBool(Path, Name, (bool)Value);
+      store.WriteBool(path, name, (bool)value);
     }
 
     #endregion
   }
 
-  class SettingsTypeNode : SettingsType
+  class SettingsTypeNode : ISettingsType
   {
     #region SettingType Members
 
@@ -101,17 +101,17 @@ namespace Bat.Library.Settings
       get { return typeof(SettingsNode); }
     }
 
-    public object Read(ISettingsStoreReader Store, SettingsNode Path, string Name, object Default)
+    public object Read(ISettingsStoreReader store, SettingsNode path, string name, object Default)
     {
       if (Default != null)
-        ((SettingsNode)Default).Load(Store);
+        ((SettingsNode)Default).Load(store);
       return Default;
     }
 
-    public void Write(ISettingsStoreWriter Store, SettingsNode Path, string Name, object Value)
+    public void Write(ISettingsStoreWriter store, SettingsNode path, string name, object value)
     {
-      if (Value != null)
-        ((SettingsNode)Value).Save(Store);
+      if (value != null)
+        ((SettingsNode)value).Save(store);
     }
 
     #endregion

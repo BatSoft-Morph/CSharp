@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace Bat.Library.Settings
 {
-  public interface SettingsType
+  public interface ISettingsType
   {
     Type DataType { get; }
 
-    object Read(ISettingsStoreReader Store, SettingsNode Path, string Name, object Default);
+    object Read(ISettingsStoreReader store, SettingsNode path, string name, object Default);
 
-    void Write(ISettingsStoreWriter Store, SettingsNode Path, string Name, object Value);
+    void Write(ISettingsStoreWriter store, SettingsNode path, string name, object value);
   }
 
   public static class SettingsTypes
@@ -30,26 +30,26 @@ namespace Bat.Library.Settings
       #endregion
     }
 
-    static private List<SettingsType> _Types = new List<SettingsType>();
+    static private List<ISettingsType> _types = new List<ISettingsType>();
 
-    static public void Register(SettingsType NewSettingType)
+    static public void Register(ISettingsType newSettingType)
     {
-      Type type = NewSettingType.DataType;
-      for (int i = _Types.Count - 1; i >= 0; i--)
-        if (type.IsSubclassOf(_Types[i].DataType))
+      Type type = newSettingType.DataType;
+      for (int i = _types.Count - 1; i >= 0; i--)
+        if (type.IsSubclassOf(_types[i].DataType))
         {
-          _Types.Insert(i + 1, NewSettingType);
+          _types.Insert(i + 1, newSettingType);
           return;
         }
-      _Types.Add(NewSettingType);
+      _types.Add(newSettingType);
     }
 
-    static internal SettingsType FindFor(Type DataType)
+    static internal ISettingsType FindFor(Type dataType)
     {
-      for (int i = _Types.Count - 1; i >= 0; i--)
+      for (int i = _types.Count - 1; i >= 0; i--)
       {
-        SettingsType settingsType = _Types[i];
-        if (settingsType.DataType.IsAssignableFrom(DataType))
+        ISettingsType settingsType = _types[i];
+        if (settingsType.DataType.IsAssignableFrom(dataType))
           return settingsType;
       }
       return null;

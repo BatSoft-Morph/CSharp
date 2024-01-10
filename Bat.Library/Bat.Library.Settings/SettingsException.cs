@@ -8,8 +8,8 @@ namespace Bat.Library.Settings
       : base(message)
     { }
 
-    internal ESettings(Type DataType)
-      : base("No SettingType registered for: " + DataType.ToString())
+    internal ESettings(Type dataType)
+      : base("No SettingType registered for: " + dataType.ToString())
     { }
   }
 }

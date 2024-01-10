@@ -11,8 +11,8 @@ namespace Bat.Library.Logging
       if (!(obj is Exception))
         return null;
       Exception x = (Exception)obj;
-      if (x is SocketException)
-        return SocketErrorMessage((SocketException)x);
+      if (x is SocketException exception)
+        return SocketErrorMessage(exception);
       else
         return nl +
           "Class: " + x.GetType().Name + nl +
@@ -22,494 +22,494 @@ namespace Bat.Library.Logging
 
     private string SocketErrorMessage(SocketException x)
     {
-      string ErrorCode;
-      string ErrorMessage;
+      string errorCode;
+      string errorMessage;
       switch (x.ErrorCode)
       {
         case 6:
-          ErrorCode = "6 - WSA_INVALID_HANDLE";
-          ErrorMessage = "Specified event object handle is invalid.";
+          errorCode = "6 - WSA_INVALID_HANDLE";
+          errorMessage = "Specified event object handle is invalid.";
           break;
 
         case 8:
-          ErrorCode = "8 - WSA_NOT_ENOUGH_MEMORY";
-          ErrorMessage = "Insufficient memory available.";
+          errorCode = "8 - WSA_NOT_ENOUGH_MEMORY";
+          errorMessage = "Insufficient memory available.";
           break;
 
         case 87:
-          ErrorCode = "87 - WSA_INVALID_PARAMETER";
-          ErrorMessage = "One or more parameters are invalid.";
+          errorCode = "87 - WSA_INVALID_PARAMETER";
+          errorMessage = "One or more parameters are invalid.";
           break;
 
         case 995:
-          ErrorCode = "995 - WSA_OPERATION_ABORTED";
-          ErrorMessage = "Overlapped operation aborted.";
+          errorCode = "995 - WSA_OPERATION_ABORTED";
+          errorMessage = "Overlapped operation aborted.";
           break;
 
         case 996:
-          ErrorCode = "996 - WSA_IO_INCOMPLETE";
-          ErrorMessage = "Overlapped I/O event object not in signaled state.";
+          errorCode = "996 - WSA_IO_INCOMPLETE";
+          errorMessage = "Overlapped I/O event object not in signaled state.";
           break;
 
         case 997:
-          ErrorCode = "997 - WSA_IO_PENDING";
-          ErrorMessage = "Overlapped operations will complete later.";
+          errorCode = "997 - WSA_IO_PENDING";
+          errorMessage = "Overlapped operations will complete later.";
           break;
 
         case 10004:
-          ErrorCode = "10004 - WSAEINTR";
-          ErrorMessage = "Interrupted function call.";
+          errorCode = "10004 - WSAEINTR";
+          errorMessage = "Interrupted function call.";
           break;
 
         case 10009:
-          ErrorCode = "10009 - WSAEBADF";
-          ErrorMessage = "File handle is not valid.";
+          errorCode = "10009 - WSAEBADF";
+          errorMessage = "File handle is not valid.";
           break;
 
         case 10013:
-          ErrorCode = "10013 - WSAEACCES";
-          ErrorMessage = "Permission denied.";
+          errorCode = "10013 - WSAEACCES";
+          errorMessage = "Permission denied.";
           break;
 
         case 10014:
-          ErrorCode = "10014 - WSAEFAULT";
-          ErrorMessage = "Bad address.";
+          errorCode = "10014 - WSAEFAULT";
+          errorMessage = "Bad address.";
           break;
 
         case 10022:
-          ErrorCode = "10022 - WSAEINVAL";
-          ErrorMessage = "Invalid argument.";
+          errorCode = "10022 - WSAEINVAL";
+          errorMessage = "Invalid argument.";
           break;
 
         case 10024:
-          ErrorCode = "10024 - WSAEMFILE";
-          ErrorMessage = "Too many open files.";
+          errorCode = "10024 - WSAEMFILE";
+          errorMessage = "Too many open files.";
           break;
 
         case 10035:
-          ErrorCode = "10035 - WSAEWOULDBLOCK";
-          ErrorMessage = "Resource temporarily unavailable.";
+          errorCode = "10035 - WSAEWOULDBLOCK";
+          errorMessage = "Resource temporarily unavailable.";
           break;
 
         case 10036:
-          ErrorCode = "10036 - WSAEINPROGRESS";
-          ErrorMessage = "Operation now in progress.";
+          errorCode = "10036 - WSAEINPROGRESS";
+          errorMessage = "Operation now in progress.";
           break;
 
         case 10037:
-          ErrorCode = "10037 - WSAEALREADY";
-          ErrorMessage = "Operation already in progress.";
+          errorCode = "10037 - WSAEALREADY";
+          errorMessage = "Operation already in progress.";
           break;
 
         case 10038:
-          ErrorCode = "10038 - WSAENOTSOCK";
-          ErrorMessage = "Socket operation on nonsocket.";
+          errorCode = "10038 - WSAENOTSOCK";
+          errorMessage = "Socket operation on nonsocket.";
           break;
 
         case 10039:
-          ErrorCode = "10039 - WSAEDESTADDRREQ";
-          ErrorMessage = "Destination address required.";
+          errorCode = "10039 - WSAEDESTADDRREQ";
+          errorMessage = "Destination address required.";
           break;
 
         case 10040:
-          ErrorCode = "10040 - WSAEMSGSIZE";
-          ErrorMessage = "Message too long.";
+          errorCode = "10040 - WSAEMSGSIZE";
+          errorMessage = "Message too long.";
           break;
 
         case 10041:
-          ErrorCode = "10041 - WSAEPROTOTYPE";
-          ErrorMessage = "Protocol wrong type for socket.";
+          errorCode = "10041 - WSAEPROTOTYPE";
+          errorMessage = "Protocol wrong type for socket.";
           break;
 
         case 10042:
-          ErrorCode = "10042 - WSAENOPROTOOPT";
-          ErrorMessage = "Bad protocol option.";
+          errorCode = "10042 - WSAENOPROTOOPT";
+          errorMessage = "Bad protocol option.";
           break;
 
         case 10043:
-          ErrorCode = "10043 - WSAEPROTONOSUPPORT";
-          ErrorMessage = "Protocol not supported.";
+          errorCode = "10043 - WSAEPROTONOSUPPORT";
+          errorMessage = "Protocol not supported.";
           break;
 
         case 10044:
-          ErrorCode = "10044 - WSAESOCKTNOSUPPORT";
-          ErrorMessage = "Socket type not supported.";
+          errorCode = "10044 - WSAESOCKTNOSUPPORT";
+          errorMessage = "Socket type not supported.";
           break;
 
         case 10045:
-          ErrorCode = "10045 - WSAEOPNOTSUPP";
-          ErrorMessage = "Operation not supported.";
+          errorCode = "10045 - WSAEOPNOTSUPP";
+          errorMessage = "Operation not supported.";
           break;
 
         case 10046:
-          ErrorCode = "10046 - WSAEPFNOSUPPORT";
-          ErrorMessage = "Protocol family not supported.";
+          errorCode = "10046 - WSAEPFNOSUPPORT";
+          errorMessage = "Protocol family not supported.";
           break;
 
         case 10047:
-          ErrorCode = "10047 - WSAEAFNOSUPPORT";
-          ErrorMessage = "Address family not supported by protocol family.";
+          errorCode = "10047 - WSAEAFNOSUPPORT";
+          errorMessage = "Address family not supported by protocol family.";
           break;
 
         case 10048:
-          ErrorCode = "10048 - WSAEADDRINUSE";
-          ErrorMessage = "Address already in use.";
+          errorCode = "10048 - WSAEADDRINUSE";
+          errorMessage = "Address already in use.";
           break;
 
         case 10049:
-          ErrorCode = "10049 - WSAEADDRNOTAVAIL";
-          ErrorMessage = "Cannot assign requested address.";
+          errorCode = "10049 - WSAEADDRNOTAVAIL";
+          errorMessage = "Cannot assign requested address.";
           break;
 
         case 10050:
-          ErrorCode = "10050 - WSAENETDOWN";
-          ErrorMessage = "Network is down.";
+          errorCode = "10050 - WSAENETDOWN";
+          errorMessage = "Network is down.";
           break;
 
         case 10051:
-          ErrorCode = "10051 - WSAENETUNREACH";
-          ErrorMessage = "Network is unreachable.";
+          errorCode = "10051 - WSAENETUNREACH";
+          errorMessage = "Network is unreachable.";
           break;
 
         case 10052:
-          ErrorCode = "10052 - WSAENETRESET";
-          ErrorMessage = "Network dropped connection on reset.";
+          errorCode = "10052 - WSAENETRESET";
+          errorMessage = "Network dropped connection on reset.";
           break;
 
         case 10053:
-          ErrorCode = "10053 - WSAECONNABORTED";
-          ErrorMessage = "Software caused connection abort.";
+          errorCode = "10053 - WSAECONNABORTED";
+          errorMessage = "Software caused connection abort.";
           break;
 
         case 10054:
-          ErrorCode = "10054 - WSAECONNRESET";
-          ErrorMessage = "Connection reset by peer.";
+          errorCode = "10054 - WSAECONNRESET";
+          errorMessage = "Connection reset by peer.";
           break;
 
         case 10055:
-          ErrorCode = "10055 - WSAENOBUFS";
-          ErrorMessage = "No buffer space available.";
+          errorCode = "10055 - WSAENOBUFS";
+          errorMessage = "No buffer space available.";
           break;
 
         case 10056:
-          ErrorCode = "10056 - WSAEISCONN";
-          ErrorMessage = "Socket is already connected.";
+          errorCode = "10056 - WSAEISCONN";
+          errorMessage = "Socket is already connected.";
           break;
 
         case 10057:
-          ErrorCode = "10057 - WSAENOTCONN";
-          ErrorMessage = "Socket is not connected.";
+          errorCode = "10057 - WSAENOTCONN";
+          errorMessage = "Socket is not connected.";
           break;
 
         case 10058:
-          ErrorCode = "10058 - WSAESHUTDOWN";
-          ErrorMessage = "Cannot send after socket shutdown.";
+          errorCode = "10058 - WSAESHUTDOWN";
+          errorMessage = "Cannot send after socket shutdown.";
           break;
 
         case 10059:
-          ErrorCode = "10059 - WSAETOOMANYREFS";
-          ErrorMessage = "Too many references.";
+          errorCode = "10059 - WSAETOOMANYREFS";
+          errorMessage = "Too many references.";
           break;
 
         case 10060:
-          ErrorCode = "10060 - WSAETIMEDOUT";
-          ErrorMessage = "Connection timed out.";
+          errorCode = "10060 - WSAETIMEDOUT";
+          errorMessage = "Connection timed out.";
           break;
 
         case 10061:
-          ErrorCode = "10061 - WSAECONNREFUSED";
-          ErrorMessage = "Connection refused.";
+          errorCode = "10061 - WSAECONNREFUSED";
+          errorMessage = "Connection refused.";
           break;
 
         case 10062:
-          ErrorCode = "10062 - WSAELOOP";
-          ErrorMessage = "Cannot translate name.";
+          errorCode = "10062 - WSAELOOP";
+          errorMessage = "Cannot translate name.";
           break;
 
         case 10063:
-          ErrorCode = "10063 - WSAENAMETOOLONG";
-          ErrorMessage = "Name too long.";
+          errorCode = "10063 - WSAENAMETOOLONG";
+          errorMessage = "Name too long.";
           break;
 
         case 10064:
-          ErrorCode = "10064 - WSAEHOSTDOWN";
-          ErrorMessage = "Host is down.";
+          errorCode = "10064 - WSAEHOSTDOWN";
+          errorMessage = "Host is down.";
           break;
 
         case 10065:
-          ErrorCode = "10065 - WSAEHOSTUNREACH";
-          ErrorMessage = "No route to host.";
+          errorCode = "10065 - WSAEHOSTUNREACH";
+          errorMessage = "No route to host.";
           break;
 
         case 10066:
-          ErrorCode = "10066 - WSAENOTEMPTY";
-          ErrorMessage = "Directory not empty.";
+          errorCode = "10066 - WSAENOTEMPTY";
+          errorMessage = "Directory not empty.";
           break;
 
         case 10067:
-          ErrorCode = "10067 - WSAEPROCLIM";
-          ErrorMessage = "Too many processes.";
+          errorCode = "10067 - WSAEPROCLIM";
+          errorMessage = "Too many processes.";
           break;
 
         case 10068:
-          ErrorCode = "10068 - WSAEUSERS";
-          ErrorMessage = "User quota exceeded.";
+          errorCode = "10068 - WSAEUSERS";
+          errorMessage = "User quota exceeded.";
           break;
 
         case 10069:
-          ErrorCode = "10069 - WSAEDQUOT";
-          ErrorMessage = "Disk quota exceeded.";
+          errorCode = "10069 - WSAEDQUOT";
+          errorMessage = "Disk quota exceeded.";
           break;
 
         case 10070:
-          ErrorCode = "10070 - WSAESTALE";
-          ErrorMessage = "Stale file handle reference.";
+          errorCode = "10070 - WSAESTALE";
+          errorMessage = "Stale file handle reference.";
           break;
 
         case 10071:
-          ErrorCode = "10071 - WSAEREMOTE";
-          ErrorMessage = "Item is remote.";
+          errorCode = "10071 - WSAEREMOTE";
+          errorMessage = "Item is remote.";
           break;
 
         case 10091:
-          ErrorCode = "10091 - WSASYSNOTREADY";
-          ErrorMessage = "Network subsystem is unavailable.";
+          errorCode = "10091 - WSASYSNOTREADY";
+          errorMessage = "Network subsystem is unavailable.";
           break;
 
         case 10092:
-          ErrorCode = "10092 - WSAVERNOTSUPPORTED";
-          ErrorMessage = "Winsock.dll version out of range.";
+          errorCode = "10092 - WSAVERNOTSUPPORTED";
+          errorMessage = "Winsock.dll version out of range.";
           break;
 
         case 10093:
-          ErrorCode = "10093 - WSANOTINITIALISED";
-          ErrorMessage = "Successful WSAStartup not yet performed.";
+          errorCode = "10093 - WSANOTINITIALISED";
+          errorMessage = "Successful WSAStartup not yet performed.";
           break;
 
         case 10101:
-          ErrorCode = "10101 - WSAEDISCON";
-          ErrorMessage = "Graceful shutdown in progress.";
+          errorCode = "10101 - WSAEDISCON";
+          errorMessage = "Graceful shutdown in progress.";
           break;
 
         case 10102:
-          ErrorCode = "10102 - WSAENOMORE";
-          ErrorMessage = "No more results.";
+          errorCode = "10102 - WSAENOMORE";
+          errorMessage = "No more results.";
           break;
 
         case 10103:
-          ErrorCode = "10103 - WSAECANCELLED";
-          ErrorMessage = "Call has been canceled.";
+          errorCode = "10103 - WSAECANCELLED";
+          errorMessage = "Call has been canceled.";
           break;
 
         case 10104:
-          ErrorCode = "10104 - WSAEINVALIDPROCTABLE";
-          ErrorMessage = "Procedure call table is invalid.";
+          errorCode = "10104 - WSAEINVALIDPROCTABLE";
+          errorMessage = "Procedure call table is invalid.";
           break;
 
         case 10105:
-          ErrorCode = "10105 - WSAEINVALIDPROVIDER";
-          ErrorMessage = "Service provider is invalid.";
+          errorCode = "10105 - WSAEINVALIDPROVIDER";
+          errorMessage = "Service provider is invalid.";
           break;
 
         case 10106:
-          ErrorCode = "10106 - WSAEPROVIDERFAILEDINIT";
-          ErrorMessage = "Service provider failed to initialize.";
+          errorCode = "10106 - WSAEPROVIDERFAILEDINIT";
+          errorMessage = "Service provider failed to initialize.";
           break;
 
         case 10107:
-          ErrorCode = "10107 - WSASYSCALLFAILURE";
-          ErrorMessage = "System call failure.";
+          errorCode = "10107 - WSASYSCALLFAILURE";
+          errorMessage = "System call failure.";
           break;
 
         case 10108:
-          ErrorCode = "10108 - WSASERVICE_NOT_FOUND";
-          ErrorMessage = "Service not found.";
+          errorCode = "10108 - WSASERVICE_NOT_FOUND";
+          errorMessage = "Service not found.";
           break;
 
         case 10109:
-          ErrorCode = "10109 - WSATYPE_NOT_FOUND";
-          ErrorMessage = "Class type not found.";
+          errorCode = "10109 - WSATYPE_NOT_FOUND";
+          errorMessage = "Class type not found.";
           break;
 
         case 10110:
-          ErrorCode = "10110 - WSA_E_NO_MORE";
-          ErrorMessage = "No more results.";
+          errorCode = "10110 - WSA_E_NO_MORE";
+          errorMessage = "No more results.";
           break;
 
         case 10111:
-          ErrorCode = "10111 - WSA_E_CANCELLED";
-          ErrorMessage = "Call was canceled.";
+          errorCode = "10111 - WSA_E_CANCELLED";
+          errorMessage = "Call was canceled.";
           break;
 
         case 10112:
-          ErrorCode = "10112 - WSAEREFUSED";
-          ErrorMessage = "Database query was refused.";
+          errorCode = "10112 - WSAEREFUSED";
+          errorMessage = "Database query was refused.";
           break;
 
         case 11001:
-          ErrorCode = "11001 - WSAHOST_NOT_FOUND";
-          ErrorMessage = "Host not found.";
+          errorCode = "11001 - WSAHOST_NOT_FOUND";
+          errorMessage = "Host not found.";
           break;
 
         case 11002:
-          ErrorCode = "11002 - WSATRY_AGAIN";
-          ErrorMessage = "Nonauthoritative host not found.";
+          errorCode = "11002 - WSATRY_AGAIN";
+          errorMessage = "Nonauthoritative host not found.";
           break;
 
         case 11003:
-          ErrorCode = "11003 - WSANO_RECOVERY";
-          ErrorMessage = "This is a nonrecoverable error.";
+          errorCode = "11003 - WSANO_RECOVERY";
+          errorMessage = "This is a nonrecoverable error.";
           break;
 
         case 11004:
-          ErrorCode = "11004 - WSANO_DATA";
-          ErrorMessage = "Valid name, no data record of requested type.";
+          errorCode = "11004 - WSANO_DATA";
+          errorMessage = "Valid name, no data record of requested type.";
           break;
 
         case 11005:
-          ErrorCode = "11005 - WSA_QOS_RECEIVERS";
-          ErrorMessage = "QOS receivers.";
+          errorCode = "11005 - WSA_QOS_RECEIVERS";
+          errorMessage = "QOS receivers.";
           break;
 
         case 11006:
-          ErrorCode = "11006 - WSA_QOS_SENDERS";
-          ErrorMessage = "QOS senders.";
+          errorCode = "11006 - WSA_QOS_SENDERS";
+          errorMessage = "QOS senders.";
           break;
 
         case 11007:
-          ErrorCode = "11007 - WSA_QOS_NO_SENDERS";
-          ErrorMessage = "No QOS senders.";
+          errorCode = "11007 - WSA_QOS_NO_SENDERS";
+          errorMessage = "No QOS senders.";
           break;
 
         case 11008:
-          ErrorCode = "11008 - WSA_QOS_NO_RECEIVERS";
-          ErrorMessage = "QOS no receivers.";
+          errorCode = "11008 - WSA_QOS_NO_RECEIVERS";
+          errorMessage = "QOS no receivers.";
           break;
 
         case 11009:
-          ErrorCode = "11009 - WSA_QOS_REQUEST_CONFIRMED";
-          ErrorMessage = "QOS request confirmed.";
+          errorCode = "11009 - WSA_QOS_REQUEST_CONFIRMED";
+          errorMessage = "QOS request confirmed.";
           break;
 
         case 11010:
-          ErrorCode = "11010 - WSA_QOS_ADMISSION_FAILURE";
-          ErrorMessage = "QOS admission error.";
+          errorCode = "11010 - WSA_QOS_ADMISSION_FAILURE";
+          errorMessage = "QOS admission error.";
           break;
 
         case 11011:
-          ErrorCode = "11011 - WSA_QOS_POLICY_FAILURE";
-          ErrorMessage = "QOS policy failure.";
+          errorCode = "11011 - WSA_QOS_POLICY_FAILURE";
+          errorMessage = "QOS policy failure.";
           break;
 
         case 11012:
-          ErrorCode = "11012 - WSA_QOS_BAD_STYLE";
-          ErrorMessage = "QOS bad style.";
+          errorCode = "11012 - WSA_QOS_BAD_STYLE";
+          errorMessage = "QOS bad style.";
           break;
 
         case 11013:
-          ErrorCode = "11013 - WSA_QOS_BAD_OBJECT";
-          ErrorMessage = "QOS bad object.";
+          errorCode = "11013 - WSA_QOS_BAD_OBJECT";
+          errorMessage = "QOS bad object.";
           break;
 
         case 11014:
-          ErrorCode = "11014 - WSA_QOS_TRAFFIC_CTRL_ERROR";
-          ErrorMessage = "QOS traffic control error.";
+          errorCode = "11014 - WSA_QOS_TRAFFIC_CTRL_ERROR";
+          errorMessage = "QOS traffic control error.";
           break;
 
         case 11015:
-          ErrorCode = "11015 - WSA_QOS_GENERIC_ERROR";
-          ErrorMessage = "QOS generic error.";
+          errorCode = "11015 - WSA_QOS_GENERIC_ERROR";
+          errorMessage = "QOS generic error.";
           break;
 
         case 11016:
-          ErrorCode = "11016 - WSA_QOS_ESERVICETYPE";
-          ErrorMessage = "QOS service type error.";
+          errorCode = "11016 - WSA_QOS_ESERVICETYPE";
+          errorMessage = "QOS service type error.";
           break;
 
         case 11017:
-          ErrorCode = "11017 - WSA_QOS_EFLOWSPEC";
-          ErrorMessage = "QOS flowspec error.";
+          errorCode = "11017 - WSA_QOS_EFLOWSPEC";
+          errorMessage = "QOS flowspec error.";
           break;
 
         case 11018:
-          ErrorCode = "11018 - WSA_QOS_EPROVSPECBUF";
-          ErrorMessage = "Invalid QOS provider buffer.";
+          errorCode = "11018 - WSA_QOS_EPROVSPECBUF";
+          errorMessage = "Invalid QOS provider buffer.";
           break;
 
         case 11019:
-          ErrorCode = "11019 - WSA_QOS_EFILTERSTYLE";
-          ErrorMessage = "Invalid QOS filter style.";
+          errorCode = "11019 - WSA_QOS_EFILTERSTYLE";
+          errorMessage = "Invalid QOS filter style.";
           break;
 
         case 11020:
-          ErrorCode = "11020 - WSA_QOS_EFILTERTYPE";
-          ErrorMessage = "Invalid QOS filter type.";
+          errorCode = "11020 - WSA_QOS_EFILTERTYPE";
+          errorMessage = "Invalid QOS filter type.";
           break;
 
         case 11021:
-          ErrorCode = "11021 - WSA_QOS_EFILTERCOUNT";
-          ErrorMessage = "Incorrect QOS filter count.";
+          errorCode = "11021 - WSA_QOS_EFILTERCOUNT";
+          errorMessage = "Incorrect QOS filter count.";
           break;
 
         case 11022:
-          ErrorCode = "11022 - WSA_QOS_EOBJLENGTH";
-          ErrorMessage = "Invalid QOS object length.";
+          errorCode = "11022 - WSA_QOS_EOBJLENGTH";
+          errorMessage = "Invalid QOS object length.";
           break;
 
         case 11023:
-          ErrorCode = "11023 - WSA_QOS_EFLOWCOUNT";
-          ErrorMessage = "Incorrect QOS flow count.";
+          errorCode = "11023 - WSA_QOS_EFLOWCOUNT";
+          errorMessage = "Incorrect QOS flow count.";
           break;
 
         case 11024:
-          ErrorCode = "11024 - WSA_QOS_EUNKOWNPSOBJ";
-          ErrorMessage = "Unrecognized QOS object.";
+          errorCode = "11024 - WSA_QOS_EUNKOWNPSOBJ";
+          errorMessage = "Unrecognized QOS object.";
           break;
 
         case 11025:
-          ErrorCode = "11025 - WSA_QOS_EPOLICYOBJ";
-          ErrorMessage = "Invalid QOS policy object.";
+          errorCode = "11025 - WSA_QOS_EPOLICYOBJ";
+          errorMessage = "Invalid QOS policy object.";
           break;
 
         case 11026:
-          ErrorCode = "11026 - WSA_QOS_EFLOWDESC";
-          ErrorMessage = "Invalid QOS flow descriptor.";
+          errorCode = "11026 - WSA_QOS_EFLOWDESC";
+          errorMessage = "Invalid QOS flow descriptor.";
           break;
 
         case 11027:
-          ErrorCode = "11027 - WSA_QOS_EPSFLOWSPEC";
-          ErrorMessage = "Invalid QOS provider-specific flowspec.";
+          errorCode = "11027 - WSA_QOS_EPSFLOWSPEC";
+          errorMessage = "Invalid QOS provider-specific flowspec.";
           break;
 
         case 11028:
-          ErrorCode = "11028 - WSA_QOS_EPSFILTERSPEC";
-          ErrorMessage = "Invalid QOS provider-specific filterspec.";
+          errorCode = "11028 - WSA_QOS_EPSFILTERSPEC";
+          errorMessage = "Invalid QOS provider-specific filterspec.";
           break;
 
         case 11029:
-          ErrorCode = "11029 - WSA_QOS_ESDMODEOBJ";
-          ErrorMessage = "Invalid QOS shape discard mode object.";
+          errorCode = "11029 - WSA_QOS_ESDMODEOBJ";
+          errorMessage = "Invalid QOS shape discard mode object.";
           break;
 
         case 11030:
-          ErrorCode = "11030 - WSA_QOS_ESHAPERATEOBJ";
-          ErrorMessage = "Invalid QOS shaping rate object.";
+          errorCode = "11030 - WSA_QOS_ESHAPERATEOBJ";
+          errorMessage = "Invalid QOS shaping rate object.";
           break;
 
         case 11031:
-          ErrorCode = "11031 - WSA_QOS_RESERVED_PETYPE";
-          ErrorMessage = "Reserved policy QOS element type.";
+          errorCode = "11031 - WSA_QOS_RESERVED_PETYPE";
+          errorMessage = "Reserved policy QOS element type.";
           break;
 
         default:
-          ErrorCode = x.ErrorCode.ToString();
-          ErrorMessage = x.Message;
+          errorCode = x.ErrorCode.ToString();
+          errorMessage = x.Message;
           break;
       }
       return nl +
         "Class: " + x.GetType().Name + nl +
-        "Code: " + ErrorCode + nl +
-        "Message: " + ErrorMessage + nl +
+        "Code: " + errorCode + nl +
+        "Message: " + errorMessage + nl +
         "StackTrace: " + nl + x.StackTrace + nl;
     }
 

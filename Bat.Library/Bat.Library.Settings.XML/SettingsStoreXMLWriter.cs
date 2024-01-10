@@ -6,44 +6,44 @@ namespace Bat.Library.Settings
   {
     public SettingsStoreXMLWriter()
     {
-      _XMLDoc = new XmlDocument();
+      _xmlDoc = new XmlDocument();
     }
 
-    public SettingsStoreXMLWriter(XmlDocument XMLDoc)
+    public SettingsStoreXMLWriter(XmlDocument xmlDoc)
     {
-      _XMLDoc = XMLDoc;
+      _xmlDoc = xmlDoc;
     }
 
-    private XmlDocument _XMLDoc;
+    private readonly XmlDocument _xmlDoc;
     public XmlDocument XMLDoc
     {
-      get { return _XMLDoc; }
+      get { return _xmlDoc; }
     }
 
     #region Internal
 
-    private XmlElement AddElement(XmlNode Parent, string Name)
+    private XmlElement AddElement(XmlNode parent, string name)
     {
-      XmlElement elem = _XMLDoc.CreateElement(Name);
-      Parent.AppendChild(elem);
+      XmlElement elem = _xmlDoc.CreateElement(name);
+      parent.AppendChild(elem);
       return elem;
     }
 
-    private XmlElement ObtainNode(SettingsNode Path)
+    private XmlElement ObtainNode(SettingsNode path)
     {
-      if (Path.SettingsParent() == null)
-        if (_XMLDoc.DocumentElement != null)
-          return _XMLDoc.DocumentElement;
+      if (path.SettingsParent() == null)
+        if (_xmlDoc.DocumentElement != null)
+          return _xmlDoc.DocumentElement;
         else
-          return AddElement(_XMLDoc, Path.SettingsName());
+          return AddElement(_xmlDoc, path.SettingsName());
       else
       {
-        XmlElement Parent = ObtainNode(Path.SettingsParent());
-        XmlElement Node = Parent[Path.SettingsName()];
-        if (Node != null)
-          return Node;
+        XmlElement parent = ObtainNode(path.SettingsParent());
+        XmlElement node = parent[path.SettingsName()];
+        if (node != null)
+          return node;
         else
-          return AddElement(Parent, Path.SettingsName());
+          return AddElement(parent, path.SettingsName());
       }
     }
 
@@ -51,34 +51,34 @@ namespace Bat.Library.Settings
 
     #region ISettingsStoreWriter
 
-    public void WriteBool(SettingsNode Path, string Name, bool Value)
+    public void WriteBool(SettingsNode path, string name, bool value)
     {
-      ObtainNode(Path).SetAttribute(Name, Value.ToString());
+      ObtainNode(path).SetAttribute(name, value.ToString());
     }
 
-    public void WriteInt8(SettingsNode Path, string Name, byte Value)
+    public void WriteInt8(SettingsNode path, string name, byte value)
     {
-      ObtainNode(Path).SetAttribute(Name, Value.ToString());
+      ObtainNode(path).SetAttribute(name, value.ToString());
     }
 
-    public void WriteInt16(SettingsNode Path, string Name, short Value)
+    public void WriteInt16(SettingsNode path, string name, short value)
     {
-      ObtainNode(Path).SetAttribute(Name, Value.ToString());
+      ObtainNode(path).SetAttribute(name, value.ToString());
     }
 
-    public void WriteInt32(SettingsNode Path, string Name, int Value)
+    public void WriteInt32(SettingsNode path, string name, int value)
     {
-      ObtainNode(Path).SetAttribute(Name, Value.ToString());
+      ObtainNode(path).SetAttribute(name, value.ToString());
     }
 
-    public void WriteInt64(SettingsNode Path, string Name, long Value)
+    public void WriteInt64(SettingsNode path, string name, long value)
     {
-      ObtainNode(Path).SetAttribute(Name, Value.ToString());
+      ObtainNode(path).SetAttribute(name, value.ToString());
     }
 
-    public void WriteString(SettingsNode Path, string Name, string Value)
+    public void WriteString(SettingsNode path, string name, string value)
     {
-      ObtainNode(Path).SetAttribute(Name, Value);
+      ObtainNode(path).SetAttribute(name, value);
     }
 
     #endregion

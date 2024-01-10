@@ -19,11 +19,11 @@ namespace Test.Bat.Library.ADTs
       throw new Exception(Message);
     }
 
-    private void CompareValues(object PoppedValue, object ExpectedValue)
+    private void CompareValues(object poppedValue, object expectedValue)
     {
-      if ((PoppedValue == null) && (ExpectedValue == null)) return;
-      if ((PoppedValue == null) || (ExpectedValue == null)) Error();
-      if (!PoppedValue.Equals(ExpectedValue)) Error();
+      if ((poppedValue == null) && (expectedValue == null)) return;
+      if ((poppedValue == null) || (expectedValue == null)) Error();
+      if (!poppedValue.Equals(expectedValue)) Error();
     }
 
     #endregion

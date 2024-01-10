@@ -7,31 +7,31 @@ namespace Bat.Library.ADTs
   {
     internal ChainLink(object Data)
     {
-      _Data = Data;
+      _data = Data;
     }
 
-    internal protected ChainLink _Prev;
-    internal protected ChainLink _Next;
-    internal object _Data;
+    internal protected ChainLink _prev;
+    internal protected ChainLink _next;
+    internal object _data;
 
-    internal void Push(ChainLink Prev, ChainLink Next)
+    internal void Push(ChainLink prev, ChainLink next)
     {
-      Prev._Next = this;
-      Next._Prev = this;
-      _Prev = Prev;
-      _Next = Next;
+      prev._next = this;
+      next._prev = this;
+      this._prev = prev;
+      this._next = next;
     }
 
     internal void Pull()
     {
-      if ((_Prev == null) || (_Next == null))
+      if ((_prev == null) || (_next == null))
         throw new EChain("Link is not in a chain");
       if (this is ChainBase)
         throw new EChain("Cannot pull a chain");
-      _Prev._Next = _Next;
-      _Next._Prev = _Prev;
-      _Prev = null;
-      _Next = null;
+      _prev._next = _next;
+      _next._prev = _prev;
+      _prev = null;
+      _next = null;
     }
   }
 
@@ -40,19 +40,19 @@ namespace Bat.Library.ADTs
     protected ChainBase()
       : base(null)
     {
-      _Prev = this;
-      _Next = this;
+      _prev = this;
+      _next = this;
     }
 
     public void Dispose()
     {
-      ChainLink Link = this;
+      ChainLink link = this;
       do
       {
-        Link._Prev = null;
-        Link = Link._Next;
-      } while (Link != null);
-      this._Next = null;
+        link._prev = null;
+        link = link._next;
+      } while (link != null);
+      this._next = null;
     }
 
     #region Internal
@@ -63,49 +63,49 @@ namespace Bat.Library.ADTs
         throw new EChain("Stack/Queue is empty");
     }
 
-    protected void Push(ChainLink Link)
+    protected void Push(ChainLink link)
     {
-      Link.Push(this, this._Next);
+      link.Push(this, this._next);
     }
 
-    protected object Peek(ChainLink Link)
+    protected object Peek(ChainLink link)
     {
       ValidateNotEmpty();
-      return Link._Data;
+      return link._data;
     }
 
-    protected virtual object Pop(ChainLink Link)
+    protected virtual object Pop(ChainLink link)
     {
       ValidateNotEmpty();
-      Link.Pull();
-      return Link._Data;
+      link.Pull();
+      return link._data;
     }
 
     #endregion
 
     public bool IsEmpty
     {
-      get { return _Next == this; }
+      get { return _next == this; }
     }
 
     public object PeekStack()
     {
-      return Peek(_Next);
+      return Peek(_next);
     }
 
     public object PeekQueue()
     {
-      return Peek(_Prev);
+      return Peek(_prev);
     }
 
     public object PopStack()
     {
-      return Pop(_Next);
+      return Pop(_next);
     }
 
     public object PopQueue()
     {
-      return Pop(_Prev);
+      return Pop(_prev);
     }
   }
 
@@ -116,9 +116,9 @@ namespace Bat.Library.ADTs
     {
     }
 
-    public void Push(object Data)
+    public void Push(object data)
     {
-      base.Push(new ChainLink(Data));
+      base.Push(new ChainLink(data));
     }
   }
 
@@ -131,54 +131,54 @@ namespace Bat.Library.ADTs
 
     #region Internal
 
-    private Hashtable _Index = new Hashtable();
+    private readonly Hashtable _index = new Hashtable();
 
     private class IndexedChainLink : ChainLink
     {
-      internal IndexedChainLink(object Key, object Data)
-        : base(Data)
+      internal IndexedChainLink(object key, object data)
+        : base(data)
       {
-        _Key = Key;
+        _key = key;
       }
 
-      internal object _Key;
+      internal object _key;
     }
 
-    private IndexedChainLink FindLink(object Key)
+    private IndexedChainLink FindLink(object key)
     {
-      IndexedChainLink Link = (IndexedChainLink)_Index[Key];
+      IndexedChainLink Link = (IndexedChainLink)_index[key];
       if (Link == null)
         throw new EChain("Key not found in index");
       return Link;
     }
 
-    protected override object Pop(ChainLink Link)
+    protected override object Pop(ChainLink link)
     {
-      base.Pop(Link);
-      _Index.Remove(((IndexedChainLink)Link)._Key);
-      return Link._Data;
+      base.Pop(link);
+      _index.Remove(((IndexedChainLink)link)._key);
+      return link._data;
     }
 
     #endregion
 
-    public void Push(object Key, object Data)
+    public void Push(object key, object data)
     {
-      IndexedChainLink Link = new IndexedChainLink(Key, Data);
-      _Index.Add(Key, Link);
-      Push(Link);
+      IndexedChainLink link = new IndexedChainLink(key, data);
+      _index.Add(key, link);
+      Push(link);
     }
 
-    public object RePush(object Key)
+    public object RePush(object key)
     {
-      IndexedChainLink Link = FindLink(Key);
-      Link.Pull();
-      Push(Link);
-      return Link._Data;
+      IndexedChainLink link = FindLink(key);
+      link.Pull();
+      Push(link);
+      return link._data;
     }
 
-    public object Pull(object Key)
+    public object Pull(object key)
     {
-      return Pop(FindLink(Key));
+      return Pop(FindLink(key));
     }
   }
 

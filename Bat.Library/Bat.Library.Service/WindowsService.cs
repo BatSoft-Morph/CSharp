@@ -71,11 +71,11 @@ namespace Bat.Library.Service
     {
       try
       {
-        this.ExitCode = DoStop();
+        ExitCode = DoStop();
       }
       catch (Exception x)
       {
-        this.ExitCode = -1;
+        ExitCode = -1;
         WriteToLog(x.Message);
       }
     }
@@ -89,17 +89,13 @@ namespace Bat.Library.Service
   
     #region Logging
 
-    private bool _IsLogging = true;
     protected bool IsLogging
-    {
-      get { return _IsLogging; }
-      set { _IsLogging = value; }
-    }
+    { get; set; }
 
-    protected void WriteToLog(string Message)
+    protected void WriteToLog(string message)
     {
       if (IsLogging)
-        EventLog.WriteEntry(GetType().Name, Message);
+        EventLog.WriteEntry(GetType().Name, message);
     }
 
     #endregion

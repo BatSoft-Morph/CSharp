@@ -14,36 +14,33 @@ namespace Bat.Library.Service
    */
   public abstract class WindowsServiceInstaller : Installer
   {
-    private ServiceInstaller _ServiceInstaller;
-    private ServiceProcessInstaller _ServiceProcessInstaller;
+    private readonly ServiceInstaller _serviceInstaller;
+    private readonly ServiceProcessInstaller _serviceProcessInstaller;
 
     public WindowsServiceInstaller()
     {
-      ServiceAccount Account;
-      ServiceStartMode StartMode;
-      string ServiceName, DisplayName, Description;
-      Initialise(out Account, out StartMode, out ServiceName, out DisplayName, out Description);
+      Initialise(out ServiceAccount account, out ServiceStartMode startMode, out string serviceName, out string displayName, out string description);
 
       // Instantiate installers for process and services.
-      _ServiceInstaller = new ServiceInstaller();
-      _ServiceProcessInstaller = new ServiceProcessInstaller();
+      _serviceInstaller = new ServiceInstaller();
+      _serviceProcessInstaller = new ServiceProcessInstaller();
 
       // The services run under the system account.
-      _ServiceProcessInstaller.Account = Account;
+      _serviceProcessInstaller.Account = account;
 
       // The services are started upon startup.
-      _ServiceInstaller.StartType = StartMode;
+      _serviceInstaller.StartType = startMode;
 
       // ServiceName must equal those on ServiceBase derived classes.            
-      _ServiceInstaller.ServiceName = ServiceName;
-      _ServiceInstaller.DisplayName = DisplayName;
-      _ServiceInstaller.Description = Description;
+      _serviceInstaller.ServiceName = serviceName;
+      _serviceInstaller.DisplayName = displayName;
+      _serviceInstaller.Description = description;
 
       // Add installers to collection. Order is not important.
-      Installers.Add(_ServiceInstaller);
-      Installers.Add(_ServiceProcessInstaller);
+      Installers.Add(_serviceInstaller);
+      Installers.Add(_serviceProcessInstaller);
     }
 
-    protected abstract void Initialise(out ServiceAccount Account, out ServiceStartMode StartMode, out string ServiceName, out string DisplayName, out string Description);
+    protected abstract void Initialise(out ServiceAccount account, out ServiceStartMode startMode, out string serviceName, out string displayName, out string description);
   }
 }

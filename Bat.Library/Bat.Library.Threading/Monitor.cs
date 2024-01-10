@@ -10,21 +10,21 @@ namespace Bat.Library.Threading
 
     public static bool TryEnter(Object obj)
     {
-      MonitorObject ObjectItem = ObtainMonitorObject(obj);
-      return ObjectItem.Enter(null, 0) != null;
+      MonitorObject objectItem = ObtainMonitorObject(obj);
+      return objectItem.Enter(null, 0) != null;
     }
 
     public static void Enter(Object obj)
     {
-      MonitorObject ObjectItem = ObtainMonitorObject(obj);
-      ObjectItem.Enter(ObjectItem.FindMonitorThread(), Timeout.Infinite);
+      MonitorObject objectItem = ObtainMonitorObject(obj);
+      objectItem.Enter(objectItem.FindMonitorThread(), Timeout.Infinite);
     }
 
     public static void Exit(Object obj)
     {
-      MonitorObject ObjectItem = ObtainMonitorObject(obj);
-      ObjectItem.Exit();
-      MayDropMonitorObject(ObjectItem);
+      MonitorObject objectItem = ObtainMonitorObject(obj);
+      objectItem.Exit();
+      MayDropMonitorObject(objectItem);
     }
 
     #endregion
@@ -38,18 +38,18 @@ namespace Bat.Library.Threading
 
     static public bool Wait(Object obj, int millisecondsTimeout)
     {
-      MonitorObject ObjectItem = ObtainMonitorObject(obj);
-      MonitorThread ThreadItem = ObjectItem.FindMonitorThread();
-      ObjectItem.ValidateIsOwner(ThreadItem);
+      MonitorObject objectItem = ObtainMonitorObject(obj);
+      MonitorThread threadItem = objectItem.FindMonitorThread();
+      objectItem.ValidateIsOwner(threadItem);
       //  Queue the thread
-      ObjectItem.WaitingPush(ThreadItem);
+      objectItem.WaitingPush(threadItem);
       //  Release the object (temporarily)
-      ObjectItem.Unlock(ThreadItem);
+      objectItem.Unlock(threadItem);
       //  Sleep for a while, or until woken
-      bool TimedOut = ThreadItem.Sleep(millisecondsTimeout);
+      bool timedOut = threadItem.Sleep(millisecondsTimeout);
       //  Reclaim obj
-      ObjectItem.Lock(ThreadItem, Timeout.Infinite);
-      return TimedOut;
+      objectItem.Lock(threadItem, Timeout.Infinite);
+      return timedOut;
     }
 
     static public bool Wait(Object obj, TimeSpan timeout)
@@ -63,159 +63,158 @@ namespace Bat.Library.Threading
 
     static public void Pulse(Object obj)
     {
-      MonitorObject ObjectItem = ObtainMonitorObject(obj);
-      MonitorThread ThreadItem = ObjectItem.FindMonitorThread();
-      ObjectItem.ValidateIsOwner(ThreadItem);
+      MonitorObject objectItem = ObtainMonitorObject(obj);
+      MonitorThread threadItem = objectItem.FindMonitorThread();
+      objectItem.ValidateIsOwner(threadItem);
       //  Pop the first thread off the waiting queue
-      MonitorThread ThreadNext = ObjectItem.WaitingPop();
-      if (ThreadNext != null)
-        ThreadNext.Wake();
+      MonitorThread threadNext = objectItem.WaitingPop();
+      threadNext?.Wake();
     }
 
     static public void PulseAll(Object obj)
     {
-      MonitorObject ObjectItem = ObtainMonitorObject(obj);
-      MonitorThread ThreadItem = ObjectItem.FindMonitorThread();
-      ObjectItem.ValidateIsOwner(ThreadItem);
+      MonitorObject objectItem = ObtainMonitorObject(obj);
+      MonitorThread threadItem = objectItem.FindMonitorThread();
+      objectItem.ValidateIsOwner(threadItem);
       //  Pulse all currently waiting threads
-      lock (ObjectItem._Waiting)
-        while (ObjectItem._Waiting.Count > 0)
-          ObjectItem.WaitingPop().Wake();
+      lock (objectItem._waiting)
+        while (objectItem._waiting.Count > 0)
+          objectItem.WaitingPop().Wake();
     }
 
     #endregion
 
     #region Internal objects
 
-    static private List<MonitorObject> _Objects = new List<MonitorObject>();
+    private static readonly List<MonitorObject> s_objects = new List<MonitorObject>();
 
     static private MonitorObject ObtainMonitorObject(Object obj)
     {
       if (obj == null)
         throw new ArgumentNullException();
-      lock (_Objects)
+      lock (s_objects)
       {
-        for (int i = _Objects.Count - 1; i >= 0; i--)
-          if (_Objects[i].Obj == obj)
-            return _Objects[i];
-        MonitorObject Queue = new MonitorObject(obj);
-        _Objects.Add(Queue);
-        return Queue;
+        for (int i = s_objects.Count - 1; i >= 0; i--)
+          if (s_objects[i]._obj == obj)
+            return s_objects[i];
+        MonitorObject queue = new MonitorObject(obj);
+        s_objects.Add(queue);
+        return queue;
       }
     }
 
-    static private void MayDropMonitorObject(MonitorObject ObjectItem)
+    static private void MayDropMonitorObject(MonitorObject objectItem)
     {
-      lock (ObjectItem._Threads)
-        if (ObjectItem._Threads.Count == 0)
-          lock (_Objects)
-            _Objects.Remove(ObjectItem);
+      lock (objectItem._threads)
+        if (objectItem._threads.Count == 0)
+          lock (s_objects)
+            s_objects.Remove(objectItem);
     }
 
     private class MonitorObject
     {
       internal MonitorObject(object Obj)
       {
-        this.Obj = Obj;
+        _obj = Obj;
       }
 
-      internal object Obj;
-      internal MonitorThread Current = null;
+      internal object _obj;
+      internal MonitorThread _current = null;
 
-      internal AutoResetEvent GateEntry = new AutoResetEvent(true);
+      internal AutoResetEvent _gateEntry = new AutoResetEvent(true);
 
-      internal void ValidateIsOwner(MonitorThread ThreadItem)
+      internal void ValidateIsOwner(MonitorThread threadItem)
       {
-        if ((ThreadItem == null) || (Current != ThreadItem))
+        if ((threadItem == null) || (_current != threadItem))
           throw new SynchronizationLockException();
       }
 
       #region MonitorThread maintenance
 
-      internal List<MonitorThread> _Threads = new List<MonitorThread>();
+      internal List<MonitorThread> _threads = new List<MonitorThread>();
 
       internal MonitorThread FindMonitorThread()
       {
-        Thread ThisThread = Thread.CurrentThread;
-        lock (_Threads)
+        Thread thisThread = Thread.CurrentThread;
+        lock (_threads)
         {
-          foreach (MonitorThread Item in _Threads)
-            if (Item._Thread == ThisThread)
-              return Item;
+          foreach (MonitorThread item in _threads)
+            if (item._thread == thisThread)
+              return item;
           return null;
         }
       }
 
       internal MonitorThread NewMonitorThread()
       {
-        MonitorThread NewItem = new MonitorThread(this);
-        _Threads.Add(NewItem);
-        return NewItem;
+        MonitorThread newItem = new MonitorThread(this);
+        _threads.Add(newItem);
+        return newItem;
       }
 
-      internal void DropMonitorThread(MonitorThread MonThread)
+      internal void DropMonitorThread(MonitorThread monitorThread)
       {
-        lock (_Threads)
-          _Threads.Remove(MonThread);
+        lock (_threads)
+          _threads.Remove(monitorThread);
       }
 
       #endregion
 
       #region Lock/Unlock
 
-      internal MonitorThread Enter(MonitorThread ThreadItem, int Timeout)
+      internal MonitorThread Enter(MonitorThread threadItem, int timeout)
       {
-        ThreadItem = Lock(ThreadItem, Timeout);
+        threadItem = Lock(threadItem, timeout);
         //  If we successfully locked, then we're a step deeper into ownership
-        if (ThreadItem != null)
-          ThreadItem._Depth++;
-        return ThreadItem;
+        if (threadItem != null)
+          threadItem._depth++;
+        return threadItem;
       }
 
-      internal MonitorThread Lock(MonitorThread ThreadItem, int Timeout)
+      internal MonitorThread Lock(MonitorThread threadItem, int timeout)
       {
         //  If this thread already owns the object, then done
-        if ((ThreadItem != null) && (ThreadItem == Current))
-          return ThreadItem;
+        if ((threadItem != null) && (threadItem == _current))
+          return threadItem;
         //  Wait for turn to lock object (if Timeout > 0)
-        if (GateEntry.WaitOne(Timeout, false))
+        if (_gateEntry.WaitOne(timeout, false))
           try
           {
             //  Wait for Obj to be unlocked and make this 
             //  Monitor class compatible with System.Threading.Monitor
-            System.Threading.Monitor.Enter(Obj);
+            System.Threading.Monitor.Enter(_obj);
             //  Ensure we have a ThreadItem
-            if (ThreadItem == null)
-              ThreadItem = NewMonitorThread();
+            if (threadItem == null)
+              threadItem = NewMonitorThread();
             //  Claim ownership
-            Current = ThreadItem;
-            return ThreadItem;
+            _current = threadItem;
+            return threadItem;
           }
           finally
           {
-            GateEntry.Set();
+            _gateEntry.Set();
           }
         //  Failed to get the lock
         return null;
       }
 
-      internal void Unlock(MonitorThread ThreadItem)
+      internal void Unlock(MonitorThread threadItem)
       {
-        ValidateIsOwner(ThreadItem);
+        ValidateIsOwner(threadItem);
         //  Release Obj
-        Current = null;
-        System.Threading.Monitor.Exit(Obj);
+        _current = null;
+        System.Threading.Monitor.Exit(_obj);
       }
 
       public void Exit()
       {
-        MonitorThread ThreadItem = FindMonitorThread();
-        ValidateIsOwner(ThreadItem);
-        ThreadItem._Depth--;
-        if (ThreadItem._Depth == 0)
+        MonitorThread threadItem = FindMonitorThread();
+        ValidateIsOwner(threadItem);
+        threadItem._depth--;
+        if (threadItem._depth == 0)
         {
-          Unlock(ThreadItem);
-          DropMonitorThread(ThreadItem);
+          Unlock(threadItem);
+          DropMonitorThread(threadItem);
         }
       }
 
@@ -223,30 +222,30 @@ namespace Bat.Library.Threading
 
       #region Waiting threads
 
-      internal List<MonitorThread> _Waiting = new List<MonitorThread>();
+      internal List<MonitorThread> _waiting = new List<MonitorThread>();
 
       internal void WaitingPush(MonitorThread Item)
       {
-        lock (_Waiting)
-          _Waiting.Add(Item);
+        lock (_waiting)
+          _waiting.Add(Item);
       }
 
       internal MonitorThread WaitingPop()
       {
-        lock (_Waiting)
+        lock (_waiting)
         {
-          if (_Waiting.Count == 0)
+          if (_waiting.Count == 0)
             return null;
-          MonitorThread Item = _Waiting[0];
-          _Waiting.RemoveAt(0);
-          return Item;
+          MonitorThread item = _waiting[0];
+          _waiting.RemoveAt(0);
+          return item;
         }
       }
 
-      internal void WaitingRemove(MonitorThread Item)
+      internal void WaitingRemove(MonitorThread item)
       {
-        lock (_Waiting)
-          _Waiting.Remove(Item);
+        lock (_waiting)
+          _waiting.Remove(item);
       }
 
       #endregion
@@ -254,33 +253,31 @@ namespace Bat.Library.Threading
 
     private class MonitorThread
     {
-      public MonitorThread(MonitorObject Owner)
+      public MonitorThread(MonitorObject owner)
       {
-        _Owner = Owner;
-        _Thread = Thread.CurrentThread;
+        _owner = owner;
+        _thread = Thread.CurrentThread;
       }
 
-      private MonitorObject _Owner;
-      internal Thread _Thread;
-      internal int _Depth = 0;
+      private readonly MonitorObject _owner;
+      internal Thread _thread;
+      internal int _depth = 0;
 
       #region Sleeping
 
-      internal ManualResetEvent AlarmClock = null;
+      internal ManualResetEvent _alarmClock = null;
 
       internal bool Sleep(int millisecondsTimeout)
       {
-        AlarmClock = new ManualResetEvent(false);
-        bool Result = AlarmClock.WaitOne(millisecondsTimeout, false);
-        AlarmClock = null;
-        return Result;
+        _alarmClock = new ManualResetEvent(false);
+        bool result = _alarmClock.WaitOne(millisecondsTimeout, false);
+        _alarmClock = null;
+        return result;
       }
 
       internal void Wake()
       {
-        ManualResetEvent Alarm = AlarmClock;
-        if (Alarm != null)
-          Alarm.Set();
+        _alarmClock?.Set();
       }
 
       #endregion

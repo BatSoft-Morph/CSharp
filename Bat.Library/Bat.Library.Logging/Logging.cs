@@ -9,30 +9,30 @@ namespace Bat.Library.Logging
   {
     public Log(string FileName)
     {
-      _FileName = FileName;
+      _fileName = FileName;
     }
 
     public const string nl = "\u000D\u000A";
 
     public static Log Default = new Log(LogFileName());
-    private static Encoding encoding = new UnicodeEncoding();
+    private static readonly Encoding s_encoding = new UnicodeEncoding();
 
-    private string _FileName;
+    private readonly string _fileName;
     public string FileName
     {
-      get { return _FileName; }
+      get { return _fileName; }
     }
 
-    public void Add(string Message)
+    public void Add(string message)
     {
       FileStream stream;
-      if (File.Exists(_FileName))
-        stream = new FileStream(_FileName, FileMode.Append);
+      if (File.Exists(_fileName))
+        stream = new FileStream(_fileName, FileMode.Append);
       else
-        stream = new FileStream(_FileName, FileMode.Create);
+        stream = new FileStream(_fileName, FileMode.Create);
       try
       {
-        byte[] bytes = encoding.GetBytes(Message + nl);
+        byte[] bytes = s_encoding.GetBytes(message + nl);
         stream.Write(bytes, 0, bytes.Length);
       }
       finally
@@ -52,9 +52,9 @@ namespace Bat.Library.Logging
       Add(ObjectToString(obj));
     }
 
-    public void Add(string Message, Object obj)
+    public void Add(string message, Object obj)
     {
-      Add(Message + ' ' + ObjectToString(obj));
+      Add(message + ' ' + ObjectToString(obj));
     }
 
     public String ObjectToString(Object obj)
@@ -74,10 +74,10 @@ namespace Bat.Library.Logging
 
     private static string LogFileName()
     {
-      string FileName = System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase + ".log";
-      if ("file:///".Equals(FileName.Substring(0, 8)))
-        FileName = FileName.Substring(8);
-      return FileName;
+      string fileName = System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase + ".log";
+      if ("file:///".Equals(fileName.Substring(0, 8)))
+        fileName = fileName.Substring(8);
+      return fileName;
     }
   }
 

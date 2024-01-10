@@ -19,28 +19,28 @@ namespace Test.Bat.Library.Settings
     }
 
     private byte _int8 = 0;
-    public byte int8
+    public byte Int8
     {
       get { return _int8; }
       set { _int8 = value; }
     }
 
     private short _int16 = 0;
-    public short int16
+    public short Int16
     {
       get { return _int16; }
       set { _int16 = value; }
     }
 
     private int _int32 = 0;
-    public int int32
+    public int Int32
     {
       get { return _int32; }
       set { _int32 = value; }
     }
 
     private long _int64 = 0;
-    public long int64
+    public long Int64
     {
       get { return _int64; }
       set { _int64 = value; }
@@ -53,10 +53,10 @@ namespace Test.Bat.Library.Settings
       set { _str = value; }
     }
 
-    internal SettingsBranch _Branch;//  Ordinarily private.  But for testing we want more flexibility.
+    internal SettingsBranch _branch;//  Ordinarily private.  But for testing we want more flexibility.
     public SettingsBranch Branch
     {
-      get { return _Branch; }
+      get { return _branch; }
     }
 
     public void Populate()
