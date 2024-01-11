@@ -9,21 +9,21 @@ namespace MorphDemoBookingServer
 {
   public class BookingRegistrationApartmentFactory : MorphApartmentFactorySession
   {
-    public BookingRegistrationApartmentFactory(IDefaultServletObjectFactory DefaultServletObject, InstanceFactories InstanceFactories, TimeSpan Timeout, SequenceLevel Level)
-      : base(DefaultServletObject, InstanceFactories, Timeout, Level)
+    public BookingRegistrationApartmentFactory(IDefaultServletObjectFactory defaultServletObject, InstanceFactories instanceFactories, TimeSpan timeout, SequenceLevel level)
+      : base(defaultServletObject, instanceFactories, timeout, level)
     {
     }
 
-    protected override MorphApartmentSession CreateApartment(object DefaultObject, SequenceLevel Level)
+    protected override MorphApartmentSession CreateApartment(object defaultObject, SequenceLevel level)
     {
-      return new BookingRegistrationSession(this, DefaultObject, Level);
+      return new BookingRegistrationSession(this, defaultObject, level);
     }
   }
 
   public class BookingRegistrationSession : MorphApartmentSession
   {
-    public BookingRegistrationSession(MorphApartmentFactory Owner, object DefaultObject, SequenceLevel Level)
-      : base(Owner, DefaultObject, Level)
+    public BookingRegistrationSession(MorphApartmentFactory owner, object defaultObject, SequenceLevel level)
+      : base(owner, defaultObject, level)
     {
       Count++;
     }
@@ -71,13 +71,13 @@ namespace MorphDemoBookingServer
     {
       #region IReferenceFactory Members
 
-      public bool DecodeReference(ServletProxy Value, out object Reference)
+      public bool DecodeReference(ServletProxy value, out object reference)
       {
-        if (BookingInterface.DiplomatClientTypeName.Equals(Value.TypeName))
-          Reference = new BookingDiplomatClientProxy(Value);
+        if (BookingInterface.DiplomatClientTypeName.Equals(value.TypeName))
+          reference = new BookingDiplomatClientProxy(value);
         else
-          Reference = null;
-        return Reference != null;
+          reference = null;
+        return reference != null;
       }
 
       #endregion

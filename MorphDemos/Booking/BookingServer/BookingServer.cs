@@ -17,87 +17,87 @@ namespace MorphDemoBookingServer
       ObjectInstance.OnClientIDChanged += OnClientIDChanged;
     }
 
-    static private Hashtable AllRegistrations = new Hashtable();
+    private static readonly Hashtable s_allRegistrations = new Hashtable();
 
-    static public Registration FindBy(string ClientID)
+    static public Registration FindBy(string clientID)
     {
-      if (ClientID == null)
+      if (clientID == null)
         return null;
       else
-        lock (AllRegistrations)
-          return ((Registration)AllRegistrations[ClientID]);
+        lock (s_allRegistrations)
+          return ((Registration)s_allRegistrations[clientID]);
     }
 
-    static public string ClientID_To_ClientName(string ClientID)
+    static public string ClientID_To_ClientName(string clientID)
     {
-      if (ClientID == null)
+      if (clientID == null)
         return null;
-      Registration reg = FindBy(ClientID);
+      Registration reg = FindBy(clientID);
       if (reg != null)
-        return reg._ClientName;
+        return reg._clientName;
       else
         return null;
     }
 
     #endregion
 
-    public Registration(string ClientName, BookingDiplomatClientProxy ClientProxy, MorphApartment Apartment)
+    public Registration(string clientName, BookingDiplomatClientProxy clientProxy, MorphApartment apartment)
     {
       //  Client identification
-      _ClientName = ClientName;
-      _ClientID = Apartment.ID.ToString();
+      _clientName = clientName;
+      _clientID = apartment.ID.ToString();
       //  Keep track of remote diplomat
-      _ClientProxy = ClientProxy;
+      _clientProxy = clientProxy;
       //  Keep track of local diplomat
-      _ServerImpl = new BookingDiplomatServerImpl();
-      _ServerImpl._Registration = this;
+      _serverImpl = new BookingDiplomatServerImpl();
+      _serverImpl._Registration = this;
       //  Register the Server servlet with this session's apartment
-      _ServerImpl.MorphApartment = Apartment;
+      _serverImpl.MorphApartment = apartment;
       //  Register the Registration
-      lock (AllRegistrations)
-        AllRegistrations[_ClientID] = this;
+      lock (s_allRegistrations)
+        s_allRegistrations[_clientID] = this;
     }
 
     public void Unregister()
     {
       //  Let other clients have access to objects
-      lock (AllRegistrations)
-        ObjectInstances.ReleaseAll(_ClientID);
+      lock (s_allRegistrations)
+        ObjectInstances.ReleaseAll(_clientID);
       //  Unregister the Registration
-      AllRegistrations[_ClientID] = null;
-      _ServerImpl.MorphApartment.Dispose();
+      s_allRegistrations[_clientID] = null;
+      _serverImpl.MorphApartment.Dispose();
     }
 
-    public string _ClientName;
-    public string _ClientID;
-    public BookingDiplomatClientProxy _ClientProxy;
-    public BookingDiplomatServerImpl _ServerImpl;
+    public string _clientName;
+    public string _clientID;
+    public BookingDiplomatClientProxy _clientProxy;
+    public BookingDiplomatServerImpl _serverImpl;
 
     // This event method notifies all interested clients when object ownership has changed
-    static void OnClientIDChanged(object Sender, ClientIDArgs args)
+    static void OnClientIDChanged(object sender, ClientIDArgs args)
     {
       ObjectInstance obj = args.ObjectInstance;
       //  Get new client name
-      string NewClientName = Registration.ClientID_To_ClientName(args.NewClientID);
+      string newClientName = Registration.ClientID_To_ClientName(args.NewClientID);
       //  List all clients who are waiting for this object
-      string[] ClientIDs = ObjectInstances.ListClientIDs(obj.ObjectName);
+      string[] clientIDs = ObjectInstances.ListClientIDs(obj.ObjectName);
       //  Tell each client that is interested in this object that the owner has changed
-      for (int i = 0; i < ClientIDs.Length; i++)
+      for (int i = 0; i < clientIDs.Length; i++)
       {
-        Registration WaitingClient = FindBy(ClientIDs[i]);
+        Registration waitingClient = FindBy(clientIDs[i]);
         try
         { //  Tell the waiting client about the change of owner
-          WaitingClient._ClientProxy.newOwner(obj.ObjectName, NewClientName);
+          waitingClient._clientProxy.NewOwner(obj.ObjectName, newClientName);
         }
         catch
         { //  Zero tolerance.  If there's a problem, then unregister the client
-          WaitingClient.Unregister();
+          waitingClient.Unregister();
         }
       }
     }
   }
 
-  public class BookingRegistrationImpl : MorphReference, BookingRegistration
+  public class BookingRegistrationImpl : MorphReference, IBookingRegistration
   {
     public BookingRegistrationImpl()
       : base(BookingInterface.RegistrationTypeName)
@@ -106,17 +106,17 @@ namespace MorphDemoBookingServer
 
     #region BookingRegistration Members
 
-    public BookingDiplomatServer register(string ClientName, BookingDiplomatClient client)
+    public IBookingDiplomatServer Register(string clientName, IBookingDiplomatClient client)
     {
-      BookingDiplomatClientProxy ClientProxy = (BookingDiplomatClientProxy)client;
-      Registration registration = new Registration(ClientName, ClientProxy, this.MorphApartment);
-      return registration._ServerImpl;
+      BookingDiplomatClientProxy clientProxy = (BookingDiplomatClientProxy)client;
+      Registration registration = new Registration(clientName, clientProxy, this.MorphApartment);
+      return registration._serverImpl;
     }
 
     #endregion
   }
 
-  public class BookingDiplomatServerImpl : MorphReference, BookingDiplomatServer
+  public class BookingDiplomatServerImpl : MorphReference, IBookingDiplomatServer
   {
     public BookingDiplomatServerImpl()
       : base(BookingInterface.DiplomatServerTypeName)
@@ -127,46 +127,46 @@ namespace MorphDemoBookingServer
 
     #region BookingDiplomatServer Members
 
-    public string book(string objectName)
+    public string Book(string objectName)
     {
-      string NewOwnersClientID = ObjectInstances.Obtain(objectName, _Registration._ClientID);
-      return Registration.ClientID_To_ClientName(NewOwnersClientID);
+      string newOwnersClientID = ObjectInstances.Obtain(objectName, _Registration._clientID);
+      return Registration.ClientID_To_ClientName(newOwnersClientID);
     }
 
-    public string unbook(string objectName)
+    public string Unbook(string objectName)
     {
-      string NewOwnersClientID = ObjectInstances.Release(objectName, _Registration._ClientID);
-      return Registration.ClientID_To_ClientName(NewOwnersClientID);
+      string newOwnersClientID = ObjectInstances.Release(objectName, _Registration._clientID);
+      return Registration.ClientID_To_ClientName(newOwnersClientID);
     }
 
-    public string ownerOf(string objectName)
+    public string OwnerOf(string objectName)
     {
-      string OwnersClientID = ObjectInstances.CurrentOwnerOf(objectName);
-      return Registration.ClientID_To_ClientName(OwnersClientID);
+      string ownersClientID = ObjectInstances.CurrentOwnerOf(objectName);
+      return Registration.ClientID_To_ClientName(ownersClientID);
     }
 
-    public string[] getQueue(string objectName)
+    public string[] GetQueue(string objectName)
     {
-      string[] ClientIDs = ObjectInstances.ListClientIDs(objectName);
-      string[] ClientNames = new string[ClientIDs.Length];
-      for (int i = 0; i < ClientIDs.Length; i++)
-        ClientNames[i] = Registration.ClientID_To_ClientName(ClientIDs[i]);
-      return ClientNames;
+      string[] clientIDs = ObjectInstances.ListClientIDs(objectName);
+      string[] clientNames = new string[clientIDs.Length];
+      for (int i = 0; i < clientIDs.Length; i++)
+        clientNames[i] = Registration.ClientID_To_ClientName(clientIDs[i]);
+      return clientNames;
     }
 
-    public void nudge(string objectName)
+    public void Nudge(string objectName)
     {
-      string OwnerID = ObjectInstances.CurrentOwnerOf(objectName);
-      if (OwnerID != null)
+      string ownerID = ObjectInstances.CurrentOwnerOf(objectName);
+      if (ownerID != null)
       {
-        Registration CurrentOwner = Registration.FindBy(OwnerID);
+        Registration currentOwner = Registration.FindBy(ownerID);
         try
         { //  Nudge the current owner of the object, telling them who the nudge is from
-          CurrentOwner._ClientProxy.nudgedBy(_Registration._ClientName);
+          currentOwner._clientProxy.NudgedBy(_Registration._clientName);
         }
         catch
         { //  Zero tolerance.  If there's a problem, then unregister the client
-          CurrentOwner.Unregister();
+          currentOwner.Unregister();
         }
       }
     }
@@ -174,25 +174,25 @@ namespace MorphDemoBookingServer
     #endregion
   }
 
-  public class BookingDiplomatClientProxy : BookingDiplomatClient
+  public class BookingDiplomatClientProxy : IBookingDiplomatClient
   {
     public BookingDiplomatClientProxy(ServletProxy ServletProxy)
     {
-      _ServletProxy = ServletProxy;
+      _servletProxy = ServletProxy;
     }
 
-    private ServletProxy _ServletProxy;
+    private ServletProxy _servletProxy;
 
     #region BookingDiplomatClient Members
 
-    public void newOwner(string objectName, string clientName)
+    public void NewOwner(string objectName, string clientName)
     {
-      _ServletProxy.SendMethod("newOwner", new object[] { objectName, clientName });
+      _servletProxy.SendMethod("NewOwner", new object[] { objectName, clientName });
     }
 
-    public void nudgedBy(string clientName)
+    public void NudgedBy(string clientName)
     {
-      _ServletProxy.CallMethod("nudgedBy", new object[] { clientName });
+      _servletProxy.CallMethod("NudgedBy", new object[] { clientName });
     }
 
     #endregion

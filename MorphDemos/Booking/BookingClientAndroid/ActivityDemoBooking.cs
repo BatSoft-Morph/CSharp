@@ -54,20 +54,20 @@ namespace MorphDemoBookingClientAndroid
       LinkTypes.Register(new LinkTypeMember());
       //  Setup Morph interface
       ActionHandler.SetThreadCount(2);
-      _BookingFactory = new BookingFactory();
-      MorphApartment apartment = new MorphApartmentShared(_BookingFactory);
-      _LocalDiplomat = new BookingDiplomatClientImpl(apartment, this);
-      _ServerDiplomat = null;
+      _bookingFactory = new BookingFactory();
+      MorphApartment apartment = new MorphApartmentShared(_bookingFactory);
+      _localDiplomat = new BookingDiplomatClientImpl(apartment, this);
+      _serverDiplomat = null;
     }
 
     protected override void OnDestroy()
     {
-      if (_ServerDiplomat != null)
+      if (_serverDiplomat != null)
       {
         //  Be polite and unbook
-        _ServerDiplomat.unbook(edObjectName.Text);
+        _serverDiplomat.Unbook(edObjectName.Text);
         //  Be polite and tell the server to release resources that have been allocated for this client
-        ((BookingDiplomatServerProxy)_ServerDiplomat).ServletProxy.ApartmentProxy.Dispose();
+        ((BookingDiplomatServerProxy)_serverDiplomat).ServletProxy.ApartmentProxy.Dispose();
       }
       ActionHandler.SetThreadCount(0);
       Connections.CloseAll();
@@ -98,17 +98,17 @@ namespace MorphDemoBookingClientAndroid
     private void RequestClick(object sender, EventArgs e)
     {
       IPAddress address;
-      if (_ServerDiplomat != null)
+      if (_serverDiplomat != null)
         ShowMessage("Already waiting for object " + edObjectName.Text + ".");
       else if (!IPAddress.TryParse(edIP.Text, out address))
         ShowMessage("Not a valid IP address:/n" + edIP.Text);
       else
         try
         {
-          MorphApartmentProxy apartmentProxy = MorphApartmentProxy.ViaAddress("Morph.Demo.Booking", new TimeSpan(0, 10, 10), _BookingFactory, address);
-          BookingRegistration _Registration = new BookingRegistrationProxy(apartmentProxy.DefaultServlet);
-          _ServerDiplomat = _Registration.register(edClientName.Text, _LocalDiplomat);
-          edCurrentOwner.Text = _ServerDiplomat.book(edObjectName.Text);
+          MorphApartmentProxy apartmentProxy = MorphApartmentProxy.ViaAddress("Morph.Demo.Booking", new TimeSpan(0, 10, 10), _bookingFactory, address);
+          IBookingRegistration _Registration = new BookingRegistrationProxy(apartmentProxy.DefaultServlet);
+          _serverDiplomat = _Registration.Register(edClientName.Text, _localDiplomat);
+          edCurrentOwner.Text = _serverDiplomat.Book(edObjectName.Text);
           //edClientName.setIsInEditMode = false;
           //edObjectName.IsInEditMode = false;
         }
@@ -120,13 +120,13 @@ namespace MorphDemoBookingClientAndroid
 
     private void ReleaseClick(object sender, EventArgs e)
     {
-      if (_ServerDiplomat == null)
+      if (_serverDiplomat == null)
         ShowMessage("Already waiting for object " + edObjectName.Text + ".");
       else
         try
         {
-          edCurrentOwner.Text = _ServerDiplomat.unbook(edObjectName.Text);
-          _ServerDiplomat = null;
+          edCurrentOwner.Text = _serverDiplomat.Unbook(edObjectName.Text);
+          _serverDiplomat = null;
         }
         catch (Exception x)
         {
@@ -138,7 +138,7 @@ namespace MorphDemoBookingClientAndroid
     {
       try
       {
-        _ServerDiplomat.nudge(edObjectName.Text);
+        _serverDiplomat.Nudge(edObjectName.Text);
       }
       catch (Exception x)
       {
@@ -155,9 +155,9 @@ namespace MorphDemoBookingClientAndroid
 
     #region Morph interface
 
-    private BookingFactory _BookingFactory;
-    private BookingDiplomatClient _LocalDiplomat;
-    private BookingDiplomatServer _ServerDiplomat;
+    private BookingFactory _bookingFactory;
+    private IBookingDiplomatClient _localDiplomat;
+    private IBookingDiplomatServer _serverDiplomat;
 
     public void NewOwner(string objectName, string clientName)
     {

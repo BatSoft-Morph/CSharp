@@ -17,7 +17,7 @@ namespace MorphDemoBookingClient
         MorphManager.Startup(5);
         MorphManager.ReplyTimeout = new TimeSpan(0, 20, 0);
         MorphApartment apartment = new MorphApartmentShared(new InstanceFactories());
-        _BookingClient = new BookingDiplomatClientImpl(apartment, this);
+        _bookingClient = new BookingDiplomatClientImpl(apartment, this);
       }
       catch
       {
@@ -26,17 +26,17 @@ namespace MorphDemoBookingClient
       }
     }
 
-    private void ShowException(string Message, Exception x)
+    private void ShowException(string message, Exception x)
     {
-      if (Message != null)
-        Message = Message + "\u000D\u000A" + x.Message + "\u000D\u000A" + x.StackTrace;
+      if (message != null)
+        message = message + "\u000D\u000A" + x.Message + "\u000D\u000A" + x.StackTrace;
       else
-        Message = x.Message + "\u000D\u000A" + x.StackTrace;
-      MessageBox.Show(Message, x.GetType().Name);
+        message = x.Message + "\u000D\u000A" + x.StackTrace;
+      MessageBox.Show(message, x.GetType().Name);
     }
 
-    private BookingDiplomatServer _BookingServer = null;
-    private BookingDiplomatClient _BookingClient = null;
+    private IBookingDiplomatServer _bookingServer = null;
+    private IBookingDiplomatClient _bookingClient = null;
 
     private void butClose_Click(object sender, EventArgs e)
     {
@@ -47,8 +47,8 @@ namespace MorphDemoBookingClient
     {
       if (butRelease.Enabled)
         butRelease_Click(sender, e);
-      if (_BookingServer != null)
-        ((BookingDiplomatServerProxy)_BookingServer).ServletProxy.ApartmentProxy.Dispose();
+      if (_bookingServer != null)
+        ((BookingDiplomatServerProxy)_bookingServer).ServletProxy.ApartmentProxy.Dispose();
       MorphManager.Shutdown();
     }
 
@@ -66,19 +66,19 @@ namespace MorphDemoBookingClient
     {
       try
       {
-        if (_BookingServer == null)
+        if (_bookingServer == null)
           try
           {
             MorphApartmentProxy ServerSide = MorphApartmentProxy.ViaLocal(BookingInterface.ServiceName, new TimeSpan(0, 30, 10), new BookingFactory());
-            BookingRegistration Registration = new BookingRegistrationProxy(ServerSide.DefaultServlet);
-            _BookingServer = Registration.register(textClientName.Text, _BookingClient);
+            IBookingRegistration Registration = new BookingRegistrationProxy(ServerSide.DefaultServlet);
+            _bookingServer = Registration.Register(textClientName.Text, _bookingClient);
           }
           catch (Exception x)
           {
             ShowException("Ensure that the Booking Server is running:", x);
             return;
           }
-        textOwner.Text = _BookingServer.book(textObjectName.Text);
+        textOwner.Text = _bookingServer.Book(textObjectName.Text);
         textClientName.Enabled = false;
         textObjectName.Enabled = false;
         butRequest.Enabled = false;
@@ -95,7 +95,7 @@ namespace MorphDemoBookingClient
     {
       try
       {
-        textOwner.Text = _BookingServer.unbook(textObjectName.Text);
+        textOwner.Text = _bookingServer.Unbook(textObjectName.Text);
         textClientName.Enabled = true;
         textObjectName.Enabled = true;
         butRequest.Enabled = true;
@@ -112,7 +112,7 @@ namespace MorphDemoBookingClient
     {
       try
       {
-        _BookingServer.nudge(textObjectName.Text);
+        _bookingServer.Nudge(textObjectName.Text);
       }
       catch (Exception x)
       {
@@ -120,14 +120,14 @@ namespace MorphDemoBookingClient
       }
     }
 
-    #region BookingDiplomatClient implementation
+    #region IBookingDiplomatClient implementation
 
-    public void newOwner(string objectName, string clientName)
+    public void NewOwner(string objectName, string clientName)
     {
       textOwner.Text = clientName;
     }
 
-    public void nudgedBy(string clientName)
+    public void NudgedBy(string clientName)
     {
       MessageBox.Show(this, clientName + " wants the object", "Nudging " + textClientName.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
     }

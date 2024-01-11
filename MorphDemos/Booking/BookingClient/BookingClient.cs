@@ -4,90 +4,90 @@ using MorphDemoBooking;
 
 namespace MorphDemoBookingClient
 {
-  public class BookingRegistrationProxy : BookingRegistration
+  public class BookingRegistrationProxy : IBookingRegistration
   {
-    public BookingRegistrationProxy(ServletProxy ServletProxy)
+    public BookingRegistrationProxy(ServletProxy servletProxy)
     {
-      _ServletProxy = ServletProxy;
+      _servletProxy = servletProxy;
     }
 
-    private ServletProxy _ServletProxy;
+    private readonly ServletProxy _servletProxy;
 
     #region BookingRegistration Members
 
-    public BookingDiplomatServer register(string ClientName, BookingDiplomatClient client)
+    public IBookingDiplomatServer Register(string clientName, IBookingDiplomatClient client)
     {
-      return (BookingDiplomatServer)_ServletProxy.CallMethod("register", new object[] { ClientName, client });
+      return (IBookingDiplomatServer)_servletProxy.CallMethod("Register", new object[] { clientName, client });
     }
 
     #endregion
   }
 
-  public class BookingDiplomatServerProxy : BookingDiplomatServer
+  public class BookingDiplomatServerProxy : IBookingDiplomatServer
   {
-    public BookingDiplomatServerProxy(ServletProxy ServletProxy)
+    public BookingDiplomatServerProxy(ServletProxy servletProxy)
     {
-      _ServletProxy = ServletProxy;
+      _servletProxy = servletProxy;
     }
 
-    private ServletProxy _ServletProxy;
+    private readonly ServletProxy _servletProxy;
     public ServletProxy ServletProxy
-    { get { return _ServletProxy; } }
+    { get { return _servletProxy; } }
 
     #region BookingDiplomatServer Members
 
-    public string book(string objectName)
+    public string Book(string objectName)
     {
-      return (string)_ServletProxy.CallMethod("book", new object[] { objectName });
+      return (string)_servletProxy.CallMethod("Book", new object[] { objectName });
     }
 
-    public string unbook(string objectName)
+    public string Unbook(string objectName)
     {
-      return (string)_ServletProxy.CallMethod("unbook", new object[] { objectName });
+      return (string)_servletProxy.CallMethod("Unbook", new object[] { objectName });
     }
 
-    public string ownerOf(string objectName)
+    public string OwnerOf(string objectName)
     {
-      return (string)_ServletProxy.CallMethod("ownerOf", new object[] { objectName });
+      return (string)_servletProxy.CallMethod("OwnerOf", new object[] { objectName });
     }
 
-    public string[] getQueue(string objectName)
+    public string[] GetQueue(string objectName)
     {
-      return (string[])_ServletProxy.CallMethod("getQueue", new object[] { objectName });
+      return (string[])_servletProxy.CallMethod("GetQueue", new object[] { objectName });
     }
 
-    public void nudge(string objectName)
+    public void Nudge(string objectName)
     {
-      _ServletProxy.SendMethod("nudge", new object[] { objectName });
+      _servletProxy.SendMethod("Nudge", new object[] { objectName });
     }
 
     #endregion
   }
 
-  public class BookingDiplomatClientImpl : MorphReference, BookingDiplomatClient
+  public class BookingDiplomatClientImpl : MorphReference, IBookingDiplomatClient
   {
     public BookingDiplomatClientImpl(MorphApartment apartment, BookingClientForm form)
       : base(BookingInterface.DiplomatClientTypeName)
     {
-      _Form = form;
+      _form = form;
       MorphApartment = apartment;
     }
 
-    BookingClientForm _Form;
+    private readonly BookingClientForm _form;
 
     delegate void DelegateNewOwner(string objectName, string ClientName);
     delegate void DelegateNudgedBy(string ClientName);
 
     #region BookingDiplomatClient Members
 
-    public void newOwner(string objectName, string clientName)
+    public void NewOwner(string objectName, string clientName)
     {
-      _Form.Invoke(new DelegateNewOwner(_Form.newOwner), new object[] { objectName, clientName });
+      _form.Invoke(new DelegateNewOwner(_form.NewOwner), new object[] { objectName, clientName });
     }
 
-    public void nudgedBy(string clientName)
+    public void NudgedBy(string clientName)
     {
-      _Form.Invoke(new DelegateNudgedBy(_Form.nudgedBy), new object[] { clientName });
+      _form.Invoke(new DelegateNudgedBy(_form.NudgedBy), new object[] { clientName });
     }
 
     #endregion
@@ -105,16 +105,16 @@ namespace MorphDemoBookingClient
     {
       #region IReferenceFactory Members
 
-      public bool DecodeReference(ServletProxy Value, out object Reference)
+      public bool DecodeReference(ServletProxy value, out object reference)
       {
-        if (BookingInterface.DiplomatServerTypeName.Equals(Value.TypeName))
+        if (BookingInterface.DiplomatServerTypeName.Equals(value.TypeName))
         {
-          Reference = new BookingDiplomatServerProxy(Value);
+          reference = new BookingDiplomatServerProxy(value);
           return true;
         }
         else
         {
-          Reference = null;
+          reference = null;
           return false;
         }
       }

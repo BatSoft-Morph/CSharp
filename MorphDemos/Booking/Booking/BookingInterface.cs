@@ -11,23 +11,23 @@ namespace MorphDemoBooking
     public const string DiplomatClientTypeName = "BookingDiplomatClient";
   }
 
-  public interface BookingRegistration
+  public interface IBookingRegistration
   {
-    BookingDiplomatServer register(string ClientName, BookingDiplomatClient client);
+    IBookingDiplomatServer Register(string ClientName, IBookingDiplomatClient client);
   }
 
-  public interface BookingDiplomatServer
+  public interface IBookingDiplomatServer
   {
-    string book(string objectName);
-    string unbook(string objectName);
-    string ownerOf(string objectName);
-    string[] getQueue(string objectName);
-    void nudge(string objectName);
+    string Book(string objectName);
+    string Unbook(string objectName);
+    string OwnerOf(string objectName);
+    string[] GetQueue(string objectName);
+    void Nudge(string objectName);
   }
 
-  public interface BookingDiplomatClient
+  public interface IBookingDiplomatClient
   {
-    void newOwner(string objectName, string clientName);
-    void nudgedBy(string clientName);
+    void NewOwner(string objectName, string clientName);
+    void NudgedBy(string clientName);
   }
 }
