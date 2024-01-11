@@ -22,9 +22,9 @@ namespace MorphDemoBookingServer
       Log.Default = new Log("C:\\Temp\\Morph.log");
       Log.Default.Add("Starting");
 #endif
-      MorphManager.startup(5);
+      MorphManager.Startup(5);
       MorphManager.ReplyTimeout = new TimeSpan(0, 20, 0);
-      MorphManager.Services.startServiceSessioned(
+      MorphManager.Services.StartServiceSessioned(
         BookingInterface.ServiceName,
         true, true,
         new BookingRegistrationApartmentFactory(new BookingRegistrationFactory(), new BookingInstanceFactories(), new TimeSpan(2, 0, 0), SequenceLevel.None)

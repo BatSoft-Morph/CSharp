@@ -9,13 +9,13 @@ namespace BasicServer
     public FormServer()
     {
       InitializeComponent();
-      MorphManager.startup(2);
-      MorphManager.Services.startServiceShared(BasicInterface.ServiceName, true, true, new BasicDefaultImpl(this), new BasicFactories());
+      MorphManager.Startup(2);
+      MorphManager.Services.StartServiceShared(BasicInterface.ServiceName, true, true, new BasicDefaultImpl(this), new BasicFactories());
     }
 
     private void FormServer_FormClosed(object sender, FormClosedEventArgs e)
     {
-      MorphManager.shutdown();
+      MorphManager.Shutdown();
     }
 
     #region Invoke

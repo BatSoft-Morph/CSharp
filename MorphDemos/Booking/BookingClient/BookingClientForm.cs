@@ -14,7 +14,7 @@ namespace MorphDemoBookingClient
       InitializeComponent();
       try
       {
-        MorphManager.startup(5);
+        MorphManager.Startup(5);
         MorphManager.ReplyTimeout = new TimeSpan(0, 20, 0);
         MorphApartment apartment = new MorphApartmentShared(new InstanceFactories());
         _BookingClient = new BookingDiplomatClientImpl(apartment, this);
@@ -49,7 +49,7 @@ namespace MorphDemoBookingClient
         butRelease_Click(sender, e);
       if (_BookingServer != null)
         ((BookingDiplomatServerProxy)_BookingServer).ServletProxy.ApartmentProxy.Dispose();
-      MorphManager.shutdown();
+      MorphManager.Shutdown();
     }
 
     private void textClientName_TextChanged(object sender, EventArgs e)

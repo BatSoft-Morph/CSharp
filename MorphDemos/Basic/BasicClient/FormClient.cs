@@ -12,12 +12,12 @@ namespace BasicClient
     public FormClient()
     {
       InitializeComponent();
-      MorphManager.startup(2);
+      MorphManager.Startup(2);
     }
 
     private void FormClient_FormClosed(object sender, FormClosedEventArgs e)
     {
-      MorphManager.shutdown();
+      MorphManager.Shutdown();
     }
 
     private void buttonConnect_Click(object sender, System.EventArgs e)

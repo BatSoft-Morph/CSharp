@@ -9,7 +9,7 @@ namespace MorphDemoBookingServer
 {
   public class BookingRegistrationApartmentFactory : MorphApartmentFactorySession
   {
-    public BookingRegistrationApartmentFactory(DefaultServletObjectFactory DefaultServletObject, InstanceFactories InstanceFactories, TimeSpan Timeout, SequenceLevel Level)
+    public BookingRegistrationApartmentFactory(IDefaultServletObjectFactory DefaultServletObject, InstanceFactories InstanceFactories, TimeSpan Timeout, SequenceLevel Level)
       : base(DefaultServletObject, InstanceFactories, Timeout, Level)
     {
     }
@@ -36,7 +36,7 @@ namespace MorphDemoBookingServer
       {
         //  Both of these work when the application is visible.  (ie. manually started)
         //  But how to kill this application when it is not visible?  (ie. started by the Morph.Daemon)
-        MorphManager.shutdown();
+        MorphManager.Shutdown();
         //BookingServerForm.Instance.Invoke(new VoidDelegate(BookingServerForm.Instance.Close));
         //BookingServerForm.Instance.Invoke(new VoidDelegate(Application.Exit));
       }
@@ -47,7 +47,7 @@ namespace MorphDemoBookingServer
     private delegate void VoidDelegate();
   }
 
-  public class BookingRegistrationFactory : DefaultServletObjectFactory
+  public class BookingRegistrationFactory : IDefaultServletObjectFactory
   {
     #region DefaultServletObjectFactory Members
 
