@@ -34,7 +34,7 @@ namespace Morph.Endpoint
       //  Timeout
       _timeout = timeout;
       //  Path
-      _apartmentProxyLink = new LinkApartmentProxy(_ApartmentProxyID);
+      _apartmentProxyLink = new LinkApartmentProxy(_apartmentProxyID);
       _device = device;
       ApartmentLink = null;
       //  Set MorphService link
@@ -54,7 +54,7 @@ namespace Morph.Endpoint
       //  Timeout
       _timeout = timeout;
       //  Path
-      _apartmentProxyLink = new LinkApartmentProxy(_ApartmentProxyID);
+      _apartmentProxyLink = new LinkApartmentProxy(_apartmentProxyID);
       _device = device;
       ApartmentLink = new LinkApartment(apartmentID);
       //  Set MorphService link
@@ -243,17 +243,17 @@ namespace Morph.Endpoint
       }
     }
 
-    private readonly int _ApartmentProxyID = IDFactory.Generate();
+    private readonly int _apartmentProxyID = IDFactory.Generate();
     public int ID
     {
-      get => _ApartmentProxyID;
+      get => _apartmentProxyID;
     }
 
     static public IIDFactory IDFactory = new IDSeed();
 
     #endregion
 
-    static private RegisterItems<MorphApartmentProxy> s_all = new RegisterItems<MorphApartmentProxy>();
+    private static readonly RegisterItems<MorphApartmentProxy> s_all = new RegisterItems<MorphApartmentProxy>();
 
     static public MorphApartmentProxy Find(int id)
     {
@@ -357,7 +357,7 @@ namespace Morph.Endpoint
         link = links[links.Count - 1];
         links.RemoveAt(links.Count - 1);
       }
-      if ((link == null) || !(link is LinkApartmentProxy) || (((LinkApartmentProxy)link).ApartmentProxyID != _ApartmentProxyID))
+      if ((link == null) || !(link is LinkApartmentProxy) || (((LinkApartmentProxy)link).ApartmentProxyID != _apartmentProxyID))
         throw new EMorphImplementation();
       //  Find the apartment link
       for (int i = links.Count - 1; i >= 0; i--)

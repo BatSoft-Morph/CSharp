@@ -23,7 +23,7 @@ namespace Morph.Daemon
       if (message is LinkMessageFromIP)
         new RegisteredApartmentInternet(_registered, ID, ((LinkMessageFromIP)message).Connection);
       else
-        throw new EMorphDaemon(GetType().Name + ".obtain(): Unhandled message type \"" + message.GetType().Name + "\".");
+        throw new EMorphDaemon(GetType().Name + ".Obtain(): Unhandled message type \"" + message.GetType().Name + "\".");
       return ID;
     }
 
