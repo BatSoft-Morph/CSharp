@@ -9,31 +9,31 @@ using Morph;
 
 namespace MorphDemoBookingServer
 {
-  static class Program
-  {
-    /// <summary>
-    /// The main entry point for the application.
-    /// </summary>
-    [STAThread]
-    static void Main()
+    static class Program
     {
+        /// <summary>
+        /// The main entry point for the application.
+        /// </summary>
+        [STAThread]
+        static void Main()
+        {
 #if LOG_MESSAGES
       LinkTypes.AppName = "MorphDemoBookingServer";
       Log.Default = new Log("C:\\Temp\\Morph.log");
       Log.Default.Add("Starting");
 #endif
-      MorphManager.Startup(5);
-      MorphManager.ReplyTimeout = new TimeSpan(0, 20, 0);
-      MorphManager.Services.StartServiceSessioned(
-        BookingInterface.ServiceName,
-        true, true,
-        new BookingRegistrationApartmentFactory(new BookingRegistrationFactory(), new BookingInstanceFactories(), new TimeSpan(2, 0, 0), SequenceLevel.None)
-        );
-      /*
-      Application.EnableVisualStyles();
-      Application.SetCompatibleTextRenderingDefault(false);
-      Application.Run(new BookingServerForm());
-       */
+            MorphManager.Startup(5);
+            MorphManager.ReplyTimeout = new TimeSpan(0, 20, 0);
+            MorphManager.Services.StartServiceSessioned(
+              BookingInterface.ServiceName,
+              true, true,
+              new BookingRegistrationApartmentFactory(new BookingRegistrationFactory(), new BookingInstanceFactories(), new TimeSpan(2, 0, 0), SequenceLevel.None)
+              );
+            /*
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new BookingServerForm());
+             */
+        }
     }
-  }
 }

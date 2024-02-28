@@ -2,11 +2,11 @@
 
 namespace Morph.Lib
 {
-  public class ContinuousStream : MemoryStream
-  {
-    public ContinuousStream()
+    public class ContinuousStream : MemoryStream
     {
-      ReadTimeout = int.MaxValue;
+        public ContinuousStream()
+        {
+            ReadTimeout = int.MaxValue;
+        }
     }
-  }
 }

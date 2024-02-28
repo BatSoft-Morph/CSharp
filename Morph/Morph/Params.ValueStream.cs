@@ -1,6 +1,6 @@
 ﻿namespace Morph.Params
 {
-  public class ValueStream : Value
-  {
-  }
+    public class ValueStream : Value
+    {
+    }
 }

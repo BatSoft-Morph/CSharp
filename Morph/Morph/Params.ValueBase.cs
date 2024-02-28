@@ -1,6 +1,6 @@
 ﻿namespace Morph.Params
 {
-  public class ValueBase : Value
-  {
-  }
+    public class ValueBase : Value
+    {
+    }
 }

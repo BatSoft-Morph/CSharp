@@ -1,6 +1,6 @@
 ﻿namespace Morph.Params
 {
-  public abstract class Value
-  {
-  }
+    public abstract class Value
+    {
+    }
 }
