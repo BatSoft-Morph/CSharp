@@ -48,6 +48,9 @@ namespace Morph
             }
         }
 
+        static public void Throw(int errorCode, string message)
+            =>Throw(errorCode, message, null);
+
         static public void Throw(int errorCode, string message, string morphTrace)
         {
             if (message == null)

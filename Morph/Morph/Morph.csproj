@@ -80,11 +80,13 @@
     <Compile Include="Params.Parameters.cs" />
     <Compile Include="Params.Value.cs" />
     <Compile Include="Params.ValueBase.cs" />
+    <Compile Include="Params.ValueEncoders.cs" />
     <Compile Include="Params.ValueInstance.cs" />
     <Compile Include="Params.ValueObject.cs" />
     <Compile Include="Params.ValueReference.cs" />
     <Compile Include="Params.ValueReferenceIndex.cs" />
     <Compile Include="Params.ValueStream.cs" />
+    <Compile Include="Params.ValueType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sequencing.LinkSequence.cs" />
     <Compile Include="Sequencing.LinkSequenceIndex.cs" />
@@ -92,6 +94,7 @@
     <Compile Include="Sequencing.SequenceLevel.cs" />
     <Compile Include="Sequencing.SequenceReceiver.cs" />
     <Compile Include="Sequencing.SequenceSender.cs" />
+    <Compile Include="Params.SimpleType.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

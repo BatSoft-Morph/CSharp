@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 
 namespace Morph.Core
@@ -41,7 +42,7 @@ namespace Morph.Core
 
         public void WriteLinkByte(LinkTypeID linkTypeID, bool x, bool y, bool z)
         {
-            WriteInt8(BitMSB | (z ? BitZ : Zero) | (y ? BitY : Zero) | (x ? BitX : Zero) | (byte)linkTypeID);
+            WriteInt8(EncodeLinkByte(linkTypeID, x, y, z));
         }
 
         #endregion
@@ -51,18 +52,26 @@ namespace Morph.Core
             get => true;
         }
 
-        public void WriteInt8(int value)
+        public void InsertInt8AtPosition(byte value, long position)
+        {
+            long currentPos = Stream.Position;
+            Stream.Position = position;
+            WriteInt8(value);
+            Stream.Position = currentPos;
+        }
+
+        public void WriteInt8(byte value)
         {
             _stream.WriteByte((byte)value);
         }
 
-        public void WriteInt16(int value)
+        public void WriteInt16(Int16 value)
         {
             _stream.WriteByte((byte)(value >> 8));
             _stream.WriteByte((byte)(value));
         }
 
-        public void WriteInt32(int value)
+        public void WriteInt32(Int32 value)
         {
             _stream.WriteByte((byte)(value >> 24));
             _stream.WriteByte((byte)(value >> 16));
@@ -70,7 +79,7 @@ namespace Morph.Core
             _stream.WriteByte((byte)(value));
         }
 
-        public void WriteInt64(long value)
+        public void WriteInt64(Int64 value)
         {
             _stream.WriteByte((byte)(value >> 56));
             _stream.WriteByte((byte)(value >> 48));
@@ -82,6 +91,12 @@ namespace Morph.Core
             _stream.WriteByte((byte)(value));
         }
 
+        /// <summary>
+        /// <br>String values are written as:</br>
+        /// <br>- byte count (4 bytes)</br>
+        /// <br>- string in UTF-8 (the number of bytes is specified in the byte count)</br>
+        /// <br>Note: Compare to WriteIdentifier() method.</br>
+        /// </summary>
         public void WriteString(string value)
         {
             byte[] buffer = Unicode.GetBytes(value);
@@ -89,10 +104,16 @@ namespace Morph.Core
             _stream.Write(buffer, 0, buffer.Length);
         }
 
+        /// <summary>
+        /// <br>Identifiers (value names, parameter names, data type names) are written as:</br>
+        /// <br>- byte count (2 bytes)</br>
+        /// <br>- string in UTF-8 (the number of bytes is specified in the byte count)</br>
+        /// <br>Note: Compare to WriteString() method.</br>
+        /// </summary>
         public void WriteIdentifier(string value)
         {
             byte[] buffer = Unicode.GetBytes(value);
-            WriteInt16(buffer.Length);
+            WriteInt16((Int16)buffer.Length);
             _stream.Write(buffer, 0, buffer.Length);
         }
 
