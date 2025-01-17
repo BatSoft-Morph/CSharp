@@ -76,7 +76,7 @@ namespace Morph.Internet
             }
             // Port
             if (hasPort)
-                writer.WriteInt16(EndPoint.Port);
+                writer.WriteInt16((short)EndPoint.Port);
         }
 
         #endregion
